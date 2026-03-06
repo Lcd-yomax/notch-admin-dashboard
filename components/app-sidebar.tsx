@@ -2,21 +2,19 @@
 
 import * as React from "react"
 import {
-  IconCamera,
+  IconBox,
+  IconCategory,
   IconChartBar,
   IconDashboard,
-  IconDatabase,
-  IconFileAi,
-  IconFileDescription,
-  IconFileWord,
-  IconFolder,
   IconHelp,
-  IconInnerShadowTop,
-  IconListDetails,
-  IconReport,
+  IconMegaphone,
+  IconPackage,
   IconSearch,
   IconSettings,
+  IconShoppingCart,
+  IconStar,
   IconUsers,
+  IconUserShield,
 } from "@tabler/icons-react"
 
 import { NavDocuments } from '@/components/nav-documents'
@@ -35,9 +33,9 @@ import {
 
 const data = {
   user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
+    name: "Admin User",
+    email: "admin@store.com",
+    avatar: "/avatars/admin.jpg",
   },
   navMain: [
     {
@@ -46,72 +44,24 @@ const data = {
       icon: IconDashboard,
     },
     {
-      title: "Lifecycle",
+      title: "Products",
       url: "#",
-      icon: IconListDetails,
+      icon: IconBox,
     },
     {
-      title: "Analytics",
+      title: "Categories",
       url: "#",
-      icon: IconChartBar,
+      icon: IconCategory,
     },
     {
-      title: "Projects",
+      title: "Orders",
       url: "#",
-      icon: IconFolder,
+      icon: IconShoppingCart,
     },
     {
-      title: "Team",
+      title: "Reviews",
       url: "#",
-      icon: IconUsers,
-    },
-  ],
-  navClouds: [
-    {
-      title: "Capture",
-      icon: IconCamera,
-      isActive: true,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Proposal",
-      icon: IconFileDescription,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Prompts",
-      icon: IconFileAi,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
+      icon: IconStar,
     },
   ],
   navSecondary: [
@@ -133,19 +83,24 @@ const data = {
   ],
   documents: [
     {
-      name: "Data Library",
+      name: "Users",
       url: "#",
-      icon: IconDatabase,
+      icon: IconUsers,
     },
     {
-      name: "Reports",
+      name: "Roles & Permissions",
       url: "#",
-      icon: IconReport,
+      icon: IconUserShield,
     },
     {
-      name: "Word Assistant",
+      name: "Announcements",
       url: "#",
-      icon: IconFileWord,
+      icon: IconMegaphone,
+    },
+    {
+      name: "Analytics",
+      url: "#",
+      icon: IconChartBar,
     },
   ],
 }
@@ -161,8 +116,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               className="data-[slot=sidebar-menu-button]:p-1.5!"
             >
               <a href="#">
-                <IconInnerShadowTop className="size-5!" />
-                <span className="text-base font-semibold">Acme Inc.</span>
+                <IconPackage className="size-5!" />
+                <span className="text-base font-semibold">E-Commerce Admin</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
