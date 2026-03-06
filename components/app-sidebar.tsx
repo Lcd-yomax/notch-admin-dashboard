@@ -40,27 +40,27 @@ const data = {
   navMain: [
     {
       title: "Dashboard",
-      url: "#",
+      url: "/dashboard",
       icon: IconDashboard,
     },
     {
       title: "Products",
-      url: "#",
+      url: "/dashboard/products",
       icon: IconBox,
     },
     {
       title: "Categories",
-      url: "#",
+      url: "/dashboard/categories",
       icon: IconCategory,
     },
     {
       title: "Orders",
-      url: "#",
+      url: "/dashboard/orders",
       icon: IconShoppingCart,
     },
     {
       title: "Reviews",
-      url: "#",
+      url: "/dashboard/reviews",
       icon: IconStar,
     },
   ],
@@ -84,22 +84,22 @@ const data = {
   documents: [
     {
       name: "Users",
-      url: "#",
+      url: "/dashboard/users",
       icon: IconUsers,
     },
     {
       name: "Roles & Permissions",
-      url: "#",
+      url: "/dashboard/roles",
       icon: IconUserShield,
     },
     {
       name: "Announcements",
-      url: "#",
+      url: "/dashboard/announcements",
       icon: IconSpeakerphone,
     },
     {
       name: "Analytics",
-      url: "#",
+      url: "/dashboard",
       icon: IconChartBar,
     },
   ],
