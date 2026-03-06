@@ -7,7 +7,7 @@ import {
   IconChartBar,
   IconDashboard,
   IconHelp,
-  IconSpeakerphone,
+  IconBellRinging,
   IconPackage,
   IconSearch,
   IconSettings,
@@ -95,7 +95,7 @@ const data = {
     {
       name: "Announcements",
       url: "/dashboard/announcements",
-      icon: IconSpeakerphone,
+      icon: IconBellRinging,
     },
     {
       name: "Analytics",
