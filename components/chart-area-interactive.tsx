@@ -32,23 +32,15 @@ import {
 
 export const description = "Sales overview chart"
 
-// Generate chart data for the last 90 days dynamically
-function generateChartData() {
-  const data = []
-  const today = new Date()
-  for (let i = 90; i >= 0; i--) {
-    const date = new Date(today)
-    date.setDate(date.getDate() - i)
-    data.push({
-      date: date.toISOString().split('T')[0],
-      orders: 0,
-      revenue: 0,
-    })
-  }
-  return data
-}
-
-const chartData = generateChartData()
+// Static chart data - no orders yet
+const chartData = [
+  { date: "2026-01-01", orders: 0 },
+  { date: "2026-01-15", orders: 0 },
+  { date: "2026-02-01", orders: 0 },
+  { date: "2026-02-15", orders: 0 },
+  { date: "2026-03-01", orders: 0 },
+  { date: "2026-03-06", orders: 0 },
+]
 
 const chartConfig = {
   sales: {
@@ -56,10 +48,6 @@ const chartConfig = {
   },
   orders: {
     label: "Orders",
-    color: "var(--primary)",
-  },
-  revenue: {
-    label: "Revenue",
     color: "var(--primary)",
   },
 } satisfies ChartConfig
@@ -74,19 +62,8 @@ export function ChartAreaInteractive() {
     }
   }, [isMobile])
 
-  const filteredData = chartData.filter((item) => {
-    const date = new Date(item.date)
-    const referenceDate = new Date() // Use today as reference
-    let daysToSubtract = 90
-    if (timeRange === "30d") {
-      daysToSubtract = 30
-    } else if (timeRange === "7d") {
-      daysToSubtract = 7
-    }
-    const startDate = new Date(referenceDate)
-    startDate.setDate(startDate.getDate() - daysToSubtract)
-    return date >= startDate
-  })
+  // For now, show all data since we have static placeholder data
+  const filteredData = chartData
 
   return (
     <Card className="@container/card">
@@ -148,18 +125,6 @@ export function ChartAreaInteractive() {
                 <stop
                   offset="95%"
                   stopColor="var(--color-orders)"
-                  stopOpacity={0.1}
-                />
-              </linearGradient>
-              <linearGradient id="fillRevenue" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor="var(--color-revenue)"
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset="95%"
-                  stopColor="var(--color-revenue)"
                   stopOpacity={0.1}
                 />
               </linearGradient>
