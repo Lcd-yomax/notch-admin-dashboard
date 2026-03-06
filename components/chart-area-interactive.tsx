@@ -32,39 +32,23 @@ import {
 
 export const description = "Sales overview chart"
 
-// Sample sales data - will show $0 when no orders exist
-const chartData = [
-  { date: "2024-04-01", orders: 0, revenue: 0 },
-  { date: "2024-04-02", orders: 0, revenue: 0 },
-  { date: "2024-04-03", orders: 0, revenue: 0 },
-  { date: "2024-04-04", orders: 0, revenue: 0 },
-  { date: "2024-04-05", orders: 0, revenue: 0 },
-  { date: "2024-04-06", orders: 0, revenue: 0 },
-  { date: "2024-04-07", orders: 0, revenue: 0 },
-  { date: "2024-04-08", orders: 0, revenue: 0 },
-  { date: "2024-04-09", orders: 0, revenue: 0 },
-  { date: "2024-04-10", orders: 0, revenue: 0 },
-  { date: "2024-04-11", orders: 0, revenue: 0 },
-  { date: "2024-04-12", orders: 0, revenue: 0 },
-  { date: "2024-04-13", orders: 0, revenue: 0 },
-  { date: "2024-04-14", orders: 0, revenue: 0 },
-  { date: "2024-04-15", orders: 0, revenue: 0 },
-  { date: "2024-04-16", orders: 0, revenue: 0 },
-  { date: "2024-04-17", orders: 0, revenue: 0 },
-  { date: "2024-04-18", orders: 0, revenue: 0 },
-  { date: "2024-04-19", orders: 0, revenue: 0 },
-  { date: "2024-04-20", orders: 0, revenue: 0 },
-  { date: "2024-04-21", orders: 0, revenue: 0 },
-  { date: "2024-04-22", orders: 0, revenue: 0 },
-  { date: "2024-04-23", orders: 0, revenue: 0 },
-  { date: "2024-04-24", orders: 0, revenue: 0 },
-  { date: "2024-04-25", orders: 0, revenue: 0 },
-  { date: "2024-04-26", orders: 0, revenue: 0 },
-  { date: "2024-04-27", orders: 0, revenue: 0 },
-  { date: "2024-04-28", orders: 0, revenue: 0 },
-  { date: "2024-04-29", orders: 0, revenue: 0 },
-  { date: "2024-04-30", orders: 0, revenue: 0 },
-]
+// Generate chart data for the last 90 days dynamically
+function generateChartData() {
+  const data = []
+  const today = new Date()
+  for (let i = 90; i >= 0; i--) {
+    const date = new Date(today)
+    date.setDate(date.getDate() - i)
+    data.push({
+      date: date.toISOString().split('T')[0],
+      orders: 0,
+      revenue: 0,
+    })
+  }
+  return data
+}
+
+const chartData = generateChartData()
 
 const chartConfig = {
   sales: {
@@ -92,7 +76,7 @@ export function ChartAreaInteractive() {
 
   const filteredData = chartData.filter((item) => {
     const date = new Date(item.date)
-    const referenceDate = new Date("2024-06-30")
+    const referenceDate = new Date() // Use today as reference
     let daysToSubtract = 90
     if (timeRange === "30d") {
       daysToSubtract = 30
