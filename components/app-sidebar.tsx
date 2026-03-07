@@ -5,7 +5,6 @@ import * as React from "react"
 import {
   IconBox,
   IconCategory,
-  IconChartBar,
   IconDashboard,
   IconHelp,
   IconBellRinging,
@@ -98,11 +97,6 @@ const data = {
       url: "/dashboard/announcements",
       icon: IconBellRinging,
     },
-    {
-      name: "Analytics",
-      url: "/dashboard",
-      icon: IconChartBar,
-    },
   ],
 }
 
@@ -116,7 +110,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:p-1.5!"
             >
-              <a href="#">
+              <a href="/dashboard">
                 <IconPackage className="size-5!" />
                 <span className="text-base font-semibold">E-Commerce Admin</span>
               </a>
