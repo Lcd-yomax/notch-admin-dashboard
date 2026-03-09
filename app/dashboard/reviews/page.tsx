@@ -55,9 +55,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { SiteHeader } from "@/components/site-header"
+import { PageHeader } from "@/components/page-header"
 
 interface Review {
   id: string
@@ -209,17 +207,11 @@ export default function ReviewsPage() {
   })
 
   return (
-    <SidebarProvider>
-      <AppSidebar variant="inset" />
-      <SidebarInset>
-        <SiteHeader />
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold">Reviews</h1>
-              <p className="text-muted-foreground">Manage customer product reviews</p>
-            </div>
-            <div className="flex items-center gap-2">
+    <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 px-4 lg:px-6">
+      <PageHeader
+        title="Reviews"
+        description="Manage customer reviews and ratings"
+      >
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">
@@ -241,8 +233,7 @@ export default function ReviewsPage() {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-            </div>
-          </div>
+      </PageHeader>
 
           <div className="overflow-hidden rounded-lg border">
             <Table>
@@ -356,7 +347,6 @@ export default function ReviewsPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </SidebarInset>
-    </SidebarProvider>
+    </div>
   )
 }

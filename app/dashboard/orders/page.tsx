@@ -60,9 +60,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { SiteHeader } from "@/components/site-header"
+import { PageHeader } from "@/components/page-header"
 
 interface Order {
   id: string
@@ -262,17 +260,11 @@ export default function OrdersPage() {
   })
 
   return (
-    <SidebarProvider>
-      <AppSidebar variant="inset" />
-      <SidebarInset>
-        <SiteHeader />
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold">Orders</h1>
-              <p className="text-muted-foreground">Manage customer orders and fulfillment</p>
-            </div>
-            <div className="flex items-center gap-2">
+    <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 px-4 lg:px-6">
+      <PageHeader
+        title="Orders"
+        description="Manage customer orders and fulfillment"
+      >
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">
@@ -294,8 +286,7 @@ export default function OrdersPage() {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-            </div>
-          </div>
+      </PageHeader>
 
           <div className="overflow-hidden rounded-lg border">
             <Table>
@@ -408,7 +399,6 @@ export default function OrdersPage() {
             )}
           </DialogContent>
         </Dialog>
-      </SidebarInset>
-    </SidebarProvider>
+    </div>
   )
 }

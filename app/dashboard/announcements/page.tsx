@@ -58,9 +58,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import { SiteHeader } from "@/components/site-header"
+import { PageHeader } from "@/components/page-header"
 
 interface Announcement {
   id: string
@@ -277,17 +275,11 @@ export default function AnnouncementsPage() {
   })
 
   return (
-    <SidebarProvider>
-      <AppSidebar variant="inset" />
-      <SidebarInset>
-        <SiteHeader />
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold">Announcements</h1>
-              <p className="text-muted-foreground">Manage system announcements and notifications</p>
-            </div>
-            <div className="flex items-center gap-2">
+    <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 px-4 lg:px-6">
+      <PageHeader
+        title="Announcements"
+        description="Create and manage system announcements"
+      >
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">
@@ -309,11 +301,11 @@ export default function AnnouncementsPage() {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button onClick={() => setIsCreateOpen(true)}>
-                <IconPlus />
-                Add Announcement
-              </Button>
-            </div>
+          <Button onClick={() => setIsCreateOpen(true)}>
+            <IconPlus />
+            Create Announcement
+          </Button>
+        </PageHeader>
           </div>
 
           <div className="overflow-hidden rounded-lg border">
@@ -436,7 +428,6 @@ export default function AnnouncementsPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </SidebarInset>
-    </SidebarProvider>
+    </div>
   )
 }
