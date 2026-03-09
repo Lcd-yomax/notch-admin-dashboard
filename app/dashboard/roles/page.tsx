@@ -399,6 +399,7 @@ export default function RolesPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+      </div>
     </div>
   )
 }
