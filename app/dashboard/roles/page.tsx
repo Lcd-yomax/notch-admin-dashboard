@@ -364,7 +364,6 @@ export default function RolesPage() {
               </Button>
             </div>
           </div>
-        </div>
 
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogContent className="sm:max-w-md">
@@ -400,6 +399,7 @@ export default function RolesPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+      </div>
     </div>
   )
 }
