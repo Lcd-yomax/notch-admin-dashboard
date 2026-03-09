@@ -395,7 +395,6 @@ export default function UsersPage() {
                 <IconChevronsRight />
               </Button>
             </div>
-          </div>
         </div>
 
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
