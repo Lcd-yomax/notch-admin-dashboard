@@ -281,29 +281,29 @@ export default function RolesPage() {
         description="Manage user roles and their permissions"
       >
         <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <IconLayoutColumns />
-                    Columns
-                    <IconChevronDown />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  {table.getAllColumns().filter((col) => col.getCanHide()).map((column) => (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-        </PageHeader>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm">
+              <IconLayoutColumns />
+              Columns
+              <IconChevronDown />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            {table.getAllColumns().filter((col) => col.getCanHide()).map((column) => (
+              <DropdownMenuCheckboxItem
+                key={column.id}
+                className="capitalize"
+                checked={column.getIsVisible()}
+                onCheckedChange={(value) => column.toggleVisibility(!!value)}
+              >
+                {column.id}
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </PageHeader>
 
-          <div className="overflow-hidden rounded-lg border">
+      <div className="overflow-hidden rounded-lg border">
             <Table>
               <TableHeader className="bg-muted">
                 {table.getHeaderGroups().map((headerGroup) => (
@@ -399,7 +399,6 @@ export default function RolesPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
     </div>
   )
 }
