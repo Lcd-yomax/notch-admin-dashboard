@@ -351,7 +351,6 @@ export default function CategoriesPage() {
               </Button>
             </div>
           </div>
-        </div>
 
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogContent className="sm:max-w-md">
@@ -387,6 +386,7 @@ export default function CategoriesPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+      </div>
     </div>
   )
 }
