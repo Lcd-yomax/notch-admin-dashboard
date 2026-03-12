@@ -290,67 +290,67 @@ export default function CategoriesPage() {
         </Button>
       </PageHeader>
 
-          <div className="overflow-hidden rounded-lg border">
-            <Table>
-              <TableHeader className="bg-muted">
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                      </TableHead>
-                    ))}
-                  </TableRow>
+      <div className="overflow-hidden rounded-lg border">
+        <Table>
+          <TableHeader className="bg-muted">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
                 ))}
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="h-24 text-center">
-                      <div className="flex flex-col items-center gap-2 py-8">
-                        <div className="text-muted-foreground">No categories found</div>
-                        <Button size="sm" onClick={() => setIsCreateOpen(true)}>
-                          <IconPlus className="size-4" />
-                          Add Category
-                        </Button>
-                      </div>
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="h-24 text-center">
+                  <div className="flex flex-col items-center gap-2 py-8">
+                    <div className="text-muted-foreground">No categories found</div>
+                    <Button size="sm" onClick={() => setIsCreateOpen(true)}>
+                      <IconPlus className="size-4" />
+                      Add Category
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-muted-foreground">
-              {table.getFilteredSelectedRowModel().rows.length} of {table.getFilteredRowModel().rows.length} selected
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()}>
-                <IconChevronsLeft />
-              </Button>
-              <Button variant="outline" size="icon" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
-                <IconChevronLeft />
-              </Button>
-              <span className="text-sm">Page {pagination.pageIndex + 1} of {table.getPageCount() || 1}</span>
-              <Button variant="outline" size="icon" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
-                <IconChevronRight />
-              </Button>
-              <Button variant="outline" size="icon" onClick={() => table.setPageIndex(table.getPageCount() - 1)} disabled={!table.getCanNextPage()}>
-                <IconChevronsRight />
-              </Button>
-            </div>
-          </div>
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-muted-foreground">
+          {table.getFilteredSelectedRowModel().rows.length} of {table.getFilteredRowModel().rows.length} selected
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="icon" onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()}>
+            <IconChevronsLeft />
+          </Button>
+          <Button variant="outline" size="icon" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
+            <IconChevronLeft />
+          </Button>
+          <span className="text-sm">Page {pagination.pageIndex + 1} of {table.getPageCount() || 1}</span>
+          <Button variant="outline" size="icon" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
+            <IconChevronRight />
+          </Button>
+          <Button variant="outline" size="icon" onClick={() => table.setPageIndex(table.getPageCount() - 1)} disabled={!table.getCanNextPage()}>
+            <IconChevronsRight />
+          </Button>
+        </div>
+      </div>
       </div>
 
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
