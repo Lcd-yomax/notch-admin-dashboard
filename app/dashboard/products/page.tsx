@@ -468,10 +468,10 @@ export default function ProductsPage() {
               </Button>
             </div>
           </div>
-        </div>
+      </div>
 
-        {/* Create Dialog */}
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+      {/* Create Dialog */}
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>Create Product</DialogTitle>
@@ -482,7 +482,7 @@ export default function ProductsPage() {
         </Dialog>
 
         {/* Edit Dialog */}
-        <Dialog open={!!editingProduct} onOpenChange={() => setEditingProduct(null)}>
+      <Dialog open={!!editingProduct} onOpenChange={() => setEditingProduct(null)}>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>Edit Product</DialogTitle>
@@ -493,7 +493,7 @@ export default function ProductsPage() {
         </Dialog>
 
         {/* Delete Dialog */}
-        <Dialog open={!!deletingProduct} onOpenChange={() => setDeletingProduct(null)}>
+      <Dialog open={!!deletingProduct} onOpenChange={() => setDeletingProduct(null)}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Delete Product</DialogTitle>

@@ -414,7 +414,7 @@ export default function AnnouncementsPage() {
           </DialogContent>
         </Dialog>
 
-        <Dialog open={!!deletingAnnouncement} onOpenChange={() => setDeletingAnnouncement(null)}>
+      <Dialog open={!!deletingAnnouncement} onOpenChange={() => setDeletingAnnouncement(null)}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Delete Announcement</DialogTitle>

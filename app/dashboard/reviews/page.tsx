@@ -333,7 +333,7 @@ export default function ReviewsPage() {
           </DialogContent>
         </Dialog>
 
-        <Dialog open={!!deletingReview} onOpenChange={() => setDeletingReview(null)}>
+      <Dialog open={!!deletingReview} onOpenChange={() => setDeletingReview(null)}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Delete Review</DialogTitle>

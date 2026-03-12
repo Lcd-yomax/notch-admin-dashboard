@@ -351,8 +351,9 @@ export default function CategoriesPage() {
               </Button>
             </div>
           </div>
+      </div>
 
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Create Category</DialogTitle>
@@ -362,7 +363,7 @@ export default function CategoriesPage() {
           </DialogContent>
         </Dialog>
 
-        <Dialog open={!!editingCategory} onOpenChange={() => setEditingCategory(null)}>
+      <Dialog open={!!editingCategory} onOpenChange={() => setEditingCategory(null)}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Edit Category</DialogTitle>
@@ -372,7 +373,7 @@ export default function CategoriesPage() {
           </DialogContent>
         </Dialog>
 
-        <Dialog open={!!deletingCategory} onOpenChange={() => setDeletingCategory(null)}>
+      <Dialog open={!!deletingCategory} onOpenChange={() => setDeletingCategory(null)}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Delete Category</DialogTitle>
@@ -385,7 +386,7 @@ export default function CategoriesPage() {
               <Button variant="destructive" onClick={handleDelete}>Delete</Button>
             </DialogFooter>
           </DialogContent>
-        </Dialog>
+      </Dialog>
     </div>
   )
 }

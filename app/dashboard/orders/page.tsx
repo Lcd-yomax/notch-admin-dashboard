@@ -348,9 +348,9 @@ export default function OrdersPage() {
               </Button>
             </div>
           </div>
-        </div>
+      </div>
 
-        <Dialog open={!!editingOrder} onOpenChange={() => setEditingOrder(null)}>
+      <Dialog open={!!editingOrder} onOpenChange={() => setEditingOrder(null)}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Update Order Status</DialogTitle>
@@ -360,7 +360,7 @@ export default function OrdersPage() {
           </DialogContent>
         </Dialog>
 
-        <Dialog open={!!viewingOrder} onOpenChange={() => setViewingOrder(null)}>
+      <Dialog open={!!viewingOrder} onOpenChange={() => setViewingOrder(null)}>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>Order Details</DialogTitle>

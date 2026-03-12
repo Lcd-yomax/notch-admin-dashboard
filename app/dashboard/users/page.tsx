@@ -407,7 +407,7 @@ export default function UsersPage() {
           </DialogContent>
         </Dialog>
 
-        <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
+      <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Edit User</DialogTitle>
@@ -417,7 +417,7 @@ export default function UsersPage() {
           </DialogContent>
         </Dialog>
 
-        <Dialog open={!!deletingUser} onOpenChange={() => setDeletingUser(null)}>
+      <Dialog open={!!deletingUser} onOpenChange={() => setDeletingUser(null)}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Delete User</DialogTitle>
