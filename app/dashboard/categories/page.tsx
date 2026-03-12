@@ -386,7 +386,6 @@ export default function CategoriesPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
     </div>
   )
 }
