@@ -263,27 +263,27 @@ export default function CategoriesPage() {
         title="Categories"
         description="Organize your products into categories"
       >
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <IconLayoutColumns />
-                    Columns
-                    <IconChevronDown />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  {table.getAllColumns().filter((col) => col.getCanHide()).map((column) => (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm">
+              <IconLayoutColumns />
+              Columns
+              <IconChevronDown />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            {table.getAllColumns().filter((col) => col.getCanHide()).map((column) => (
+              <DropdownMenuCheckboxItem
+                key={column.id}
+                className="capitalize"
+                checked={column.getIsVisible()}
+                onCheckedChange={(value) => column.toggleVisibility(!!value)}
+              >
+                {column.id}
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
         <Button onClick={() => setIsCreateOpen(true)}>
           <IconPlus />
           Add Category
@@ -354,38 +354,38 @@ export default function CategoriesPage() {
       </div>
 
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Create Category</DialogTitle>
-              <DialogDescription>Add a new category to organize your products.</DialogDescription>
-            </DialogHeader>
-            <CategoryForm onSave={handleCreate} onCancel={() => setIsCreateOpen(false)} />
-          </DialogContent>
-        </Dialog>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create Category</DialogTitle>
+            <DialogDescription>Add a new category to organize your products.</DialogDescription>
+          </DialogHeader>
+          <CategoryForm onSave={handleCreate} onCancel={() => setIsCreateOpen(false)} />
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!editingCategory} onOpenChange={() => setEditingCategory(null)}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Edit Category</DialogTitle>
-              <DialogDescription>Update category information.</DialogDescription>
-            </DialogHeader>
-            <CategoryForm category={editingCategory} onSave={handleUpdate} onCancel={() => setEditingCategory(null)} />
-          </DialogContent>
-        </Dialog>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Category</DialogTitle>
+            <DialogDescription>Update category information.</DialogDescription>
+          </DialogHeader>
+          <CategoryForm category={editingCategory} onSave={handleUpdate} onCancel={() => setEditingCategory(null)} />
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!deletingCategory} onOpenChange={() => setDeletingCategory(null)}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Delete Category</DialogTitle>
-              <DialogDescription>
-                Are you sure you want to delete "{deletingCategory?.name}"? Products in this category will become uncategorized.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setDeletingCategory(null)}>Cancel</Button>
-              <Button variant="destructive" onClick={handleDelete}>Delete</Button>
-            </DialogFooter>
-          </DialogContent>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Category</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete "{deletingCategory?.name}"? Products in this category will become uncategorized.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeletingCategory(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+          </DialogFooter>
+        </DialogContent>
       </Dialog>
     </div>
   )
