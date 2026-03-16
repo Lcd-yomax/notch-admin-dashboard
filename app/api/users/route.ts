@@ -1,9 +1,8 @@
-import { createClient } from "@/lib/supabase/server"
-import { createClient as createServiceClient } from "@supabase/supabase-js"
+import { createAdminClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 
 export async function GET() {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
   
   const { data, error } = await supabase
     .from("dashboard_users")
@@ -33,10 +32,7 @@ export async function GET() {
 export async function POST(request: Request) {
   const body = await request.json()
 
-  const supabaseAdmin = createServiceClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  )
+  const supabaseAdmin = createAdminClient()
 
   // 1. Create auth user
   const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
