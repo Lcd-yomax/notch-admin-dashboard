@@ -9,7 +9,12 @@ export async function GET() {
     .select(`
       id,
       title,
-      content,
+      body,
+      image_url,
+      cta_label,
+      cta_url,
+      starts_at,
+      ends_at,
       is_active,
       created_at,
       dashboard_users(full_name)
@@ -36,7 +41,12 @@ export async function POST(request: Request) {
     .from("announcements")
     .insert({
       title: body.title,
-      content: body.content,
+      body: body.body,
+      image_url: body.image_url || null,
+      cta_label: body.cta_label || null,
+      cta_url: body.cta_url || null,
+      starts_at: body.starts_at,
+      ends_at: body.ends_at,
       is_active: body.is_active,
     })
     .select()

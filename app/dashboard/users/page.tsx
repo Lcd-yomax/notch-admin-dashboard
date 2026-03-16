@@ -25,6 +25,7 @@ import {
   type VisibilityState,
 } from "@tanstack/react-table"
 import useSWR from "swr"
+import { TableSpinner } from "@/components/ui/spinner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -94,6 +95,7 @@ function UserForm({
   onCancel: () => void
 }) {
   const [email, setEmail] = React.useState(user?.email || "")
+  const [password, setPassword] = React.useState("")
   const [fullName, setFullName] = React.useState(user?.full_name || "")
   const [roleId, setRoleId] = React.useState(user?.role_id || "")
   const [isActive, setIsActive] = React.useState(user?.is_active ?? true)
@@ -102,6 +104,7 @@ function UserForm({
     e.preventDefault()
     onSave({
       email,
+      ...(!user && { password }),
       full_name: fullName || null,
       role_id: roleId || null,
       is_active: isActive,
@@ -122,6 +125,20 @@ function UserForm({
           disabled={!!user}
         />
       </div>
+      {!user && (
+        <div className="space-y-2">
+          <Label htmlFor="password">Password *</Label>
+          <Input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Min 6 characters"
+            required
+            minLength={6}
+          />
+        </div>
+      )}
       <div className="space-y-2">
         <Label htmlFor="fullName">Full Name</Label>
         <Input
@@ -157,7 +174,7 @@ function UserForm({
 }
 
 export default function UsersPage() {
-  const { data: users = [], mutate } = useSWR<User[]>("/api/users", fetcher)
+  const { data: users = [], mutate, isLoading } = useSWR<User[]>("/api/users", fetcher)
   const { data: roles = [] } = useSWR<Role[]>("/api/roles", fetcher)
   
   const [isCreateOpen, setIsCreateOpen] = React.useState(false)
@@ -359,6 +376,8 @@ export default function UsersPage() {
                       ))}
                     </TableRow>
                   ))
+                ) : isLoading ? (
+                  <TableSpinner colSpan={columns.length} />
                 ) : (
                   <TableRow>
                     <TableCell colSpan={columns.length} className="h-24 text-center">

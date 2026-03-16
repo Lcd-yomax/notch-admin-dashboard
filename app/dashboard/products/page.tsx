@@ -14,6 +14,7 @@ import {
   IconLayoutColumns,
   IconPlus,
   IconTrash,
+  IconUpload,
 } from "@tabler/icons-react"
 import {
   flexRender,
@@ -28,6 +29,9 @@ import {
   type VisibilityState,
 } from "@tanstack/react-table"
 import useSWR from "swr"
+import * as XLSX from "xlsx"
+import JSZip from "jszip"
+import { TableSpinner } from "@/components/ui/spinner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -78,6 +82,8 @@ interface Product {
   category_name: string | null
   thumbnail_url: string | null
   is_active: boolean
+  is_featured: boolean
+  is_best_seller: boolean
   created_at: string
   variations_count: number
 }
@@ -106,6 +112,8 @@ function ProductForm({
   const [categoryId, setCategoryId] = React.useState(product?.category_id || "")
   const [thumbnailUrl, setThumbnailUrl] = React.useState(product?.thumbnail_url || "")
   const [isActive, setIsActive] = React.useState(product?.is_active ?? true)
+  const [isFeatured, setIsFeatured] = React.useState(product?.is_featured ?? false)
+  const [isBestSeller, setIsBestSeller] = React.useState(product?.is_best_seller ?? false)
 
   const handleNameChange = (value: string) => {
     setName(value)
@@ -123,6 +131,8 @@ function ProductForm({
       category_id: categoryId || null,
       thumbnail_url: thumbnailUrl || null,
       is_active: isActive,
+      is_featured: isFeatured,
+      is_best_seller: isBestSeller,
     })
   }
 
@@ -191,6 +201,16 @@ function ProductForm({
         <Switch id="is_active" checked={isActive} onCheckedChange={setIsActive} />
         <Label htmlFor="is_active">Active</Label>
       </div>
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <Switch id="is_featured" checked={isFeatured} onCheckedChange={setIsFeatured} />
+          <Label htmlFor="is_featured">Featured</Label>
+        </div>
+        <div className="flex items-center gap-2">
+          <Switch id="is_best_seller" checked={isBestSeller} onCheckedChange={setIsBestSeller} />
+          <Label htmlFor="is_best_seller">Best Seller</Label>
+        </div>
+      </div>
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
@@ -203,12 +223,16 @@ function ProductForm({
 
 export default function ProductsPage() {
   const router = useRouter()
-  const { data: products = [], mutate } = useSWR<Product[]>("/api/products", fetcher)
+  const { data: products = [], mutate, isLoading } = useSWR<Product[]>("/api/products", fetcher)
   const { data: categories = [] } = useSWR<Category[]>("/api/categories", fetcher)
   
   const [isCreateOpen, setIsCreateOpen] = React.useState(false)
   const [editingProduct, setEditingProduct] = React.useState<Product | null>(null)
   const [deletingProduct, setDeletingProduct] = React.useState<Product | null>(null)
+  const [isImportOpen, setIsImportOpen] = React.useState(false)
+  const [importData, setImportData] = React.useState<{ name: string; category: string; description: string; imageBlob?: Blob; imagePreview?: string }[]>([])
+  const [isImporting, setIsImporting] = React.useState(false)
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
   
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
@@ -242,6 +266,134 @@ export default function ProductsPage() {
     await fetch(`/api/products/${deletingProduct.id}`, { method: "DELETE" })
     mutate()
     setDeletingProduct(null)
+  }
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const arrayBuffer = await file.arrayBuffer()
+
+    // Parse spreadsheet data
+    const workbook = XLSX.read(arrayBuffer, { type: "array" })
+    const sheet = workbook.Sheets[workbook.SheetNames[0]]
+    const rows = XLSX.utils.sheet_to_json<Record<string, string>>(sheet, { defval: "" })
+
+    const parsed = rows
+      .filter((row) => row["Model"] || row["model"])
+      .map((row) => ({
+        name: row["Model"] || row["model"] || "",
+        category: row["Product"] || row["product"] || "",
+        description: row["Specification"] || row["specification"] || "",
+      }))
+
+    // Fill down category for merged cells
+    let lastCategory = ""
+    for (const item of parsed) {
+      if (item.category) lastCategory = item.category
+      else item.category = lastCategory
+    }
+
+    // Extract images from the XLSX ZIP
+    const imageMap: Record<number, { blob: Blob; preview: string }> = {}
+    try {
+      const zip = await JSZip.loadAsync(arrayBuffer)
+
+      // Parse the drawing relationships to map images to rows
+      const drawingRelsFile = zip.file(/xl\/drawings\/_rels\/.*\.rels/)[0]
+      const drawingFile = zip.file(/xl\/drawings\/drawing.*\.xml/)[0]
+
+      if (drawingFile && drawingRelsFile) {
+        const drawingXml = await drawingFile.async("text")
+        const relsXml = await drawingRelsFile.async("text")
+
+        // Parse rels: map rId -> image file path
+        const rIdToFile: Record<string, string> = {}
+        const relMatches = relsXml.matchAll(/Id="(rId\d+)"[^>]*Target="([^"]+)"/g)
+        for (const m of relMatches) {
+          rIdToFile[m[1]] = m[2].replace("..", "xl")
+        }
+
+        // Parse drawing: map row number -> rId
+        // Each twoCellAnchor has <xdr:from><xdr:row>N</xdr:row> and <a:blip r:embed="rIdN">
+        const anchorRegex = /<xdr:twoCellAnchor[\s\S]*?<\/xdr:twoCellAnchor>/g
+        const anchors = drawingXml.match(anchorRegex) || []
+
+        for (const anchor of anchors) {
+          const rowMatch = anchor.match(/<xdr:from>[\s\S]*?<xdr:row>(\d+)<\/xdr:row>/)
+          const embedMatch = anchor.match(/r:embed="(rId\d+)"/)
+          if (rowMatch && embedMatch) {
+            const row = parseInt(rowMatch[1]) - 1 // Convert to 0-based data row (minus header)
+            const rId = embedMatch[1]
+            const imagePath = rIdToFile[rId]
+            if (imagePath) {
+              const imageFile = zip.file(imagePath)
+              if (imageFile) {
+                const imageData = await imageFile.async("arraybuffer")
+                const ext = imagePath.split(".").pop() || "png"
+                const blob = new Blob([new Uint8Array(imageData as ArrayBuffer)], { type: `image/${ext === "jpg" ? "jpeg" : ext}` })
+                const preview = URL.createObjectURL(blob)
+                imageMap[row] = { blob, preview }
+              }
+            }
+          }
+        }
+      }
+    } catch {
+      // Image extraction failed - continue without images
+    }
+
+    // Attach images to parsed product data
+    const withImages = parsed.map((item, i) => ({
+      ...item,
+      imageBlob: imageMap[i]?.blob,
+      imagePreview: imageMap[i]?.preview,
+    }))
+
+    setImportData(withImages)
+    setIsImportOpen(true)
+    e.target.value = ""
+  }
+
+  const handleImport = async () => {
+    setIsImporting(true)
+
+    // Upload images first and collect URLs
+    const productsWithUrls = await Promise.all(
+      importData.map(async (item) => {
+        let thumbnail_url: string | null = null
+        if (item.imageBlob) {
+          const formData = new FormData()
+          const ext = item.imageBlob.type.split("/")[1] || "png"
+          formData.append("file", item.imageBlob, `${item.name}.${ext}`)
+          const res = await fetch("/api/upload", { method: "POST", body: formData })
+          if (res.ok) {
+            const { url } = await res.json()
+            thumbnail_url = url
+          }
+        }
+        return {
+          name: item.name,
+          category: item.category,
+          description: item.description,
+          thumbnail_url,
+        }
+      })
+    )
+
+    await fetch("/api/products/import", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ products: productsWithUrls }),
+    })
+    mutate()
+    // Clean up blob URLs
+    importData.forEach((item) => {
+      if (item.imagePreview) URL.revokeObjectURL(item.imagePreview)
+    })
+    setIsImporting(false)
+    setIsImportOpen(false)
+    setImportData([])
   }
 
   const columns: ColumnDef<Product>[] = [
@@ -405,6 +557,17 @@ export default function ProductsPage() {
             <IconPlus />
             Add Product
           </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+          <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+            <IconUpload />
+            Import Excel
+          </Button>
         </PageHeader>
 
           <div className="overflow-hidden rounded-lg border">
@@ -431,6 +594,8 @@ export default function ProductsPage() {
                       ))}
                     </TableRow>
                   ))
+                ) : isLoading ? (
+                  <TableSpinner colSpan={columns.length} />
                 ) : (
                   <TableRow>
                     <TableCell colSpan={columns.length} className="h-24 text-center">
@@ -468,7 +633,6 @@ export default function ProductsPage() {
               </Button>
             </div>
           </div>
-        </div>
 
         {/* Create Dialog */}
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
@@ -504,6 +668,52 @@ export default function ProductsPage() {
             <DialogFooter>
               <Button variant="outline" onClick={() => setDeletingProduct(null)}>Cancel</Button>
               <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Import Preview Dialog */}
+        <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
+          <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+            <DialogHeader>
+              <DialogTitle>Import Products</DialogTitle>
+              <DialogDescription>{importData.length} product(s) found in the file</DialogDescription>
+            </DialogHeader>
+            <div className="overflow-auto flex-1 rounded-lg border">
+              <Table>
+                <TableHeader className="bg-muted">
+                  <TableRow>
+                    <TableHead className="w-12">#</TableHead>
+                    <TableHead className="w-16">Image</TableHead>
+                    <TableHead>Model (Name)</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Specification</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {importData.map((item, i) => (
+                    <TableRow key={i}>
+                      <TableCell className="text-muted-foreground">{i + 1}</TableCell>
+                      <TableCell>
+                        {item.imagePreview ? (
+                          <img src={item.imagePreview} alt={item.name} className="w-10 h-10 rounded object-cover" />
+                        ) : (
+                          <div className="w-10 h-10 rounded bg-muted flex items-center justify-center text-muted-foreground text-xs">—</div>
+                        )}
+                      </TableCell>
+                      <TableCell className="font-medium">{item.name}</TableCell>
+                      <TableCell>{item.category}</TableCell>
+                      <TableCell className="max-w-xs truncate text-sm text-muted-foreground">{item.description}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsImportOpen(false)}>Cancel</Button>
+              <Button onClick={handleImport} disabled={isImporting || importData.length === 0}>
+                {isImporting ? "Importing..." : `Import ${importData.length} Products`}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

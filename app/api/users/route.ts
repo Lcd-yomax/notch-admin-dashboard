@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { createClient as createServiceClient } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
 
 export async function GET() {
@@ -30,12 +31,30 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const supabase = await createClient()
   const body = await request.json()
 
-  const { data, error } = await supabase
+  const supabaseAdmin = createServiceClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  )
+
+  // 1. Create auth user
+  const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+    email: body.email,
+    password: body.password,
+    email_confirm: true,
+    user_metadata: { full_name: body.full_name },
+  })
+
+  if (authError) {
+    return NextResponse.json({ error: authError.message }, { status: 500 })
+  }
+
+  // 2. Insert dashboard_users row linked to the auth user
+  const { data, error } = await supabaseAdmin
     .from("dashboard_users")
     .insert({
+      id: authData.user.id,
       email: body.email,
       full_name: body.full_name,
       role_id: body.role_id,
@@ -45,6 +64,8 @@ export async function POST(request: Request) {
     .single()
 
   if (error) {
+    // Clean up: remove the auth user if dashboard insert fails
+    await supabaseAdmin.auth.admin.deleteUser(authData.user.id)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 

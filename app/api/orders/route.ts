@@ -8,10 +8,15 @@ export async function GET() {
     .from("orders")
     .select(`
       id,
-      customer_name,
-      customer_email,
+      order_number,
+      full_name,
+      email,
+      phone,
+      city,
+      address,
       status,
       total_amount,
+      notes,
       created_at,
       order_items(count)
     `)

@@ -26,6 +26,7 @@ import {
   type VisibilityState,
 } from "@tanstack/react-table"
 import useSWR from "swr"
+import { TableSpinner } from "@/components/ui/spinner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -63,7 +64,12 @@ import { PageHeader } from "@/components/page-header"
 interface Announcement {
   id: string
   title: string
-  content: string
+  body: string | null
+  image_url: string | null
+  cta_label: string | null
+  cta_url: string | null
+  starts_at: string
+  ends_at: string
   is_active: boolean
   created_at: string
   created_by_name: string | null
@@ -81,12 +87,20 @@ function AnnouncementForm({
   onCancel: () => void
 }) {
   const [title, setTitle] = React.useState(announcement?.title || "")
-  const [content, setContent] = React.useState(announcement?.content || "")
+  const [body, setBody] = React.useState(announcement?.body || "")
   const [isActive, setIsActive] = React.useState(announcement?.is_active ?? true)
+  const [startsAt, setStartsAt] = React.useState(announcement?.starts_at ? announcement.starts_at.slice(0, 16) : "")
+  const [endsAt, setEndsAt] = React.useState(announcement?.ends_at ? announcement.ends_at.slice(0, 16) : "")
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onSave({ title, content, is_active: isActive })
+    onSave({
+      title,
+      body,
+      starts_at: new Date(startsAt).toISOString(),
+      ends_at: new Date(endsAt).toISOString(),
+      is_active: isActive,
+    })
   }
 
   return (
@@ -102,15 +116,36 @@ function AnnouncementForm({
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="content">Content *</Label>
+        <Label htmlFor="body">Body</Label>
         <Textarea
-          id="content"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
+          id="body"
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
           placeholder="Write your announcement..."
           rows={5}
-          required
         />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="starts_at">Starts At *</Label>
+          <Input
+            id="starts_at"
+            type="datetime-local"
+            value={startsAt}
+            onChange={(e) => setStartsAt(e.target.value)}
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="ends_at">Ends At *</Label>
+          <Input
+            id="ends_at"
+            type="datetime-local"
+            value={endsAt}
+            onChange={(e) => setEndsAt(e.target.value)}
+            required
+          />
+        </div>
       </div>
       <div className="flex items-center gap-2">
         <Switch id="is_active" checked={isActive} onCheckedChange={setIsActive} />
@@ -125,7 +160,7 @@ function AnnouncementForm({
 }
 
 export default function AnnouncementsPage() {
-  const { data: announcements = [], mutate } = useSWR<Announcement[]>("/api/announcements", fetcher)
+  const { data: announcements = [], mutate, isLoading } = useSWR<Announcement[]>("/api/announcements", fetcher)
   
   const [isCreateOpen, setIsCreateOpen] = React.useState(false)
   const [editingAnnouncement, setEditingAnnouncement] = React.useState<Announcement | null>(null)
@@ -196,7 +231,7 @@ export default function AnnouncementsPage() {
         <div>
           <div className="font-medium">{row.original.title}</div>
           <div className="text-xs text-muted-foreground max-w-xs truncate">
-            {row.original.content}
+            {row.original.body}
           </div>
         </div>
       ),
@@ -306,7 +341,6 @@ export default function AnnouncementsPage() {
             Create Announcement
           </Button>
         </PageHeader>
-          </div>
 
           <div className="overflow-hidden rounded-lg border">
             <Table>
@@ -332,6 +366,8 @@ export default function AnnouncementsPage() {
                       ))}
                     </TableRow>
                   ))
+                ) : isLoading ? (
+                  <TableSpinner colSpan={columns.length} />
                 ) : (
                   <TableRow>
                     <TableCell colSpan={columns.length} className="h-24 text-center">
@@ -369,7 +405,6 @@ export default function AnnouncementsPage() {
               </Button>
             </div>
           </div>
-        </div>
 
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogContent className="sm:max-w-lg">
@@ -400,7 +435,7 @@ export default function AnnouncementsPage() {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
-              <div className="whitespace-pre-wrap">{viewingAnnouncement?.content}</div>
+              <div className="whitespace-pre-wrap">{viewingAnnouncement?.body}</div>
               <div className="flex items-center gap-2">
                 <Badge variant={viewingAnnouncement?.is_active ? "default" : "secondary"}>
                   {viewingAnnouncement?.is_active ? "Active" : "Inactive"}

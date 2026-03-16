@@ -25,6 +25,7 @@ import {
   type VisibilityState,
 } from "@tanstack/react-table"
 import useSWR from "swr"
+import { TableSpinner } from "@/components/ui/spinner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -61,6 +62,7 @@ interface Category {
   id: string
   name: string
   slug: string
+  image_url: string | null
   created_at: string
   products_count: number
 }
@@ -78,6 +80,7 @@ function CategoryForm({
 }) {
   const [name, setName] = React.useState(category?.name || "")
   const [slug, setSlug] = React.useState(category?.slug || "")
+  const [imageUrl, setImageUrl] = React.useState(category?.image_url || "")
 
   const handleNameChange = (value: string) => {
     setName(value)
@@ -88,7 +91,7 @@ function CategoryForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onSave({ name, slug })
+    onSave({ name, slug, image_url: imageUrl || null })
   }
 
   return (
@@ -113,6 +116,15 @@ function CategoryForm({
           required
         />
       </div>
+      <div className="space-y-2">
+        <Label htmlFor="image_url">Image URL</Label>
+        <Input
+          id="image_url"
+          value={imageUrl}
+          onChange={(e) => setImageUrl(e.target.value)}
+          placeholder="https://example.com/image.jpg"
+        />
+      </div>
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
         <Button type="submit">{category ? "Update" : "Create"} Category</Button>
@@ -122,7 +134,7 @@ function CategoryForm({
 }
 
 export default function CategoriesPage() {
-  const { data: categories = [], mutate } = useSWR<Category[]>("/api/categories", fetcher)
+  const { data: categories = [], mutate, isLoading } = useSWR<Category[]>("/api/categories", fetcher)
   
   const [isCreateOpen, setIsCreateOpen] = React.useState(false)
   const [editingCategory, setEditingCategory] = React.useState<Category | null>(null)
@@ -314,6 +326,8 @@ export default function CategoriesPage() {
                       ))}
                     </TableRow>
                   ))
+                ) : isLoading ? (
+                  <TableSpinner colSpan={columns.length} />
                 ) : (
                   <TableRow>
                     <TableCell colSpan={columns.length} className="h-24 text-center">
@@ -351,7 +365,6 @@ export default function CategoriesPage() {
               </Button>
             </div>
           </div>
-        </div>
 
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogContent className="sm:max-w-md">

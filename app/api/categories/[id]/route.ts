@@ -11,7 +11,7 @@ export async function PUT(
 
   const { data, error } = await supabase
     .from("categories")
-    .update({ name: body.name, slug: body.slug })
+    .update({ name: body.name, slug: body.slug, image_url: body.image_url })
     .eq("id", id)
     .select()
     .single()

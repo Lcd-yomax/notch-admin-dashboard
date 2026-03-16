@@ -43,6 +43,8 @@ export async function PUT(
       category_id: body.category_id,
       thumbnail_url: body.thumbnail_url,
       is_active: body.is_active,
+      is_featured: body.is_featured,
+      is_best_seller: body.is_best_seller,
     })
     .eq("id", id)
     .select()

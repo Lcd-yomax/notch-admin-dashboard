@@ -9,9 +9,12 @@ export async function GET() {
     .select(`
       id,
       product_id,
-      customer_name,
-      rating,
+      full_name,
+      email,
+      stars,
       comment,
+      image_url,
+      is_approved,
       created_at,
       products(name)
     `)

@@ -14,6 +14,8 @@ export async function GET() {
       category_id,
       thumbnail_url,
       is_active,
+      is_featured,
+      is_best_seller,
       created_at,
       categories(name),
       product_variations(count)
@@ -46,6 +48,8 @@ export async function POST(request: Request) {
       category_id: body.category_id,
       thumbnail_url: body.thumbnail_url,
       is_active: body.is_active,
+      is_featured: body.is_featured ?? false,
+      is_best_seller: body.is_best_seller ?? false,
     })
     .select()
     .single()
