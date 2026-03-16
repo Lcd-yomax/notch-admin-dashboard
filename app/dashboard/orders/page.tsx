@@ -24,6 +24,7 @@ import {
   type VisibilityState,
 } from "@tanstack/react-table"
 import useSWR from "swr"
+import { TableSpinner } from "@/components/ui/spinner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -64,10 +65,15 @@ import { PageHeader } from "@/components/page-header"
 
 interface Order {
   id: string
-  customer_name: string
-  customer_email: string
+  order_number: string
+  full_name: string
+  email: string | null
+  phone: string | null
+  city: string
+  address: string
   status: "pending" | "processing" | "shipped" | "delivered" | "cancelled"
   total_amount: number
+  notes: string | null
   created_at: string
   items_count: number
 }
@@ -124,7 +130,7 @@ function OrderStatusForm({
 }
 
 export default function OrdersPage() {
-  const { data: orders = [], mutate } = useSWR<Order[]>("/api/orders", fetcher)
+  const { data: orders = [], mutate, isLoading } = useSWR<Order[]>("/api/orders", fetcher)
   
   const [editingOrder, setEditingOrder] = React.useState<Order | null>(null)
   const [viewingOrder, setViewingOrder] = React.useState<Order | null>(null)
@@ -170,20 +176,20 @@ export default function OrdersPage() {
       enableHiding: false,
     },
     {
-      accessorKey: "id",
-      header: "Order ID",
+      accessorKey: "order_number",
+      header: "Order",
       cell: ({ row }) => (
-        <span className="font-mono text-sm">#{row.original.id.slice(0, 8)}</span>
+        <span className="font-mono text-sm">{row.original.order_number}</span>
       ),
       enableHiding: false,
     },
     {
-      accessorKey: "customer_name",
+      accessorKey: "full_name",
       header: "Customer",
       cell: ({ row }) => (
         <div>
-          <div className="font-medium">{row.original.customer_name}</div>
-          <div className="text-xs text-muted-foreground">{row.original.customer_email}</div>
+          <div className="font-medium">{row.original.full_name}</div>
+          {row.original.email && <div className="text-xs text-muted-foreground">{row.original.email}</div>}
         </div>
       ),
     },
@@ -312,6 +318,8 @@ export default function OrdersPage() {
                       ))}
                     </TableRow>
                   ))
+                ) : isLoading ? (
+                  <TableSpinner colSpan={columns.length} />
                 ) : (
                   <TableRow>
                     <TableCell colSpan={columns.length} className="h-24 text-center">
@@ -348,13 +356,12 @@ export default function OrdersPage() {
               </Button>
             </div>
           </div>
-        </div>
 
         <Dialog open={!!editingOrder} onOpenChange={() => setEditingOrder(null)}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Update Order Status</DialogTitle>
-              <DialogDescription>Change the status of order #{editingOrder?.id.slice(0, 8)}</DialogDescription>
+              <DialogDescription>Change the status of order {editingOrder?.order_number}</DialogDescription>
             </DialogHeader>
             {editingOrder && <OrderStatusForm order={editingOrder} onSave={handleUpdateStatus} onCancel={() => setEditingOrder(null)} />}
           </DialogContent>
@@ -364,15 +371,16 @@ export default function OrdersPage() {
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>Order Details</DialogTitle>
-              <DialogDescription>Order #{viewingOrder?.id.slice(0, 8)}</DialogDescription>
+              <DialogDescription>Order {viewingOrder?.order_number}</DialogDescription>
             </DialogHeader>
             {viewingOrder && (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-muted-foreground">Customer</Label>
-                    <p className="font-medium">{viewingOrder.customer_name}</p>
-                    <p className="text-sm text-muted-foreground">{viewingOrder.customer_email}</p>
+                    <p className="font-medium">{viewingOrder.full_name}</p>
+                    {viewingOrder.email && <p className="text-sm text-muted-foreground">{viewingOrder.email}</p>}
+                    {viewingOrder.phone && <p className="text-sm text-muted-foreground">{viewingOrder.phone}</p>}
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Status</Label>
@@ -383,6 +391,11 @@ export default function OrdersPage() {
                     </div>
                   </div>
                   <div>
+                    <Label className="text-muted-foreground">Shipping</Label>
+                    <p className="font-medium">{viewingOrder.city}</p>
+                    <p className="text-sm text-muted-foreground">{viewingOrder.address}</p>
+                  </div>
+                  <div>
                     <Label className="text-muted-foreground">Total</Label>
                     <p className="text-lg font-semibold">${viewingOrder.total_amount.toFixed(2)}</p>
                   </div>
@@ -390,6 +403,12 @@ export default function OrdersPage() {
                     <Label className="text-muted-foreground">Date</Label>
                     <p>{new Date(viewingOrder.created_at).toLocaleString()}</p>
                   </div>
+                  {viewingOrder.notes && (
+                    <div className="col-span-2">
+                      <Label className="text-muted-foreground">Notes</Label>
+                      <p className="text-sm">{viewingOrder.notes}</p>
+                    </div>
+                  )}
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setViewingOrder(null)}>Close</Button>

@@ -10,6 +10,7 @@ export async function GET() {
       id,
       name,
       slug,
+      image_url,
       created_at,
       products(count)
     `)
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
 
   const { data, error } = await supabase
     .from("categories")
-    .insert({ name: body.name, slug: body.slug })
+    .insert({ name: body.name, slug: body.slug, image_url: body.image_url || null })
     .select()
     .single()
 

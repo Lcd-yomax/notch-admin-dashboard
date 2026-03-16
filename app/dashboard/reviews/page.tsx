@@ -26,6 +26,7 @@ import {
   type VisibilityState,
 } from "@tanstack/react-table"
 import useSWR from "swr"
+import { TableSpinner } from "@/components/ui/spinner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -61,19 +62,22 @@ interface Review {
   id: string
   product_id: string
   product_name: string
-  customer_name: string
-  rating: number
+  full_name: string
+  email: string
+  stars: number
   comment: string | null
+  image_url: string | null
+  is_approved: boolean
   created_at: string
 }
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
-function StarRating({ rating }: { rating: number }) {
+function StarRating({ stars }: { stars: number }) {
   return (
     <div className="flex items-center gap-0.5">
       {[1, 2, 3, 4, 5].map((star) => (
-        star <= rating ? (
+        star <= stars ? (
           <IconStarFilled key={star} className="size-4 text-yellow-500" />
         ) : (
           <IconStar key={star} className="size-4 text-muted-foreground/30" />
@@ -84,7 +88,7 @@ function StarRating({ rating }: { rating: number }) {
 }
 
 export default function ReviewsPage() {
-  const { data: reviews = [], mutate } = useSWR<Review[]>("/api/reviews", fetcher)
+  const { data: reviews = [], mutate, isLoading } = useSWR<Review[]>("/api/reviews", fetcher)
   
   const [viewingReview, setViewingReview] = React.useState<Review | null>(null)
   const [deletingReview, setDeletingReview] = React.useState<Review | null>(null)
@@ -134,14 +138,19 @@ export default function ReviewsPage() {
       enableHiding: false,
     },
     {
-      accessorKey: "customer_name",
+      accessorKey: "full_name",
       header: "Customer",
-      cell: ({ row }) => row.original.customer_name,
+      cell: ({ row }) => (
+        <div>
+          <div>{row.original.full_name}</div>
+          <div className="text-xs text-muted-foreground">{row.original.email}</div>
+        </div>
+      ),
     },
     {
-      accessorKey: "rating",
+      accessorKey: "stars",
       header: "Rating",
-      cell: ({ row }) => <StarRating rating={row.original.rating} />,
+      cell: ({ row }) => <StarRating stars={row.original.stars} />,
     },
     {
       accessorKey: "comment",
@@ -150,6 +159,15 @@ export default function ReviewsPage() {
         <div className="max-w-xs truncate text-muted-foreground">
           {row.original.comment || "No comment"}
         </div>
+      ),
+    },
+    {
+      accessorKey: "is_approved",
+      header: "Status",
+      cell: ({ row }) => (
+        <Badge variant={row.original.is_approved ? "default" : "outline"}>
+          {row.original.is_approved ? "Approved" : "Pending"}
+        </Badge>
       ),
     },
     {
@@ -259,6 +277,8 @@ export default function ReviewsPage() {
                       ))}
                     </TableRow>
                   ))
+                ) : isLoading ? (
+                  <TableSpinner colSpan={columns.length} />
                 ) : (
                   <TableRow>
                     <TableCell colSpan={columns.length} className="h-24 text-center">
@@ -295,7 +315,6 @@ export default function ReviewsPage() {
               </Button>
             </div>
           </div>
-        </div>
 
         <Dialog open={!!viewingReview} onOpenChange={() => setViewingReview(null)}>
           <DialogContent className="sm:max-w-lg">
@@ -308,12 +327,21 @@ export default function ReviewsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label className="text-muted-foreground">Customer</Label>
-                    <p className="font-medium">{viewingReview.customer_name}</p>
+                    <p className="font-medium">{viewingReview.full_name}</p>
+                    <p className="text-sm text-muted-foreground">{viewingReview.email}</p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Rating</Label>
                     <div className="mt-1">
-                      <StarRating rating={viewingReview.rating} />
+                      <StarRating stars={viewingReview.stars} />
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Status</Label>
+                    <div className="mt-1">
+                      <Badge variant={viewingReview.is_approved ? "default" : "outline"}>
+                        {viewingReview.is_approved ? "Approved" : "Pending"}
+                      </Badge>
                     </div>
                   </div>
                 </div>
@@ -338,7 +366,7 @@ export default function ReviewsPage() {
             <DialogHeader>
               <DialogTitle>Delete Review</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete this review from {deletingReview?.customer_name}?
+                Are you sure you want to delete this review from {deletingReview?.full_name}?
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>

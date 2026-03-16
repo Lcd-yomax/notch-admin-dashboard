@@ -26,6 +26,7 @@ import {
   type VisibilityState,
 } from "@tanstack/react-table"
 import useSWR from "swr"
+import { TableSpinner } from "@/components/ui/spinner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -119,7 +120,7 @@ function RoleForm({
 }
 
 export default function RolesPage() {
-  const { data: roles = [], mutate } = useSWR<Role[]>("/api/roles", fetcher)
+  const { data: roles = [], mutate, isLoading } = useSWR<Role[]>("/api/roles", fetcher)
   
   const [isCreateOpen, setIsCreateOpen] = React.useState(false)
   const [editingRole, setEditingRole] = React.useState<Role | null>(null)
@@ -327,6 +328,8 @@ export default function RolesPage() {
                   ))}
                 </TableRow>
               ))
+            ) : isLoading ? (
+              <TableSpinner colSpan={columns.length} />
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">

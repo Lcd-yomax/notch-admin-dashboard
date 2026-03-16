@@ -13,7 +13,12 @@ export async function PUT(
     .from("announcements")
     .update({
       title: body.title,
-      content: body.content,
+      body: body.body,
+      image_url: body.image_url,
+      cta_label: body.cta_label,
+      cta_url: body.cta_url,
+      starts_at: body.starts_at,
+      ends_at: body.ends_at,
       is_active: body.is_active,
     })
     .eq("id", id)
