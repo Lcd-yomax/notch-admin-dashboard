@@ -1,11 +1,8 @@
-import { createClient } from "@supabase/supabase-js"
+import { createAdminClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 
 export async function POST(request: Request) {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
+  const supabase = createAdminClient()
 
   const formData = await request.formData()
   const file = formData.get("file") as File | null

@@ -86,6 +86,15 @@ interface Product {
   is_best_seller: boolean
   created_at: string
   variations_count: number
+  product_images?: ProductImage[]
+}
+
+interface ProductImage {
+  id: string
+  url: string
+  alt_text: string | null
+  sort_order: number
+  is_primary: boolean
 }
 
 interface Category {
@@ -103,17 +112,22 @@ function ProductForm({
 }: {
   product?: Product | null
   categories: Category[]
-  onSave: (data: Partial<Product>) => void
+  onSave: (data: Partial<Product> & { images?: File[]; existingImages?: ProductImage[] }) => void
   onCancel: () => void
 }) {
   const [name, setName] = React.useState(product?.name || "")
   const [slug, setSlug] = React.useState(product?.slug || "")
   const [description, setDescription] = React.useState(product?.description || "")
   const [categoryId, setCategoryId] = React.useState(product?.category_id || "")
-  const [thumbnailUrl, setThumbnailUrl] = React.useState(product?.thumbnail_url || "")
   const [isActive, setIsActive] = React.useState(product?.is_active ?? true)
   const [isFeatured, setIsFeatured] = React.useState(product?.is_featured ?? false)
   const [isBestSeller, setIsBestSeller] = React.useState(product?.is_best_seller ?? false)
+
+  // Image state
+  const [newFiles, setNewFiles] = React.useState<File[]>([])
+  const [newPreviews, setNewPreviews] = React.useState<string[]>([])
+  const [existingImages, setExistingImages] = React.useState<ProductImage[]>(product?.product_images || [])
+  const imageInputRef = React.useRef<HTMLInputElement>(null)
 
   const handleNameChange = (value: string) => {
     setName(value)
@@ -122,6 +136,30 @@ function ProductForm({
     }
   }
 
+  const handleAddFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    if (files.length === 0) return
+    setNewFiles((prev) => [...prev, ...files])
+    setNewPreviews((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))])
+    e.target.value = ""
+  }
+
+  const removeNewFile = (index: number) => {
+    URL.revokeObjectURL(newPreviews[index])
+    setNewFiles((prev) => prev.filter((_, i) => i !== index))
+    setNewPreviews((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const removeExistingImage = (id: string) => {
+    setExistingImages((prev) => prev.filter((img) => img.id !== id))
+  }
+
+  React.useEffect(() => {
+    return () => {
+      newPreviews.forEach((url) => URL.revokeObjectURL(url))
+    }
+  }, [])
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     onSave({
@@ -129,10 +167,12 @@ function ProductForm({
       slug,
       description: description || null,
       category_id: categoryId || null,
-      thumbnail_url: thumbnailUrl || null,
+      thumbnail_url: null,
       is_active: isActive,
       is_featured: isFeatured,
       is_best_seller: isBestSeller,
+      images: newFiles,
+      existingImages,
     })
   }
 
@@ -170,32 +210,67 @@ function ProductForm({
           rows={3}
         />
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="category">Category</Label>
-          <Select value={categoryId || "none"} onValueChange={(val) => setCategoryId(val === "none" ? "" : val)}>
-            <SelectTrigger id="category">
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="none">No category</SelectItem>
-              {categories.map((cat) => (
-                <SelectItem key={cat.id} value={cat.id}>
-                  {cat.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <div className="space-y-2">
+        <Label htmlFor="category">Category</Label>
+        <Select value={categoryId || "none"} onValueChange={(val) => setCategoryId(val === "none" ? "" : val)}>
+          <SelectTrigger id="category">
+            <SelectValue placeholder="Select category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">No category</SelectItem>
+            {categories.map((cat) => (
+              <SelectItem key={cat.id} value={cat.id}>
+                {cat.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      {/* Multi-image upload */}
+      <div className="space-y-2">
+        <Label>Product Images</Label>
+        <div className="flex flex-wrap gap-3">
+          {existingImages.map((img) => (
+            <div key={img.id} className="group relative size-20 rounded-lg border overflow-hidden">
+              <img src={img.url} alt={img.alt_text || ""} className="size-full object-cover" />
+              <button
+                type="button"
+                onClick={() => removeExistingImage(img.id)}
+                className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <IconTrash className="size-4 text-white" />
+              </button>
+            </div>
+          ))}
+          {newPreviews.map((src, i) => (
+            <div key={`new-${i}`} className="group relative size-20 rounded-lg border overflow-hidden">
+              <img src={src} alt="" className="size-full object-cover" />
+              <button
+                type="button"
+                onClick={() => removeNewFile(i)}
+                className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <IconTrash className="size-4 text-white" />
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => imageInputRef.current?.click()}
+            className="flex size-20 flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-muted-foreground/25 text-muted-foreground hover:border-muted-foreground/50 hover:text-foreground transition-colors"
+          >
+            <IconPlus className="size-5" />
+            <span className="text-[10px]">Add</span>
+          </button>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="thumbnail">Thumbnail URL</Label>
-          <Input
-            id="thumbnail"
-            value={thumbnailUrl}
-            onChange={(e) => setThumbnailUrl(e.target.value)}
-            placeholder="https://..."
-          />
-        </div>
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={handleAddFiles}
+        />
       </div>
       <div className="flex items-center gap-2">
         <Switch id="is_active" checked={isActive} onCheckedChange={setIsActive} />
@@ -240,23 +315,78 @@ export default function ProductsPage() {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
 
-  const handleCreate = async (data: Partial<Product>) => {
-    await fetch("/api/products", {
+  const uploadImages = async (files: File[]): Promise<string[]> => {
+    const urls: string[] = []
+    for (const file of files) {
+      const formData = new FormData()
+      formData.append("file", file)
+      const res = await fetch("/api/upload", { method: "POST", body: formData })
+      if (res.ok) {
+        const { url } = await res.json()
+        urls.push(url)
+      }
+    }
+    return urls
+  }
+
+  const handleCreate = async (data: Partial<Product> & { images?: File[]; existingImages?: ProductImage[] }) => {
+    const { images, existingImages, ...productData } = data
+
+    // Upload new images first
+    const imageUrls = images?.length ? await uploadImages(images) : []
+
+    // Set thumbnail to first image if available
+    if (imageUrls.length > 0) {
+      productData.thumbnail_url = imageUrls[0]
+    }
+
+    const res = await fetch("/api/products", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify(productData),
     })
+    const created = await res.json()
+
+    // Save images to product_images table
+    if (created.id && imageUrls.length > 0) {
+      await fetch(`/api/products/${created.id}/images`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ urls: imageUrls }),
+      })
+    }
+
     mutate()
     setIsCreateOpen(false)
   }
 
-  const handleUpdate = async (data: Partial<Product>) => {
+  const handleUpdate = async (data: Partial<Product> & { images?: File[]; existingImages?: ProductImage[] }) => {
     if (!editingProduct) return
+    const { images, existingImages, ...productData } = data
+
+    // Upload new images
+    const newImageUrls = images?.length ? await uploadImages(images) : []
+
+    // Set thumbnail: first existing image, or first new image
+    const firstExisting = existingImages?.[0]?.url
+    productData.thumbnail_url = firstExisting || newImageUrls[0] || null
+
     await fetch(`/api/products/${editingProduct.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify(productData),
     })
+
+    // Sync images: send existing IDs to keep + new URLs to add
+    await fetch(`/api/products/${editingProduct.id}/images`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        keepIds: existingImages?.map((img) => img.id) || [],
+        newUrls: newImageUrls,
+      }),
+    })
+
     mutate()
     setEditingProduct(null)
   }
@@ -487,7 +617,11 @@ export default function ProductsPage() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-32">
-            <DropdownMenuItem onClick={() => setEditingProduct(row.original)}>
+            <DropdownMenuItem onClick={async () => {
+              const res = await fetch(`/api/products/${row.original.id}`)
+              const full = await res.json()
+              setEditingProduct({ ...row.original, product_images: full.product_images || [] })
+            }}>
               <IconEdit className="mr-2 size-4" />
               Edit
             </DropdownMenuItem>
@@ -636,7 +770,7 @@ export default function ProductsPage() {
 
         {/* Create Dialog */}
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create Product</DialogTitle>
               <DialogDescription>Add a new product to your catalog.</DialogDescription>
@@ -647,7 +781,7 @@ export default function ProductsPage() {
 
         {/* Edit Dialog */}
         <Dialog open={!!editingProduct} onOpenChange={() => setEditingProduct(null)}>
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Edit Product</DialogTitle>
               <DialogDescription>Update product information.</DialogDescription>

@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 
 import {
   IconBox,
@@ -110,10 +111,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:p-1.5!"
             >
-              <a href="/dashboard">
+              <Link href="/dashboard">
                 <IconPackage className="size-5!" />
                 <span className="text-base font-semibold">E-Commerce Admin</span>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
