@@ -33,23 +33,30 @@ export async function POST(
   return NextResponse.json(data)
 }
 
-// PUT: Sync images for a product (used on edit)
+// PUT: Sync images for a product or variation
 // - keepIds: existing image IDs to keep
 // - newUrls: new image URLs to add
+// - variationId: (optional) if set, scope images to this variation
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
   const supabase = createAdminClient()
-  const { keepIds, newUrls } = await request.json()
+  const { keepIds, newUrls, variationId } = await request.json()
+
+  // Build base query scoped to product (and optionally variation)
+  const scopeQuery = (query: ReturnType<typeof supabase.from>) => {
+    const q = query.eq("product_id", id)
+    if (variationId) return q.eq("variation_id", variationId)
+    return q.is("variation_id", null)
+  }
 
   // Delete images that are no longer kept
   if (Array.isArray(keepIds)) {
-    const { data: existing } = await supabase
-      .from("product_images")
-      .select("id")
-      .eq("product_id", id)
+    const { data: existing } = await scopeQuery(
+      supabase.from("product_images").select("id")
+    )
 
     const toDelete = (existing || [])
       .filter((img) => !keepIds.includes(img.id))
@@ -78,6 +85,7 @@ export async function PUT(
 
     const rows = newUrls.map((url: string, i: number) => ({
       product_id: id,
+      variation_id: variationId || null,
       url,
       sort_order: nextOrder + i,
       is_primary: !hasExisting && i === 0,
