@@ -73,6 +73,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { PageHeader } from "@/components/page-header"
 import { usePermissions } from "@/hooks/use-permissions"
+import { RichTextEditor } from "@/components/rich-text-editor"
 
 interface Product {
   id: string
@@ -202,13 +203,11 @@ function ProductForm({
         </div>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
-        <Textarea
-          id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
+        <Label>Description</Label>
+        <RichTextEditor
+          content={description}
+          onChange={setDescription}
           placeholder="Enter product description"
-          rows={3}
         />
       </div>
       <div className="space-y-2">

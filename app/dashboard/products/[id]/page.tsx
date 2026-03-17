@@ -466,7 +466,10 @@ export default function ProductDetailPage({
                 </div>
                 {product.description && (
                   <div className="pt-2 border-t">
-                    <p className="text-sm text-muted-foreground">{product.description}</p>
+                    <div
+                      className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground"
+                      dangerouslySetInnerHTML={{ __html: product.description }}
+                    />
                   </div>
                 )}
               </CardContent>
