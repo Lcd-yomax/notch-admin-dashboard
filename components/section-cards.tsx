@@ -1,3 +1,6 @@
+"use client"
+
+import { useTranslations } from "next-intl"
 import { IconBox, IconShoppingCart, IconStar, IconUsers } from "@tabler/icons-react"
 
 import {
@@ -9,13 +12,15 @@ import {
 } from '@/components/ui/card'
 
 export function SectionCards() {
+  const t = useTranslations("cards")
+
   return (
     <div className="grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4 dark:*:data-[slot=card]:bg-card">
       <Card className="@container/card">
         <CardHeader>
           <CardDescription className="flex items-center gap-2">
             <IconShoppingCart className="size-4" />
-            Total Orders
+            {t("totalOrders")}
           </CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             0
@@ -23,7 +28,7 @@ export function SectionCards() {
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="text-muted-foreground">
-            No orders yet
+            {t("noOrders")}
           </div>
         </CardFooter>
       </Card>
@@ -31,7 +36,7 @@ export function SectionCards() {
         <CardHeader>
           <CardDescription className="flex items-center gap-2">
             <IconBox className="size-4" />
-            Products
+            {t("products")}
           </CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             0
@@ -39,7 +44,7 @@ export function SectionCards() {
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="text-muted-foreground">
-            No products in catalog
+            {t("noProducts")}
           </div>
         </CardFooter>
       </Card>
@@ -47,7 +52,7 @@ export function SectionCards() {
         <CardHeader>
           <CardDescription className="flex items-center gap-2">
             <IconStar className="size-4" />
-            Reviews
+            {t("reviews")}
           </CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             0
@@ -55,7 +60,7 @@ export function SectionCards() {
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="text-muted-foreground">
-            No customer reviews
+            {t("noReviews")}
           </div>
         </CardFooter>
       </Card>
@@ -63,7 +68,7 @@ export function SectionCards() {
         <CardHeader>
           <CardDescription className="flex items-center gap-2">
             <IconUsers className="size-4" />
-            Admin Users
+            {t("adminUsers")}
           </CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             0
@@ -71,7 +76,7 @@ export function SectionCards() {
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="text-muted-foreground">
-            3 roles configured
+            {t("rolesConfigured", { count: 3 })}
           </div>
         </CardFooter>
       </Card>

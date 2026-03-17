@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useTranslations } from "next-intl"
 import {
   IconChevronDown,
   IconChevronLeft,
@@ -79,6 +80,8 @@ function CategoryForm({
   onSave: (data: Partial<Category>) => void
   onCancel: () => void
 }) {
+  const t = useTranslations("categories")
+  const tc = useTranslations("common")
   const [name, setName] = React.useState(category?.name || "")
   const [slug, setSlug] = React.useState(category?.slug || "")
   const [imageUrl, setImageUrl] = React.useState(category?.image_url || "")
@@ -98,37 +101,37 @@ function CategoryForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="name">Category Name *</Label>
+        <Label htmlFor="name">{t("categoryName")} *</Label>
         <Input
           id="name"
           value={name}
           onChange={(e) => handleNameChange(e.target.value)}
-          placeholder="Enter category name"
+          placeholder={t("enterCategoryName")}
           required
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="slug">Slug *</Label>
+        <Label htmlFor="slug">{t("categorySlug")} *</Label>
         <Input
           id="slug"
           value={slug}
           onChange={(e) => setSlug(e.target.value)}
-          placeholder="category-slug"
+          placeholder={t("categorySlug")}
           required
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="image_url">Image URL</Label>
+        <Label htmlFor="image_url">{t("imageUrl")}</Label>
         <Input
           id="image_url"
           value={imageUrl}
           onChange={(e) => setImageUrl(e.target.value)}
-          placeholder="https://example.com/image.jpg"
+          placeholder={t("imageUrlPlaceholder")}
         />
       </div>
       <DialogFooter>
-        <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-        <Button type="submit">{category ? "Update" : "Create"} Category</Button>
+        <Button type="button" variant="outline" onClick={onCancel}>{tc("cancel")}</Button>
+        <Button type="submit">{category ? t("updateCategory") : t("createCategory")}</Button>
       </DialogFooter>
     </form>
   )
@@ -136,6 +139,8 @@ function CategoryForm({
 
 export default function CategoriesPage() {
   const { hasPermission } = usePermissions()
+  const t = useTranslations("categories")
+  const tc = useTranslations("common")
   const { data: categories = [], mutate, isLoading } = useSWR<Category[]>("/api/categories", fetcher)
   
   const [isCreateOpen, setIsCreateOpen] = React.useState(false)
@@ -202,7 +207,7 @@ export default function CategoriesPage() {
     },
     {
       accessorKey: "name",
-      header: "Category Name",
+      header: t("categoryName"),
       cell: ({ row }) => (
         <div>
           <div className="font-medium">{row.original.name}</div>
@@ -213,14 +218,14 @@ export default function CategoriesPage() {
     },
     {
       accessorKey: "products_count",
-      header: "Products",
+      header: t("productsCount"),
       cell: ({ row }) => (
         <Badge variant="secondary">{row.original.products_count} products</Badge>
       ),
     },
     {
       accessorKey: "created_at",
-      header: "Created",
+      header: tc("created"),
       cell: ({ row }) => (
         <div className="text-muted-foreground">
           {new Date(row.original.created_at).toLocaleDateString()}
@@ -241,7 +246,7 @@ export default function CategoriesPage() {
             {hasPermission("products:write") && (
               <DropdownMenuItem onClick={() => setEditingCategory(row.original)}>
                 <IconEdit className="mr-2 size-4" />
-                Edit
+                {tc("edit")}
               </DropdownMenuItem>
             )}
             {hasPermission("products:delete") && (
@@ -252,7 +257,7 @@ export default function CategoriesPage() {
                   className="text-destructive focus:text-destructive"
                 >
                   <IconTrash className="mr-2 size-4" />
-                  Delete
+                  {tc("delete")}
                 </DropdownMenuItem>
               </>
             )}
@@ -289,14 +294,14 @@ export default function CategoriesPage() {
   return (
     <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 px-4 lg:px-6">
       <PageHeader
-        title="Categories"
-        description="Organize your products into categories"
+        title={t("title")}
+        description={t("description")}
       >
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">
                     <IconLayoutColumns />
-                    Columns
+                    {tc("columns")}
                     <IconChevronDown />
                   </Button>
                 </DropdownMenuTrigger>
@@ -316,14 +321,14 @@ export default function CategoriesPage() {
         {hasPermission("products:write") && (
           <Button onClick={() => setIsCreateOpen(true)}>
             <IconPlus />
-            Add Category
+            {t("addCategory")}
           </Button>
         )}
       </PageHeader>
 
           <div className="flex items-center gap-2">
             <Input
-              placeholder="Search categories..."
+              placeholder={t("searchCategories")}
               value={globalFilter}
               onChange={(e) => setGlobalFilter(e.target.value)}
               className="max-w-sm"
@@ -360,11 +365,11 @@ export default function CategoriesPage() {
                   <TableRow>
                     <TableCell colSpan={columns.length} className="h-24 text-center">
                       <div className="flex flex-col items-center gap-2 py-8">
-                        <div className="text-muted-foreground">No categories found</div>
+                        <div className="text-muted-foreground">{t("noCategories")}</div>
                         {hasPermission("products:write") && (
                           <Button size="sm" onClick={() => setIsCreateOpen(true)}>
                             <IconPlus className="size-4" />
-                            Add Category
+                            {t("addCategory")}
                           </Button>
                         )}
                       </div>
@@ -399,7 +404,7 @@ export default function CategoriesPage() {
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Create Category</DialogTitle>
+              <DialogTitle>{t("createCategory")}</DialogTitle>
               <DialogDescription>Add a new category to organize your products.</DialogDescription>
             </DialogHeader>
             <CategoryForm onSave={handleCreate} onCancel={() => setIsCreateOpen(false)} />
@@ -409,7 +414,7 @@ export default function CategoriesPage() {
         <Dialog open={!!editingCategory} onOpenChange={() => setEditingCategory(null)}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Edit Category</DialogTitle>
+              <DialogTitle>{t("updateCategory")}</DialogTitle>
               <DialogDescription>Update category information.</DialogDescription>
             </DialogHeader>
             <CategoryForm category={editingCategory} onSave={handleUpdate} onCancel={() => setEditingCategory(null)} />
@@ -425,8 +430,8 @@ export default function CategoriesPage() {
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setDeletingCategory(null)}>Cancel</Button>
-              <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+              <Button variant="outline" onClick={() => setDeletingCategory(null)}>{tc("cancel")}</Button>
+              <Button variant="destructive" onClick={handleDelete}>{tc("delete")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import useSWR from "swr"
+import { useTranslations } from "next-intl"
 import {
   IconBell,
   IconBellFilled,
@@ -31,22 +32,24 @@ interface Notification {
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
-function timeAgo(dateStr: string) {
-  const now = new Date()
-  const date = new Date(dateStr)
-  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000)
-
-  if (seconds < 60) return "just now"
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  const days = Math.floor(hours / 24)
-  if (days < 7) return `${days}d ago`
-  return date.toLocaleDateString()
-}
-
 export function NotificationBell() {
+  const t = useTranslations("notifications")
+
+  function timeAgo(dateStr: string) {
+    const now = new Date()
+    const date = new Date(dateStr)
+    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000)
+
+    if (seconds < 60) return t("justNow")
+    const minutes = Math.floor(seconds / 60)
+    if (minutes < 60) return t("minutesAgo", { count: minutes })
+    const hours = Math.floor(minutes / 60)
+    if (hours < 24) return t("hoursAgo", { count: hours })
+    const days = Math.floor(hours / 24)
+    if (days < 7) return t("daysAgo", { count: days })
+    return date.toLocaleDateString()
+  }
+
   const { data: notifications = [], mutate } = useSWR<Notification[]>(
     "/api/notifications",
     fetcher,
@@ -81,12 +84,12 @@ export function NotificationBell() {
               {unreadCount > 9 ? "9+" : unreadCount}
             </span>
           )}
-          <span className="sr-only">Notifications</span>
+          <span className="sr-only">{t("title")}</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 p-0">
         <div className="flex items-center justify-between px-4 py-3">
-          <h4 className="text-sm font-semibold">Notifications</h4>
+          <h4 className="text-sm font-semibold">{t("title")}</h4>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
@@ -95,7 +98,7 @@ export function NotificationBell() {
               onClick={markAllAsRead}
             >
               <IconCheck className="mr-1 size-3" />
-              Mark all read
+              {t("markAllRead")}
             </Button>
           )}
         </div>
@@ -104,7 +107,7 @@ export function NotificationBell() {
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center gap-1 py-8 text-center">
               <IconBell className="size-8 text-muted-foreground/40" />
-              <p className="text-sm text-muted-foreground">No notifications</p>
+              <p className="text-sm text-muted-foreground">{t("empty")}</p>
             </div>
           ) : (
             <div className="flex flex-col">

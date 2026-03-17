@@ -38,6 +38,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { PageHeader } from "@/components/page-header"
 import { usePermissions } from "@/hooks/use-permissions"
 import { TableSpinner } from "@/components/ui/spinner"
+import { useTranslations } from "next-intl"
 
 interface ProductVariation {
   id: string
@@ -93,6 +94,8 @@ function VariationForm({
   onSave: () => void
   onCancel: () => void
 }) {
+  const t = useTranslations("productDetail")
+  const tc = useTranslations("common")
   const [sku, setSku] = React.useState(variation?.sku || "")
   const [color, setColor] = React.useState(variation?.color || "")
   const [size, setSize] = React.useState(variation?.size || "")
@@ -218,37 +221,37 @@ function VariationForm({
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="sku">SKU *</Label>
+          <Label htmlFor="sku">{t("sku")} *</Label>
           <Input
             id="sku"
             value={sku}
             onChange={(e) => setSku(e.target.value)}
-            placeholder="e.g. PROD-RED-M"
+            placeholder={t("skuPlaceholder")}
             required
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="color">Color</Label>
+          <Label htmlFor="color">{t("color")}</Label>
           <Input
             id="color"
             value={color}
             onChange={(e) => setColor(e.target.value)}
-            placeholder="e.g. Noir, Blanc, Rouge"
+            placeholder={t("colorPlaceholder")}
           />
         </div>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="size">Size</Label>
+          <Label htmlFor="size">{t("size")}</Label>
           <Input
             id="size"
             value={size}
             onChange={(e) => setSize(e.target.value)}
-            placeholder="e.g. S, M, L, 1m, 2m"
+            placeholder={t("sizePlaceholder")}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="stock">Stock *</Label>
+          <Label htmlFor="stock">{t("stock")} *</Label>
           <Input
             id="stock"
             type="number"
@@ -261,7 +264,7 @@ function VariationForm({
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-2">
-          <Label htmlFor="price">Price *</Label>
+          <Label htmlFor="price">{t("price")} *</Label>
           <Input
             id="price"
             type="number"
@@ -269,12 +272,12 @@ function VariationForm({
             min="0"
             value={price}
             onChange={(e) => setPrice(e.target.value)}
-            placeholder="0.00"
+            placeholder={t("pricePlaceholder")}
             required
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="price_display">Original Price</Label>
+          <Label htmlFor="price_display">{t("originalPrice")}</Label>
           <Input
             id="price_display"
             type="number"
@@ -282,25 +285,25 @@ function VariationForm({
             min="0"
             value={priceDisplay}
             onChange={(e) => setPriceDisplay(e.target.value)}
-            placeholder="Crossed-out price"
+            placeholder={t("originalPricePlaceholder")}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="discount_label">Discount Label</Label>
+          <Label htmlFor="discount_label">{t("discountLabel")}</Label>
           <Input
             id="discount_label"
             value={discountLabel}
             onChange={(e) => setDiscountLabel(e.target.value)}
-            placeholder="e.g. 30% OFF"
+            placeholder={t("discountLabelPlaceholder")}
           />
         </div>
       </div>
 
       {/* Variation Images */}
       <div className="space-y-2">
-        <Label>Variation Images</Label>
+        <Label>{t("variationImagesLabel")}</Label>
         <p className="text-xs text-muted-foreground">
-          Images specific to this color/variation. Used on the storefront when this variant is selected.
+          {t("variationImagesDesc")}
         </p>
         <div className="flex flex-wrap gap-3">
           {existingImages.map((img) => (
@@ -348,14 +351,14 @@ function VariationForm({
 
       <div className="flex items-center gap-2">
         <Switch id="var_is_active" checked={isActive} onCheckedChange={setIsActive} />
-        <Label htmlFor="var_is_active">Active</Label>
+        <Label htmlFor="var_is_active">{tc("active")}</Label>
       </div>
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onCancel} disabled={isSaving}>
-          Cancel
+          {tc("cancel")}
         </Button>
         <Button type="submit" disabled={isSaving}>
-          {isSaving ? "Saving..." : variation ? "Update Variation" : "Add Variation"}
+          {isSaving ? t("saving") : variation ? t("updateVariation") : t("addVariation")}
         </Button>
       </DialogFooter>
     </form>
@@ -370,6 +373,8 @@ export default function ProductDetailPage({
   const { id } = use(params)
   const router = useRouter()
   const { hasPermission } = usePermissions()
+  const t = useTranslations("productDetail")
+  const tc = useTranslations("common")
   const { data: product, mutate, isLoading } = useSWR<Product>(`/api/products/${id}`, fetcher)
 
   const [variationDialogOpen, setVariationDialogOpen] = React.useState(false)
@@ -401,7 +406,7 @@ export default function ProductDetailPage({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="text-muted-foreground">Loading product...</div>
+        <div className="text-muted-foreground">{t("loadingProduct")}</div>
       </div>
     )
   }
@@ -409,10 +414,10 @@ export default function ProductDetailPage({
   if (!product) {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
-        <div className="text-muted-foreground">Product not found</div>
+        <div className="text-muted-foreground">{t("productNotFound")}</div>
         <Button variant="outline" onClick={() => router.push("/dashboard/products")}>
           <IconArrowLeft className="mr-2 size-4" />
-          Back to Products
+          {t("backToProducts")}
         </Button>
       </div>
     )
@@ -422,7 +427,7 @@ export default function ProductDetailPage({
     <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 px-4 lg:px-6">
       <PageHeader
         title={product.name}
-        description={`${product.categories?.name || "Uncategorized"} • ${variations.length} variation(s)`}
+        description={`${product.categories?.name || t("category")} • ${t("variationCount", { count: variations.length })}`}
       >
         <Button variant="outline" onClick={() => router.push("/dashboard/products")}>
           <IconArrowLeft className="mr-2 size-4" />
@@ -432,8 +437,8 @@ export default function ProductDetailPage({
 
       <Tabs defaultValue="overview">
         <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="variations">Variations ({variations.length})</TabsTrigger>
+          <TabsTrigger value="overview">{t("overview")}</TabsTrigger>
+          <TabsTrigger value="variations">{t("variations")} ({variations.length})</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -441,27 +446,27 @@ export default function ProductDetailPage({
           <div className="grid gap-4 md:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>Product Details</CardTitle>
+                <CardTitle>{t("productDetails")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="grid grid-cols-[120px_1fr] gap-2 text-sm">
-                  <span className="text-muted-foreground">Name</span>
+                  <span className="text-muted-foreground">{t("name")}</span>
                   <span>{product.name}</span>
-                  <span className="text-muted-foreground">Slug</span>
+                  <span className="text-muted-foreground">{t("slug")}</span>
                   <span className="font-mono text-xs">{product.slug}</span>
-                  <span className="text-muted-foreground">Category</span>
+                  <span className="text-muted-foreground">{t("category")}</span>
                   <span>{product.categories?.name || "—"}</span>
-                  <span className="text-muted-foreground">Status</span>
+                  <span className="text-muted-foreground">{t("status")}</span>
                   <span>
                     <Badge variant={product.is_active ? "default" : "secondary"}>
-                      {product.is_active ? "Active" : "Inactive"}
+                      {product.is_active ? tc("active") : tc("inactive")}
                     </Badge>
                   </span>
-                  <span className="text-muted-foreground">Featured</span>
-                  <span>{product.is_featured ? "Yes" : "No"}</span>
-                  <span className="text-muted-foreground">Best Seller</span>
-                  <span>{product.is_best_seller ? "Yes" : "No"}</span>
-                  <span className="text-muted-foreground">Created</span>
+                  <span className="text-muted-foreground">{t("featured")}</span>
+                  <span>{product.is_featured ? t("yes") : t("no")}</span>
+                  <span className="text-muted-foreground">{t("bestSeller")}</span>
+                  <span>{product.is_best_seller ? t("yes") : t("no")}</span>
+                  <span className="text-muted-foreground">{tc("created")}</span>
                   <span>{new Date(product.created_at).toLocaleDateString()}</span>
                 </div>
                 {product.description && (
@@ -477,15 +482,15 @@ export default function ProductDetailPage({
 
             <Card>
               <CardHeader>
-                <CardTitle>Variation Summary</CardTitle>
+                <CardTitle>{t("variationSummary")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="grid grid-cols-[120px_1fr] gap-2 text-sm">
-                  <span className="text-muted-foreground">Total</span>
-                  <span>{variations.length} variation(s)</span>
+                  <span className="text-muted-foreground">{t("total")}</span>
+                  <span>{t("variationCount", { count: variations.length })}</span>
                   {colors.length > 0 && (
                     <>
-                      <span className="text-muted-foreground">Colors</span>
+                      <span className="text-muted-foreground">{t("colors")}</span>
                       <div className="flex flex-wrap gap-1">
                         {colors.map((c) => (
                           <Badge key={c} variant="outline">{c}</Badge>
@@ -495,7 +500,7 @@ export default function ProductDetailPage({
                   )}
                   {sizes.length > 0 && (
                     <>
-                      <span className="text-muted-foreground">Sizes</span>
+                      <span className="text-muted-foreground">{t("sizes")}</span>
                       <div className="flex flex-wrap gap-1">
                         {sizes.map((s) => (
                           <Badge key={s} variant="outline">{s}</Badge>
@@ -503,11 +508,11 @@ export default function ProductDetailPage({
                       </div>
                     </>
                   )}
-                  <span className="text-muted-foreground">Total Stock</span>
-                  <span>{variations.reduce((sum, v) => sum + v.stock, 0)} units</span>
+                  <span className="text-muted-foreground">{t("totalStock")}</span>
+                  <span>{t("units", { count: variations.reduce((sum, v) => sum + v.stock, 0) })}</span>
                   {variations.length > 0 && (
                     <>
-                      <span className="text-muted-foreground">Price Range</span>
+                      <span className="text-muted-foreground">{t("priceRange")}</span>
                       <span>
                         ${Math.min(...variations.map((v) => v.price)).toFixed(2)}
                         {Math.min(...variations.map((v) => v.price)) !== Math.max(...variations.map((v) => v.price)) &&
@@ -524,7 +529,7 @@ export default function ProductDetailPage({
           {productImages.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Product Images</CardTitle>
+                <CardTitle>{t("productImages")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-3">
@@ -533,7 +538,7 @@ export default function ProductDetailPage({
                       <img src={img.url} alt={img.alt_text || ""} className="size-full object-cover" />
                       {img.is_primary && (
                         <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] text-center py-0.5">
-                          Primary
+                          {t("primary")}
                         </div>
                       )}
                     </div>
@@ -548,12 +553,12 @@ export default function ProductDetailPage({
         <TabsContent value="variations" className="space-y-4">
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              Manage colors, sizes, prices, stock, and images for each variant.
+              {t("manageVariations")}
             </p>
             {hasPermission("products:write") && (
               <Button onClick={() => { setEditingVariation(null); setVariationDialogOpen(true) }}>
                 <IconPlus className="mr-2 size-4" />
-                Add Variation
+                {t("addVariation")}
               </Button>
             )}
           </div>
@@ -562,16 +567,16 @@ export default function ProductDetailPage({
             <Table>
               <TableHeader className="bg-muted">
                 <TableRow>
-                  <TableHead>SKU</TableHead>
-                  <TableHead>Color</TableHead>
-                  <TableHead>Size</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Original Price</TableHead>
-                  <TableHead>Discount</TableHead>
-                  <TableHead>Stock</TableHead>
-                  <TableHead>Images</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="w-[80px]">Actions</TableHead>
+                  <TableHead>{t("sku")}</TableHead>
+                  <TableHead>{t("color")}</TableHead>
+                  <TableHead>{t("size")}</TableHead>
+                  <TableHead>{t("price")}</TableHead>
+                  <TableHead>{t("originalPrice")}</TableHead>
+                  <TableHead>{t("discount")}</TableHead>
+                  <TableHead>{t("stock")}</TableHead>
+                  <TableHead>{t("images")}</TableHead>
+                  <TableHead>{t("status")}</TableHead>
+                  <TableHead className="w-[80px]">{tc("actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -612,7 +617,7 @@ export default function ProductDetailPage({
                       </TableCell>
                       <TableCell>
                         <Badge variant={v.stock > 0 ? "default" : "destructive"}>
-                          {v.stock > 0 ? `${v.stock} in stock` : "Out of stock"}
+                          {v.stock > 0 ? t("inStock", { count: v.stock }) : t("outOfStock")}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -633,12 +638,12 @@ export default function ProductDetailPage({
                             )}
                           </div>
                         ) : (
-                          <span className="text-muted-foreground text-xs">None</span>
+                          <span className="text-muted-foreground text-xs">{t("none")}</span>
                         )}
                       </TableCell>
                       <TableCell>
                         <Badge variant={v.is_active ? "default" : "secondary"}>
-                          {v.is_active ? "Active" : "Inactive"}
+                          {v.is_active ? tc("active") : tc("inactive")}
                         </Badge>
                       </TableCell>
                       <TableCell>
@@ -671,9 +676,9 @@ export default function ProductDetailPage({
                   <TableRow>
                     <TableCell colSpan={10} className="h-24 text-center">
                       <div className="flex flex-col items-center gap-2 py-8">
-                        <div className="text-muted-foreground">No variations yet</div>
+                        <div className="text-muted-foreground">{t("noVariationsYet")}</div>
                         <p className="text-sm text-muted-foreground max-w-md">
-                          Add variations to define colors, sizes, prices, and stock levels for this product.
+                          {t("addVariationsHint")}
                         </p>
                         {hasPermission("products:write") && (
                           <Button
@@ -682,7 +687,7 @@ export default function ProductDetailPage({
                             onClick={() => { setEditingVariation(null); setVariationDialogOpen(true) }}
                           >
                             <IconPlus className="size-4 mr-1" />
-                            Add First Variation
+                            {t("addFirstVariation")}
                           </Button>
                         )}
                       </div>
@@ -704,11 +709,11 @@ export default function ProductDetailPage({
       >
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingVariation ? "Edit Variation" : "Add Variation"}</DialogTitle>
+            <DialogTitle>{editingVariation ? t("editVariation") : t("addVariation")}</DialogTitle>
             <DialogDescription>
               {editingVariation
-                ? "Update this variation's attributes, pricing, and stock."
-                : "Add a new color, size, or variant with its own price and stock."}
+                ? t("editVariationDesc")
+                : t("addVariationDesc")}
             </DialogDescription>
           </DialogHeader>
           <VariationForm
@@ -724,17 +729,14 @@ export default function ProductDetailPage({
       <Dialog open={!!deletingVariation} onOpenChange={() => setDeletingVariation(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Delete Variation</DialogTitle>
+            <DialogTitle>{t("deleteVariation")}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete variation "{deletingVariation?.sku}"
-              {deletingVariation?.color && ` (${deletingVariation.color})`}
-              {deletingVariation?.size && ` - ${deletingVariation.size}`}
-              ? This will also remove any associated images.
+              {t("deleteVariationConfirm", { sku: deletingVariation?.sku })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeletingVariation(null)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleDeleteVariation}>Delete</Button>
+            <Button variant="outline" onClick={() => setDeletingVariation(null)}>{tc("cancel")}</Button>
+            <Button variant="destructive" onClick={handleDeleteVariation}>{tc("delete")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

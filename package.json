@@ -66,6 +66,7 @@
     "jszip": "^3.10.1",
     "lucide-react": "latest",
     "next": "16.1.6",
+    "next-intl": "^4.8.3",
     "next-themes": "latest",
     "react": "19.2.4",
     "react-day-picker": "9.13.2",

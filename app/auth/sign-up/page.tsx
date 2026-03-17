@@ -15,8 +15,10 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { IconPackage } from '@tabler/icons-react'
+import { useTranslations } from 'next-intl'
 
 export default function SignUpPage() {
+  const t = useTranslations('auth')
   const [email, setEmail] = useState('')
   const [fullName, setFullName] = useState('')
   const [password, setPassword] = useState('')
@@ -32,13 +34,13 @@ export default function SignUpPage() {
     setError(null)
 
     if (password !== repeatPassword) {
-      setError('Passwords do not match')
+      setError(t('passwordMismatch'))
       setIsLoading(false)
       return
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters')
+      setError(t('passwordMinLength'))
       setIsLoading(false)
       return
     }
@@ -102,57 +104,57 @@ export default function SignUpPage() {
         <div className="flex flex-col gap-6">
           <div className="flex items-center justify-center gap-2 text-foreground">
             <IconPackage className="size-8" />
-            <span className="text-xl font-semibold">E-Commerce Admin</span>
+            <span className="text-xl font-semibold">{t('brandName')}</span>
           </div>
           <Card className="shadow-lg">
             <CardHeader className="text-center">
-              <CardTitle className="text-2xl">Create Admin Account</CardTitle>
+              <CardTitle className="text-2xl">{t('createAdminAccount')}</CardTitle>
               <CardDescription>
-                Sign up as a superadmin to manage the store
+                {t('signUpDescription')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSignUp}>
                 <div className="flex flex-col gap-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="fullName">Full Name</Label>
+                    <Label htmlFor="fullName">{t('fullName')}</Label>
                     <Input
                       id="fullName"
                       type="text"
-                      placeholder="John Doe"
+                      placeholder={t('fullNamePlaceholder')}
                       required
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">{t('email')}</Label>
                     <Input
                       id="email"
                       type="email"
-                      placeholder="admin@store.com"
+                      placeholder={t('emailPlaceholder')}
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password">{t('password')}</Label>
                     <Input
                       id="password"
                       type="password"
-                      placeholder="Min. 6 characters"
+                      placeholder={t('minChars')}
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="repeat-password">Confirm Password</Label>
+                    <Label htmlFor="repeat-password">{t('confirmPassword')}</Label>
                     <Input
                       id="repeat-password"
                       type="password"
-                      placeholder="Repeat password"
+                      placeholder={t('repeatPassword')}
                       required
                       value={repeatPassword}
                       onChange={(e) => setRepeatPassword(e.target.value)}
@@ -164,16 +166,16 @@ export default function SignUpPage() {
                     </p>
                   )}
                   <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? 'Creating account...' : 'Create Superadmin Account'}
+                    {isLoading ? t('creatingAccount') : t('createSuperadminAccount')}
                   </Button>
                 </div>
                 <div className="mt-4 text-center text-sm text-muted-foreground">
-                  Already have an account?{' '}
+                  {t('haveAccount')}{' '}
                   <Link
                     href="/auth/login"
                     className="text-primary underline underline-offset-4 hover:text-primary/80"
                   >
-                    Sign in
+                    {t('signInLink')}
                   </Link>
                 </div>
               </form>

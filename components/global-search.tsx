@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import {
   IconBox,
   IconCategory,
@@ -43,7 +44,7 @@ type SearchResults = {
 const entityConfig = [
   {
     key: "products" as const,
-    label: "Products",
+    labelKey: "products" as const,
     icon: IconBox,
     path: "/dashboard/products",
     mapItem: (item: Record<string, unknown>) => ({
@@ -54,7 +55,7 @@ const entityConfig = [
   },
   {
     key: "categories" as const,
-    label: "Categories",
+    labelKey: "categories" as const,
     icon: IconCategory,
     path: "/dashboard/categories",
     mapItem: (item: Record<string, unknown>) => ({
@@ -64,7 +65,7 @@ const entityConfig = [
   },
   {
     key: "orders" as const,
-    label: "Orders",
+    labelKey: "orders" as const,
     icon: IconShoppingCart,
     path: "/dashboard/orders",
     mapItem: (item: Record<string, unknown>) => ({
@@ -75,7 +76,7 @@ const entityConfig = [
   },
   {
     key: "reviews" as const,
-    label: "Reviews",
+    labelKey: "reviews" as const,
     icon: IconStar,
     path: "/dashboard/reviews",
     mapItem: (item: Record<string, unknown>) => ({
@@ -86,7 +87,7 @@ const entityConfig = [
   },
   {
     key: "users" as const,
-    label: "Users",
+    labelKey: "users" as const,
     icon: IconUsers,
     path: "/dashboard/users",
     mapItem: (item: Record<string, unknown>) => ({
@@ -97,7 +98,7 @@ const entityConfig = [
   },
   {
     key: "roles" as const,
-    label: "Roles",
+    labelKey: "rolesPermissions" as const,
     icon: IconUserShield,
     path: "/dashboard/roles",
     mapItem: (item: Record<string, unknown>) => ({
@@ -107,7 +108,7 @@ const entityConfig = [
   },
   {
     key: "announcements" as const,
-    label: "Announcements",
+    labelKey: "announcements" as const,
     icon: IconBellRinging,
     path: "/dashboard/announcements",
     mapItem: (item: Record<string, unknown>) => ({
@@ -123,6 +124,8 @@ export function GlobalSearch() {
   const [results, setResults] = React.useState<SearchResults | null>(null)
   const [isSearching, setIsSearching] = React.useState(false)
   const router = useRouter()
+  const t = useTranslations("search")
+  const tNav = useTranslations("nav")
   const debounceRef = React.useRef<ReturnType<typeof setTimeout>>(null)
 
   React.useEffect(() => {
@@ -209,7 +212,7 @@ export function GlobalSearch() {
       >
         <IconSearch className="size-4 sm:mr-2" />
         <span className="hidden sm:inline-flex text-muted-foreground">
-          Search...
+          {t("placeholder")}
         </span>
         <Kbd className="pointer-events-none hidden sm:inline-flex absolute right-2 top-1/2 -translate-y-1/2">
           ⌘K
@@ -217,19 +220,19 @@ export function GlobalSearch() {
       </Button>
       <CommandDialog open={open} onOpenChange={setOpen}>
         <CommandInput
-          placeholder="Search products, orders, users..."
+          placeholder={t("commandPlaceholder")}
           value={query}
           onValueChange={setQuery}
         />
         <CommandList>
           {!query.trim() && (
-            <CommandEmpty>Type to search across all entities...</CommandEmpty>
+            <CommandEmpty>{t("typeToSearch")}</CommandEmpty>
           )}
           {query.trim() && !isSearching && !hasResults && (
-            <CommandEmpty>No results found.</CommandEmpty>
+            <CommandEmpty>{t("noResults")}</CommandEmpty>
           )}
           {isSearching && (
-            <CommandEmpty>Searching...</CommandEmpty>
+            <CommandEmpty>{t("searching")}</CommandEmpty>
           )}
           {results &&
             entityConfig.map((entity) => {
@@ -237,7 +240,7 @@ export function GlobalSearch() {
               if (!items || items.length === 0) return null
               const Icon = entity.icon
               return (
-                <CommandGroup key={entity.key} heading={entity.label}>
+                <CommandGroup key={entity.key} heading={tNav(entity.labelKey)}>
                   {items.map((item) => (
                     <CommandItem
                       key={item.id}

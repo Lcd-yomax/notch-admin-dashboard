@@ -1,6 +1,10 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { NextIntlClientProvider } from 'next-intl'
+import { getLocale, getMessages } from 'next-intl/server'
+import { isRtl } from '@/i18n/config'
+import type { Locale } from '@/i18n/config'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -29,15 +33,21 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const locale = await getLocale() as Locale
+  const messages = await getMessages()
+  const dir = isRtl(locale) ? 'rtl' : 'ltr'
+
   return (
-    <html lang="en">
+    <html lang={locale} dir={dir}>
       <body className="font-sans antialiased">
-        {children}
+        <NextIntlClientProvider messages={messages}>
+          {children}
+        </NextIntlClientProvider>
         <Analytics />
       </body>
     </html>

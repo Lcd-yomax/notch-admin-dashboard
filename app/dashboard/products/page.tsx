@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import {
   IconChevronDown,
   IconChevronLeft,
@@ -117,6 +118,8 @@ function ProductForm({
   onSave: (data: Partial<Product> & { images?: File[]; existingImages?: ProductImage[] }) => void
   onCancel: () => void
 }) {
+  const t = useTranslations("products")
+  const tc = useTranslations("common")
   const [name, setName] = React.useState(product?.name || "")
   const [slug, setSlug] = React.useState(product?.slug || "")
   const [description, setDescription] = React.useState(product?.description || "")
@@ -182,42 +185,42 @@ function ProductForm({
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="name">Product Name *</Label>
+          <Label htmlFor="name">{t("productName")} *</Label>
           <Input
             id="name"
             value={name}
             onChange={(e) => handleNameChange(e.target.value)}
-            placeholder="Enter product name"
+            placeholder={t("enterProductName")}
             required
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="slug">Slug *</Label>
+          <Label htmlFor="slug">{t("slug")} *</Label>
           <Input
             id="slug"
             value={slug}
             onChange={(e) => setSlug(e.target.value)}
-            placeholder="product-slug"
+            placeholder={t("productSlug")}
             required
           />
         </div>
       </div>
       <div className="space-y-2">
-        <Label>Description</Label>
+        <Label>{t("productDescription")}</Label>
         <RichTextEditor
           content={description}
           onChange={setDescription}
-          placeholder="Enter product description"
+          placeholder={t("enterProductDescription")}
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="category">Category</Label>
+        <Label htmlFor="category">{t("category")}</Label>
         <Select value={categoryId || "none"} onValueChange={(val) => setCategoryId(val === "none" ? "" : val)}>
           <SelectTrigger id="category">
-            <SelectValue placeholder="Select category" />
+            <SelectValue placeholder={t("selectCategory")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="none">No category</SelectItem>
+            <SelectItem value="none">{t("noCategory")}</SelectItem>
             {categories.map((cat) => (
               <SelectItem key={cat.id} value={cat.id}>
                 {cat.name}
@@ -228,7 +231,7 @@ function ProductForm({
       </div>
       {/* Multi-image upload */}
       <div className="space-y-2">
-        <Label>Product Images</Label>
+        <Label>{t("productImages")}</Label>
         <div className="flex flex-wrap gap-3">
           {existingImages.map((img) => (
             <div key={img.id} className="group relative size-20 rounded-lg border overflow-hidden">
@@ -274,23 +277,23 @@ function ProductForm({
       </div>
       <div className="flex items-center gap-2">
         <Switch id="is_active" checked={isActive} onCheckedChange={setIsActive} />
-        <Label htmlFor="is_active">Active</Label>
+        <Label htmlFor="is_active">{t("isActive")}</Label>
       </div>
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
           <Switch id="is_featured" checked={isFeatured} onCheckedChange={setIsFeatured} />
-          <Label htmlFor="is_featured">Featured</Label>
+          <Label htmlFor="is_featured">{t("isFeatured")}</Label>
         </div>
         <div className="flex items-center gap-2">
           <Switch id="is_best_seller" checked={isBestSeller} onCheckedChange={setIsBestSeller} />
-          <Label htmlFor="is_best_seller">Best Seller</Label>
+          <Label htmlFor="is_best_seller">{t("isBestSeller")}</Label>
         </div>
       </div>
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
+          {tc("cancel")}
         </Button>
-        <Button type="submit">{product ? "Update" : "Create"} Product</Button>
+        <Button type="submit">{product ? t("updateProduct") : t("createProduct")}</Button>
       </DialogFooter>
     </form>
   )
@@ -299,6 +302,8 @@ function ProductForm({
 export default function ProductsPage() {
   const router = useRouter()
   const { hasPermission } = usePermissions()
+  const t = useTranslations("products")
+  const tc = useTranslations("common")
   const { data: products = [], mutate, isLoading } = useSWR<Product[]>("/api/products", fetcher)
   const { data: categories = [] } = useSWR<Category[]>("/api/categories", fetcher)
   
@@ -554,7 +559,7 @@ export default function ProductsPage() {
     },
     {
       accessorKey: "name",
-      header: "Product",
+      header: t("product"),
       cell: ({ row }) => (
         <div className="flex items-center gap-3">
           {row.original.thumbnail_url ? (
@@ -565,7 +570,7 @@ export default function ProductsPage() {
             />
           ) : (
             <div className="flex size-10 items-center justify-center rounded-md bg-muted text-xs text-muted-foreground">
-              No img
+              {t("noImg")}
             </div>
           )}
           <div>
@@ -578,30 +583,30 @@ export default function ProductsPage() {
     },
     {
       accessorKey: "category_name",
-      header: "Category",
+      header: t("category"),
       cell: ({ row }) => (
         <Badge variant="outline" className="text-muted-foreground">
-          {row.original.category_name || "Uncategorized"}
+          {row.original.category_name || t("uncategorized")}
         </Badge>
       ),
     },
     {
       accessorKey: "variations_count",
-      header: "Variations",
+      header: t("variations"),
       cell: ({ row }) => <div className="text-center">{row.original.variations_count}</div>,
     },
     {
       accessorKey: "is_active",
-      header: "Status",
+      header: tc("status"),
       cell: ({ row }) => (
         <Badge variant={row.original.is_active ? "default" : "secondary"}>
-          {row.original.is_active ? "Active" : "Inactive"}
+          {row.original.is_active ? tc("active") : tc("inactive")}
         </Badge>
       ),
     },
     {
       accessorKey: "created_at",
-      header: "Created",
+      header: tc("created"),
       cell: ({ row }) => (
         <div className="text-muted-foreground">
           {new Date(row.original.created_at).toLocaleDateString()}
@@ -626,12 +631,12 @@ export default function ProductsPage() {
                 setEditingProduct({ ...row.original, product_images: full.product_images || [] })
               }}>
                 <IconEdit className="mr-2 size-4" />
-                Edit
+                {tc("edit")}
               </DropdownMenuItem>
             )}
             <DropdownMenuItem onClick={() => router.push(`/dashboard/products/${row.original.id}`)}>
               <IconEye className="mr-2 size-4" />
-              View
+              {tc("view")}
             </DropdownMenuItem>
             {hasPermission("products:delete") && (
               <>
@@ -641,7 +646,7 @@ export default function ProductsPage() {
                   className="text-destructive focus:text-destructive"
                 >
                   <IconTrash className="mr-2 size-4" />
-                  Delete
+                  {tc("delete")}
                 </DropdownMenuItem>
               </>
             )}
@@ -679,14 +684,14 @@ export default function ProductsPage() {
   return (
     <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 px-4 lg:px-6">
       <PageHeader
-          title="Products"
-          description="Manage your product catalog"
+          title={t("title")}
+          description={t("description")}
         >
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">
                     <IconLayoutColumns />
-                    Columns
+                    {tc("columns")}
                     <IconChevronDown />
                   </Button>
                 </DropdownMenuTrigger>
@@ -707,7 +712,7 @@ export default function ProductsPage() {
             <>
               <Button onClick={() => setIsCreateOpen(true)}>
                 <IconPlus />
-                Add Product
+                {t("addProduct")}
               </Button>
               <input
                 ref={fileInputRef}
@@ -718,7 +723,7 @@ export default function ProductsPage() {
               />
               <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
                 <IconUpload />
-                Import Excel
+                {t("importProducts")}
               </Button>
             </>
           )}
@@ -726,7 +731,7 @@ export default function ProductsPage() {
 
           <div className="flex items-center gap-2">
             <Input
-              placeholder="Search products..."
+              placeholder={t("searchProducts")}
               value={globalFilter}
               onChange={(e) => setGlobalFilter(e.target.value)}
               className="max-w-sm"
@@ -763,11 +768,11 @@ export default function ProductsPage() {
                   <TableRow>
                     <TableCell colSpan={columns.length} className="h-24 text-center">
                       <div className="flex flex-col items-center gap-2 py-8">
-                        <div className="text-muted-foreground">No products found</div>
+                        <div className="text-muted-foreground">{t("noProducts")}</div>
                         {hasPermission("products:write") && (
                           <Button size="sm" onClick={() => setIsCreateOpen(true)}>
                             <IconPlus className="size-4" />
-                            Add Product
+                            {t("addProduct")}
                           </Button>
                         )}
                       </div>
@@ -803,7 +808,7 @@ export default function ProductsPage() {
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Create Product</DialogTitle>
+              <DialogTitle>{t("createProduct")}</DialogTitle>
               <DialogDescription>Add a new product to your catalog.</DialogDescription>
             </DialogHeader>
             <ProductForm categories={categories} onSave={handleCreate} onCancel={() => setIsCreateOpen(false)} />
@@ -814,7 +819,7 @@ export default function ProductsPage() {
         <Dialog open={!!editingProduct} onOpenChange={() => setEditingProduct(null)}>
           <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Edit Product</DialogTitle>
+              <DialogTitle>{t("updateProduct")}</DialogTitle>
               <DialogDescription>Update product information.</DialogDescription>
             </DialogHeader>
             <ProductForm product={editingProduct} categories={categories} onSave={handleUpdate} onCancel={() => setEditingProduct(null)} />
@@ -831,8 +836,8 @@ export default function ProductsPage() {
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setDeletingProduct(null)}>Cancel</Button>
-              <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+              <Button variant="outline" onClick={() => setDeletingProduct(null)}>{tc("cancel")}</Button>
+              <Button variant="destructive" onClick={handleDelete}>{tc("delete")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -841,7 +846,7 @@ export default function ProductsPage() {
         <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
           <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
             <DialogHeader>
-              <DialogTitle>Import Products</DialogTitle>
+              <DialogTitle>{t("importProducts")}</DialogTitle>
               <DialogDescription>{importData.length} product(s) found in the file</DialogDescription>
             </DialogHeader>
             <div className="overflow-auto flex-1 rounded-lg border">
@@ -875,7 +880,7 @@ export default function ProductsPage() {
               </Table>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsImportOpen(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => setIsImportOpen(false)}>{tc("cancel")}</Button>
               <Button onClick={handleImport} disabled={isImporting || importData.length === 0}>
                 {isImporting ? "Importing..." : `Import ${importData.length} Products`}
               </Button>

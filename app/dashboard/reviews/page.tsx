@@ -59,6 +59,7 @@ import {
 } from "@/components/ui/table"
 import { PageHeader } from "@/components/page-header"
 import { usePermissions } from "@/hooks/use-permissions"
+import { useTranslations } from "next-intl"
 
 interface Review {
   id: string
@@ -91,6 +92,8 @@ function StarRating({ stars }: { stars: number }) {
 
 export default function ReviewsPage() {
   const { hasPermission } = usePermissions()
+  const t = useTranslations("reviews")
+  const tc = useTranslations("common")
   const { data: reviews = [], mutate, isLoading } = useSWR<Review[]>("/api/reviews", fetcher)
   
   const [viewingReview, setViewingReview] = React.useState<Review | null>(null)
@@ -135,7 +138,7 @@ export default function ReviewsPage() {
     },
     {
       accessorKey: "product_name",
-      header: "Product",
+      header: t("product"),
       cell: ({ row }) => (
         <div className="font-medium">{row.original.product_name}</div>
       ),
@@ -143,7 +146,7 @@ export default function ReviewsPage() {
     },
     {
       accessorKey: "full_name",
-      header: "Customer",
+      header: t("customer"),
       cell: ({ row }) => (
         <div>
           <div>{row.original.full_name}</div>
@@ -153,30 +156,30 @@ export default function ReviewsPage() {
     },
     {
       accessorKey: "stars",
-      header: "Rating",
+      header: t("rating"),
       cell: ({ row }) => <StarRating stars={row.original.stars} />,
     },
     {
       accessorKey: "comment",
-      header: "Comment",
+      header: t("comment"),
       cell: ({ row }) => (
         <div className="max-w-xs truncate text-muted-foreground">
-          {row.original.comment || "No comment"}
+          {row.original.comment || t("noComment")}
         </div>
       ),
     },
     {
       accessorKey: "is_approved",
-      header: "Status",
+      header: tc("status"),
       cell: ({ row }) => (
         <Badge variant={row.original.is_approved ? "default" : "outline"}>
-          {row.original.is_approved ? "Approved" : "Pending"}
+          {row.original.is_approved ? t("approved") : t("pending")}
         </Badge>
       ),
     },
     {
       accessorKey: "created_at",
-      header: "Date",
+      header: tc("date"),
       cell: ({ row }) => (
         <div className="text-muted-foreground">
           {new Date(row.original.created_at).toLocaleDateString()}
@@ -196,7 +199,7 @@ export default function ReviewsPage() {
           <DropdownMenuContent align="end" className="w-32">
             <DropdownMenuItem onClick={() => setViewingReview(row.original)}>
               <IconEye className="mr-2 size-4" />
-              View
+              {tc("view")}
             </DropdownMenuItem>
             {hasPermission("reviews:delete") && (
               <>
@@ -206,7 +209,7 @@ export default function ReviewsPage() {
                   className="text-destructive focus:text-destructive"
                 >
                   <IconTrash className="mr-2 size-4" />
-                  Delete
+                  {tc("delete")}
                 </DropdownMenuItem>
               </>
             )}
@@ -243,14 +246,14 @@ export default function ReviewsPage() {
   return (
     <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 px-4 lg:px-6">
       <PageHeader
-        title="Reviews"
-        description="Manage customer reviews and ratings"
+        title={t("title")}
+        description={t("description")}
       >
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">
                     <IconLayoutColumns />
-                    Columns
+                    {tc("columns")}
                     <IconChevronDown />
                   </Button>
                 </DropdownMenuTrigger>
@@ -271,7 +274,7 @@ export default function ReviewsPage() {
 
           <div className="flex items-center gap-2">
             <Input
-              placeholder="Search reviews..."
+              placeholder={t("searchReviews")}
               value={globalFilter}
               onChange={(e) => setGlobalFilter(e.target.value)}
               className="max-w-sm"
@@ -308,9 +311,9 @@ export default function ReviewsPage() {
                   <TableRow>
                     <TableCell colSpan={columns.length} className="h-24 text-center">
                       <div className="flex flex-col items-center gap-2 py-8">
-                        <div className="text-muted-foreground">No reviews yet</div>
+                        <div className="text-muted-foreground">{t("noReviews")}</div>
                         <div className="text-sm text-muted-foreground">
-                          Customer reviews will appear here
+                          {t("reviewsWillAppear")}
                         </div>
                       </div>
                     </TableCell>
@@ -344,42 +347,42 @@ export default function ReviewsPage() {
         <Dialog open={!!viewingReview} onOpenChange={() => setViewingReview(null)}>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
-              <DialogTitle>Review Details</DialogTitle>
-              <DialogDescription>Review for {viewingReview?.product_name}</DialogDescription>
+              <DialogTitle>{t("reviewDetails")}</DialogTitle>
+              <DialogDescription>{t("reviewFor", { productName: viewingReview?.product_name })}</DialogDescription>
             </DialogHeader>
             {viewingReview && (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-muted-foreground">Customer</Label>
+                    <Label className="text-muted-foreground">{t("customer")}</Label>
                     <p className="font-medium">{viewingReview.full_name}</p>
                     <p className="text-sm text-muted-foreground">{viewingReview.email}</p>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">Rating</Label>
+                    <Label className="text-muted-foreground">{t("rating")}</Label>
                     <div className="mt-1">
                       <StarRating stars={viewingReview.stars} />
                     </div>
                   </div>
                   <div>
-                    <Label className="text-muted-foreground">Status</Label>
+                    <Label className="text-muted-foreground">{tc("status")}</Label>
                     <div className="mt-1">
                       <Badge variant={viewingReview.is_approved ? "default" : "outline"}>
-                        {viewingReview.is_approved ? "Approved" : "Pending"}
+                        {viewingReview.is_approved ? t("approved") : t("pending")}
                       </Badge>
                     </div>
                   </div>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">Comment</Label>
-                  <p className="mt-1">{viewingReview.comment || "No comment provided"}</p>
+                  <Label className="text-muted-foreground">{t("comment")}</Label>
+                  <p className="mt-1">{viewingReview.comment || t("noCommentProvided")}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">Date</Label>
+                  <Label className="text-muted-foreground">{tc("date")}</Label>
                   <p>{new Date(viewingReview.created_at).toLocaleString()}</p>
                 </div>
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setViewingReview(null)}>Close</Button>
+                  <Button variant="outline" onClick={() => setViewingReview(null)}>{tc("close")}</Button>
                 </DialogFooter>
               </div>
             )}
@@ -389,14 +392,14 @@ export default function ReviewsPage() {
         <Dialog open={!!deletingReview} onOpenChange={() => setDeletingReview(null)}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Delete Review</DialogTitle>
+              <DialogTitle>{t("deleteReview")}</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete this review from {deletingReview?.full_name}?
+                {t("deleteReviewConfirm", { name: deletingReview?.full_name })}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setDeletingReview(null)}>Cancel</Button>
-              <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+              <Button variant="outline" onClick={() => setDeletingReview(null)}>{tc("cancel")}</Button>
+              <Button variant="destructive" onClick={handleDelete}>{tc("delete")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
