@@ -59,6 +59,7 @@ import {
 } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
 import { PageHeader } from "@/components/page-header"
+import { usePermissions } from "@/hooks/use-permissions"
 
 interface Role {
   id: string
@@ -120,6 +121,7 @@ function RoleForm({
 }
 
 export default function RolesPage() {
+  const { hasPermission } = usePermissions()
   const { data: roles = [], mutate, isLoading } = useSWR<Role[]>("/api/roles", fetcher)
   
   const [isCreateOpen, setIsCreateOpen] = React.useState(false)
@@ -129,6 +131,7 @@ export default function RolesPage() {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [sorting, setSorting] = React.useState<SortingState>([])
+  const [globalFilter, setGlobalFilter] = React.useState("")
   const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
 
   const handleCreate = async (data: Partial<Role>) => {
@@ -237,22 +240,28 @@ export default function RolesPage() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-32">
-            <DropdownMenuItem 
-              onClick={() => setEditingRole(row.original)}
-              disabled={row.original.is_system}
-            >
-              <IconEdit className="mr-2 size-4" />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => setDeletingRole(row.original)}
-              className="text-destructive focus:text-destructive"
-              disabled={row.original.is_system}
-            >
-              <IconTrash className="mr-2 size-4" />
-              Delete
-            </DropdownMenuItem>
+            {hasPermission("roles:manage") && (
+              <DropdownMenuItem 
+                onClick={() => setEditingRole(row.original)}
+                disabled={row.original.is_system}
+              >
+                <IconEdit className="mr-2 size-4" />
+                Edit
+              </DropdownMenuItem>
+            )}
+            {hasPermission("roles:manage") && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => setDeletingRole(row.original)}
+                  className="text-destructive focus:text-destructive"
+                  disabled={row.original.is_system}
+                >
+                  <IconTrash className="mr-2 size-4" />
+                  Delete
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       ),
@@ -262,11 +271,12 @@ export default function RolesPage() {
   const table = useReactTable({
     data: roles,
     columns,
-    state: { sorting, columnVisibility, rowSelection, pagination },
+    state: { sorting, columnVisibility, rowSelection, globalFilter, pagination },
     getRowId: (row) => row.id,
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
     onColumnVisibilityChange: setColumnVisibility,
     onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
@@ -303,6 +313,15 @@ export default function RolesPage() {
           </DropdownMenuContent>
         </DropdownMenu>
       </PageHeader>
+
+      <div className="flex items-center gap-2">
+        <Input
+          placeholder="Search roles..."
+          value={globalFilter}
+          onChange={(e) => setGlobalFilter(e.target.value)}
+          className="max-w-sm"
+        />
+      </div>
 
       <div className="overflow-hidden rounded-lg border">
         <Table>

@@ -65,6 +65,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { PageHeader } from "@/components/page-header"
+import { usePermissions } from "@/hooks/use-permissions"
 
 interface User {
   id: string
@@ -174,6 +175,7 @@ function UserForm({
 }
 
 export default function UsersPage() {
+  const { hasPermission } = usePermissions()
   const { data: users = [], mutate, isLoading } = useSWR<User[]>("/api/users", fetcher)
   const { data: roles = [] } = useSWR<Role[]>("/api/roles", fetcher)
   
@@ -184,6 +186,7 @@ export default function UsersPage() {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [sorting, setSorting] = React.useState<SortingState>([])
+  const [globalFilter, setGlobalFilter] = React.useState("")
   const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
 
   const handleCreate = async (data: Partial<User>) => {
@@ -285,18 +288,24 @@ export default function UsersPage() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-32">
-            <DropdownMenuItem onClick={() => setEditingUser(row.original)}>
-              <IconEdit className="mr-2 size-4" />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => setDeletingUser(row.original)}
-              className="text-destructive focus:text-destructive"
-            >
-              <IconTrash className="mr-2 size-4" />
-              Delete
-            </DropdownMenuItem>
+            {hasPermission("users:write") && (
+              <DropdownMenuItem onClick={() => setEditingUser(row.original)}>
+                <IconEdit className="mr-2 size-4" />
+                Edit
+              </DropdownMenuItem>
+            )}
+            {hasPermission("users:delete") && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => setDeletingUser(row.original)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <IconTrash className="mr-2 size-4" />
+                  Delete
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       ),
@@ -306,11 +315,12 @@ export default function UsersPage() {
   const table = useReactTable({
     data: users,
     columns,
-    state: { sorting, columnVisibility, rowSelection, pagination },
+    state: { sorting, columnVisibility, rowSelection, globalFilter, pagination },
     getRowId: (row) => row.id,
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
     onColumnVisibilityChange: setColumnVisibility,
     onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
@@ -346,11 +356,22 @@ export default function UsersPage() {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-          <Button onClick={() => setIsCreateOpen(true)}>
-            <IconPlus />
-            Add User
-          </Button>
+          {hasPermission("users:write") && (
+            <Button onClick={() => setIsCreateOpen(true)}>
+              <IconPlus />
+              Add User
+            </Button>
+          )}
         </PageHeader>
+
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Search users..."
+              value={globalFilter}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              className="max-w-sm"
+            />
+          </div>
 
           <div className="overflow-hidden rounded-lg border">
             <Table>
@@ -383,10 +404,12 @@ export default function UsersPage() {
                     <TableCell colSpan={columns.length} className="h-24 text-center">
                       <div className="flex flex-col items-center gap-2 py-8">
                         <div className="text-muted-foreground">No admin users found</div>
-                        <Button size="sm" onClick={() => setIsCreateOpen(true)}>
-                          <IconPlus className="size-4" />
-                          Add User
-                        </Button>
+                        {hasPermission("users:write") && (
+                          <Button size="sm" onClick={() => setIsCreateOpen(true)}>
+                            <IconPlus className="size-4" />
+                            Add User
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

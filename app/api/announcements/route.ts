@@ -1,4 +1,4 @@
-import { createAdminClient } from "@/lib/supabase/server"
+import { createAdminClient, requirePermission } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 
 export async function GET() {
@@ -34,6 +34,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const denied = await requirePermission("announcements:write")
+  if (denied) return denied
+
   const supabase = createAdminClient()
   const body = await request.json()
 

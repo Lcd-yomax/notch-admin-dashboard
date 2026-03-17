@@ -60,6 +60,7 @@ import {
 } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
 import { PageHeader } from "@/components/page-header"
+import { usePermissions } from "@/hooks/use-permissions"
 
 interface Announcement {
   id: string
@@ -160,6 +161,7 @@ function AnnouncementForm({
 }
 
 export default function AnnouncementsPage() {
+  const { hasPermission } = usePermissions()
   const { data: announcements = [], mutate, isLoading } = useSWR<Announcement[]>("/api/announcements", fetcher)
   
   const [isCreateOpen, setIsCreateOpen] = React.useState(false)
@@ -170,6 +172,7 @@ export default function AnnouncementsPage() {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [sorting, setSorting] = React.useState<SortingState>([])
+  const [globalFilter, setGlobalFilter] = React.useState("")
   const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
 
   const handleCreate = async (data: Partial<Announcement>) => {
@@ -275,18 +278,24 @@ export default function AnnouncementsPage() {
               <IconEye className="mr-2 size-4" />
               View
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setEditingAnnouncement(row.original)}>
-              <IconEdit className="mr-2 size-4" />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => setDeletingAnnouncement(row.original)}
-              className="text-destructive focus:text-destructive"
-            >
-              <IconTrash className="mr-2 size-4" />
-              Delete
-            </DropdownMenuItem>
+            {hasPermission("announcements:write") && (
+              <DropdownMenuItem onClick={() => setEditingAnnouncement(row.original)}>
+                <IconEdit className="mr-2 size-4" />
+                Edit
+              </DropdownMenuItem>
+            )}
+            {hasPermission("announcements:delete") && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => setDeletingAnnouncement(row.original)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <IconTrash className="mr-2 size-4" />
+                  Delete
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       ),
@@ -296,11 +305,12 @@ export default function AnnouncementsPage() {
   const table = useReactTable({
     data: announcements,
     columns,
-    state: { sorting, columnVisibility, rowSelection, pagination },
+    state: { sorting, columnVisibility, rowSelection, globalFilter, pagination },
     getRowId: (row) => row.id,
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
     onColumnVisibilityChange: setColumnVisibility,
     onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
@@ -336,11 +346,22 @@ export default function AnnouncementsPage() {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-          <Button onClick={() => setIsCreateOpen(true)}>
-            <IconPlus />
-            Create Announcement
-          </Button>
+          {hasPermission("announcements:write") && (
+            <Button onClick={() => setIsCreateOpen(true)}>
+              <IconPlus />
+              Create Announcement
+            </Button>
+          )}
         </PageHeader>
+
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Search announcements..."
+              value={globalFilter}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              className="max-w-sm"
+            />
+          </div>
 
           <div className="overflow-hidden rounded-lg border">
             <Table>
@@ -373,10 +394,12 @@ export default function AnnouncementsPage() {
                     <TableCell colSpan={columns.length} className="h-24 text-center">
                       <div className="flex flex-col items-center gap-2 py-8">
                         <div className="text-muted-foreground">No announcements</div>
-                        <Button size="sm" onClick={() => setIsCreateOpen(true)}>
-                          <IconPlus className="size-4" />
-                          Add Announcement
-                        </Button>
+                        {hasPermission("announcements:write") && (
+                          <Button size="sm" onClick={() => setIsCreateOpen(true)}>
+                            <IconPlus className="size-4" />
+                            Add Announcement
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -443,7 +466,9 @@ export default function AnnouncementsPage() {
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setViewingAnnouncement(null)}>Close</Button>
-                <Button onClick={() => { setViewingAnnouncement(null); setEditingAnnouncement(viewingAnnouncement); }}>Edit</Button>
+                {hasPermission("announcements:write") && (
+                  <Button onClick={() => { setViewingAnnouncement(null); setEditingAnnouncement(viewingAnnouncement); }}>Edit</Button>
+                )}
               </DialogFooter>
             </div>
           </DialogContent>

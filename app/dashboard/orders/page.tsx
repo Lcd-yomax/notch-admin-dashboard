@@ -45,6 +45,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
   Select,
@@ -62,6 +63,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { PageHeader } from "@/components/page-header"
+import { usePermissions } from "@/hooks/use-permissions"
 
 interface Order {
   id: string
@@ -130,6 +132,7 @@ function OrderStatusForm({
 }
 
 export default function OrdersPage() {
+  const { hasPermission } = usePermissions()
   const { data: orders = [], mutate, isLoading } = useSWR<Order[]>("/api/orders", fetcher)
   
   const [editingOrder, setEditingOrder] = React.useState<Order | null>(null)
@@ -138,6 +141,7 @@ export default function OrdersPage() {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [sorting, setSorting] = React.useState<SortingState>([])
+  const [globalFilter, setGlobalFilter] = React.useState("")
   const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
 
   const handleUpdateStatus = async (status: string) => {
@@ -238,11 +242,15 @@ export default function OrdersPage() {
               <IconEye className="mr-2 size-4" />
               View Details
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => setEditingOrder(row.original)}>
-              <IconEdit className="mr-2 size-4" />
-              Update Status
-            </DropdownMenuItem>
+            {hasPermission("orders:update_status") && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setEditingOrder(row.original)}>
+                  <IconEdit className="mr-2 size-4" />
+                  Update Status
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       ),
@@ -252,11 +260,12 @@ export default function OrdersPage() {
   const table = useReactTable({
     data: orders,
     columns,
-    state: { sorting, columnVisibility, rowSelection, pagination },
+    state: { sorting, columnVisibility, rowSelection, globalFilter, pagination },
     getRowId: (row) => row.id,
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
     onColumnVisibilityChange: setColumnVisibility,
     onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
@@ -293,6 +302,15 @@ export default function OrdersPage() {
                 </DropdownMenuContent>
               </DropdownMenu>
       </PageHeader>
+
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Search orders..."
+              value={globalFilter}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              className="max-w-sm"
+            />
+          </div>
 
           <div className="overflow-hidden rounded-lg border">
             <Table>

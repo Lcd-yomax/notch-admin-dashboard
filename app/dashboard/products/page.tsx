@@ -72,6 +72,7 @@ import {
 } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
 import { PageHeader } from "@/components/page-header"
+import { usePermissions } from "@/hooks/use-permissions"
 
 interface Product {
   id: string
@@ -298,6 +299,7 @@ function ProductForm({
 
 export default function ProductsPage() {
   const router = useRouter()
+  const { hasPermission } = usePermissions()
   const { data: products = [], mutate, isLoading } = useSWR<Product[]>("/api/products", fetcher)
   const { data: categories = [] } = useSWR<Category[]>("/api/categories", fetcher)
   
@@ -313,6 +315,7 @@ export default function ProductsPage() {
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [sorting, setSorting] = React.useState<SortingState>([])
+  const [globalFilter, setGlobalFilter] = React.useState("")
   const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
 
   const uploadImages = async (files: File[]): Promise<string[]> => {
@@ -617,26 +620,32 @@ export default function ProductsPage() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-32">
-            <DropdownMenuItem onClick={async () => {
-              const res = await fetch(`/api/products/${row.original.id}`)
-              const full = await res.json()
-              setEditingProduct({ ...row.original, product_images: full.product_images || [] })
-            }}>
-              <IconEdit className="mr-2 size-4" />
-              Edit
-            </DropdownMenuItem>
+            {hasPermission("products:write") && (
+              <DropdownMenuItem onClick={async () => {
+                const res = await fetch(`/api/products/${row.original.id}`)
+                const full = await res.json()
+                setEditingProduct({ ...row.original, product_images: full.product_images || [] })
+              }}>
+                <IconEdit className="mr-2 size-4" />
+                Edit
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem onClick={() => router.push(`/dashboard/products/${row.original.id}`)}>
               <IconEye className="mr-2 size-4" />
               View
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => setDeletingProduct(row.original)}
-              className="text-destructive focus:text-destructive"
-            >
-              <IconTrash className="mr-2 size-4" />
-              Delete
-            </DropdownMenuItem>
+            {hasPermission("products:delete") && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => setDeletingProduct(row.original)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <IconTrash className="mr-2 size-4" />
+                  Delete
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       ),
@@ -646,12 +655,13 @@ export default function ProductsPage() {
   const table = useReactTable({
     data: products,
     columns,
-    state: { sorting, columnVisibility, rowSelection, columnFilters, pagination },
+    state: { sorting, columnVisibility, rowSelection, columnFilters, globalFilter, pagination },
     getRowId: (row) => row.id,
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: setGlobalFilter,
     onColumnVisibilityChange: setColumnVisibility,
     onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
@@ -687,22 +697,35 @@ export default function ProductsPage() {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-          <Button onClick={() => setIsCreateOpen(true)}>
-            <IconPlus />
-            Add Product
-          </Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".xlsx,.xls"
-            onChange={handleFileChange}
-            className="hidden"
-          />
-          <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
-            <IconUpload />
-            Import Excel
-          </Button>
+          {hasPermission("products:write") && (
+            <>
+              <Button onClick={() => setIsCreateOpen(true)}>
+                <IconPlus />
+                Add Product
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+                <IconUpload />
+                Import Excel
+              </Button>
+            </>
+          )}
         </PageHeader>
+
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Search products..."
+              value={globalFilter}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              className="max-w-sm"
+            />
+          </div>
 
           <div className="overflow-hidden rounded-lg border">
             <Table>
@@ -735,10 +758,12 @@ export default function ProductsPage() {
                     <TableCell colSpan={columns.length} className="h-24 text-center">
                       <div className="flex flex-col items-center gap-2 py-8">
                         <div className="text-muted-foreground">No products found</div>
-                        <Button size="sm" onClick={() => setIsCreateOpen(true)}>
-                          <IconPlus className="size-4" />
-                          Add Product
-                        </Button>
+                        {hasPermission("products:write") && (
+                          <Button size="sm" onClick={() => setIsCreateOpen(true)}>
+                            <IconPlus className="size-4" />
+                            Add Product
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

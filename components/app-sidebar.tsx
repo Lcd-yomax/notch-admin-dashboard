@@ -31,77 +31,91 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
+import { usePermissions } from '@/hooks/use-permissions'
 
-const data = {
-  user: {
-    name: "Admin User",
-    email: "admin@store.com",
-    avatar: "/avatars/admin.jpg",
+const navMain = [
+  {
+    title: "Dashboard",
+    url: "/dashboard",
+    icon: IconDashboard,
+    permission: null, // always visible
   },
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: IconDashboard,
-    },
-    {
-      title: "Products",
-      url: "/dashboard/products",
-      icon: IconBox,
-    },
-    {
-      title: "Categories",
-      url: "/dashboard/categories",
-      icon: IconCategory,
-    },
-    {
-      title: "Orders",
-      url: "/dashboard/orders",
-      icon: IconShoppingCart,
-    },
-    {
-      title: "Reviews",
-      url: "/dashboard/reviews",
-      icon: IconStar,
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Settings",
-      url: "#",
-      icon: IconSettings,
-    },
-    {
-      title: "Get Help",
-      url: "#",
-      icon: IconHelp,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: IconSearch,
-    },
-  ],
-  documents: [
-    {
-      name: "Users",
-      url: "/dashboard/users",
-      icon: IconUsers,
-    },
-    {
-      name: "Roles & Permissions",
-      url: "/dashboard/roles",
-      icon: IconUserShield,
-    },
-    {
-      name: "Announcements",
-      url: "/dashboard/announcements",
-      icon: IconBellRinging,
-    },
-  ],
-}
+  {
+    title: "Products",
+    url: "/dashboard/products",
+    icon: IconBox,
+    permission: "products:read",
+  },
+  {
+    title: "Categories",
+    url: "/dashboard/categories",
+    icon: IconCategory,
+    permission: "products:read",
+  },
+  {
+    title: "Orders",
+    url: "/dashboard/orders",
+    icon: IconShoppingCart,
+    permission: "orders:read",
+  },
+  {
+    title: "Reviews",
+    url: "/dashboard/reviews",
+    icon: IconStar,
+    permission: "reviews:read",
+  },
+]
+
+const navSecondary = [
+  {
+    title: "Settings",
+    url: "#",
+    icon: IconSettings,
+  },
+  {
+    title: "Get Help",
+    url: "#",
+    icon: IconHelp,
+  },
+  {
+    title: "Search",
+    url: "#",
+    icon: IconSearch,
+  },
+]
+
+const documents = [
+  {
+    name: "Users",
+    url: "/dashboard/users",
+    icon: IconUsers,
+    permission: "users:read",
+  },
+  {
+    name: "Roles & Permissions",
+    url: "/dashboard/roles",
+    icon: IconUserShield,
+    permission: "roles:manage",
+  },
+  {
+    name: "Announcements",
+    url: "/dashboard/announcements",
+    icon: IconBellRinging,
+    permission: "announcements:read",
+  },
+]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { user, hasPermission } = usePermissions()
+
+  const filteredNavMain = navMain.filter(
+    (item) => !item.permission || hasPermission(item.permission)
+  )
+
+  const filteredDocuments = documents.filter(
+    (item) => hasPermission(item.permission)
+  )
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -120,12 +134,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavMain items={filteredNavMain} />
+        {filteredDocuments.length > 0 && <NavDocuments items={filteredDocuments} />}
+        <NavSecondary items={navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={user ? { name: user.full_name || user.email, email: user.email, avatar: "" } : { name: "", email: "", avatar: "" }} />
       </SidebarFooter>
     </Sidebar>
   )

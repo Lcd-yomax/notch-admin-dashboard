@@ -1,10 +1,13 @@
-import { createAdminClient } from "@/lib/supabase/server"
+import { createAdminClient, requirePermission } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await requirePermission("reviews:delete")
+  if (denied) return denied
+
   const { id } = await params
   const supabase = createAdminClient()
 
