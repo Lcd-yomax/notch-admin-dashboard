@@ -55,12 +55,26 @@ export async function requirePermission(permission: string): Promise<NextRespons
   }
 
   const admin = createAdminClient()
-  const { data: hasAccess } = await admin.rpc("has_permission", {
-    user_id: user.id,
-    permission_key: permission,
-  })
 
-  if (!hasAccess) {
+  // Look up the user's role, then check if that role has the permission
+  const { data: dashUser } = await admin
+    .from("dashboard_users")
+    .select("role_id, is_active")
+    .eq("id", user.id)
+    .single()
+
+  if (!dashUser || !dashUser.is_active) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  }
+
+  const { data: perm } = await admin
+    .from("role_permissions")
+    .select("permission_id, permissions!inner(key)")
+    .eq("role_id", dashUser.role_id)
+    .eq("permissions.key", permission)
+    .maybeSingle()
+
+  if (!perm) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
