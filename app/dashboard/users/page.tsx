@@ -318,6 +318,13 @@ export default function UsersPage() {
     state: { sorting, columnVisibility, rowSelection, globalFilter, pagination },
     getRowId: (row) => row.id,
     enableRowSelection: true,
+    globalFilterFn: (row, _columnId, filterValue) => {
+      const q = String(filterValue).toLowerCase()
+      const u = row.original
+      return [
+        u.full_name, u.email, u.role_name,
+      ].some((v) => v && String(v).toLowerCase().includes(q))
+    },
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,

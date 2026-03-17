@@ -274,6 +274,13 @@ export default function RolesPage() {
     state: { sorting, columnVisibility, rowSelection, globalFilter, pagination },
     getRowId: (row) => row.id,
     enableRowSelection: true,
+    globalFilterFn: (row, _columnId, filterValue) => {
+      const q = String(filterValue).toLowerCase()
+      const r = row.original
+      return [
+        r.name, r.description,
+      ].some((v) => v && String(v).toLowerCase().includes(q))
+    },
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,

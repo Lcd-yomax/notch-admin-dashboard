@@ -222,6 +222,13 @@ export default function ReviewsPage() {
     state: { sorting, columnVisibility, rowSelection, globalFilter, pagination },
     getRowId: (row) => row.id,
     enableRowSelection: true,
+    globalFilterFn: (row, _columnId, filterValue) => {
+      const q = String(filterValue).toLowerCase()
+      const r = row.original
+      return [
+        r.product_name, r.full_name, r.email, r.comment,
+      ].some((v) => v && String(v).toLowerCase().includes(q))
+    },
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,

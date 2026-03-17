@@ -658,6 +658,13 @@ export default function ProductsPage() {
     state: { sorting, columnVisibility, rowSelection, columnFilters, globalFilter, pagination },
     getRowId: (row) => row.id,
     enableRowSelection: true,
+    globalFilterFn: (row, _columnId, filterValue) => {
+      const q = String(filterValue).toLowerCase()
+      const p = row.original
+      return [
+        p.name, p.slug, p.description, p.category_name,
+      ].some((v) => v && String(v).toLowerCase().includes(q))
+    },
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,

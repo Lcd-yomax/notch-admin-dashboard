@@ -308,6 +308,13 @@ export default function AnnouncementsPage() {
     state: { sorting, columnVisibility, rowSelection, globalFilter, pagination },
     getRowId: (row) => row.id,
     enableRowSelection: true,
+    globalFilterFn: (row, _columnId, filterValue) => {
+      const q = String(filterValue).toLowerCase()
+      const a = row.original
+      return [
+        a.title, a.body, a.cta_label, a.created_by_name,
+      ].some((v) => v && String(v).toLowerCase().includes(q))
+    },
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
