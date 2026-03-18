@@ -731,7 +731,7 @@ export default function ProductDetailPage({
           <DialogHeader>
             <DialogTitle>{t("deleteVariation")}</DialogTitle>
             <DialogDescription>
-              {t("deleteVariationConfirm", { sku: deletingVariation?.sku })}
+              {t("deleteVariationConfirm", { sku: deletingVariation?.sku ?? "" })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

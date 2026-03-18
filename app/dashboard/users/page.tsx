@@ -482,7 +482,7 @@ export default function UsersPage() {
             <DialogHeader>
               <DialogTitle>{t("deleteUser")}</DialogTitle>
               <DialogDescription>
-                {t("deleteUserConfirm", { email: deletingUser?.email })}
+                {t("deleteUserConfirm", { email: deletingUser?.email ?? "" })}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>

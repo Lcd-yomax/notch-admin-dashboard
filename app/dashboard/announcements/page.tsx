@@ -522,7 +522,7 @@ export default function AnnouncementsPage() {
             <DialogHeader>
               <DialogTitle>{t("deleteAnnouncement")}</DialogTitle>
               <DialogDescription>
-                {t("deleteAnnouncementConfirm", { title: deletingAnnouncement?.title })}
+                {t("deleteAnnouncementConfirm", { title: deletingAnnouncement?.title ?? "" })}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
