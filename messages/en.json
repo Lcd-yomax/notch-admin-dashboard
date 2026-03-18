@@ -26,7 +26,7 @@
     "upload": "Upload"
   },
   "brand": {
-    "name": "E-Commerce Admin",
+    "name": "Notch",
     "dashboard": "E-Commerce Dashboard"
   },
   "nav": {
@@ -251,6 +251,9 @@
     "enterTitle": "Announcement title",
     "body": "Body",
     "enterBody": "Write your announcement...",
+    "ctaLabel": "Button Label",
+    "enterCtaLabel": "e.g. Learn More",
+    "ctaUrl": "Link URL",
     "startsAt": "Starts At",
     "endsAt": "Ends At",
     "activeVisible": "Active (visible to users)",
@@ -313,7 +316,7 @@
     "deleteRoleConfirm": "Are you sure you want to delete \"{name}\"? Users with this role will lose access."
   },
   "auth": {
-    "brandName": "E-Commerce Admin",
+    "brandName": "Notch",
     "welcomeBack": "Welcome back",
     "signInDescription": "Sign in to your admin account to continue",
     "email": "Email",

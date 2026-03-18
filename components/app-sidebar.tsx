@@ -123,6 +123,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={filteredNavMain} />
+        <NavDocuments items={filteredDocuments} />
         </SidebarContent>
       <SidebarFooter>
         <NavUser user={user ? { name: user.full_name || user.email, email: user.email, avatar: "" } : { name: "", email: "", avatar: "" }} />

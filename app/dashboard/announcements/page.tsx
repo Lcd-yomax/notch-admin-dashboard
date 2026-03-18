@@ -92,6 +92,8 @@ function AnnouncementForm({
   const tc = useTranslations("common")
   const [title, setTitle] = React.useState(announcement?.title || "")
   const [body, setBody] = React.useState(announcement?.body || "")
+  const [ctaLabel, setCtaLabel] = React.useState(announcement?.cta_label || "")
+  const [ctaUrl, setCtaUrl] = React.useState(announcement?.cta_url || "")
   const [isActive, setIsActive] = React.useState(announcement?.is_active ?? true)
   const [startsAt, setStartsAt] = React.useState(announcement?.starts_at ? announcement.starts_at.slice(0, 16) : "")
   const [endsAt, setEndsAt] = React.useState(announcement?.ends_at ? announcement.ends_at.slice(0, 16) : "")
@@ -101,6 +103,8 @@ function AnnouncementForm({
     onSave({
       title,
       body,
+      cta_label: ctaLabel || null,
+      cta_url: ctaUrl || null,
       starts_at: new Date(startsAt).toISOString(),
       ends_at: new Date(endsAt).toISOString(),
       is_active: isActive,
@@ -128,6 +132,27 @@ function AnnouncementForm({
           placeholder={t("enterBody")}
           rows={5}
         />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="cta_label">{t("ctaLabel")}</Label>
+          <Input
+            id="cta_label"
+            value={ctaLabel}
+            onChange={(e) => setCtaLabel(e.target.value)}
+            placeholder={t("enterCtaLabel")}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="cta_url">{t("ctaUrl")}</Label>
+          <Input
+            id="cta_url"
+            type="url"
+            value={ctaUrl}
+            onChange={(e) => setCtaUrl(e.target.value)}
+            placeholder="https://example.com"
+          />
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
