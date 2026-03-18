@@ -386,7 +386,7 @@ export default function ReviewsPage() {
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>{t("reviewDetails")}</DialogTitle>
-              <DialogDescription>{t("reviewFor", { productName: viewingReview?.product_name })}</DialogDescription>
+              <DialogDescription>{t("reviewFor", { productName: viewingReview?.product_name ?? "" })}</DialogDescription>
             </DialogHeader>
             {viewingReview && (
               <div className="flex flex-col gap-5">
@@ -478,7 +478,7 @@ export default function ReviewsPage() {
             <DialogHeader>
               <DialogTitle>{t("deleteReview")}</DialogTitle>
               <DialogDescription>
-                {t("deleteReviewConfirm", { name: deletingReview?.full_name })}
+                {t("deleteReviewConfirm", { name: deletingReview?.full_name ?? "" })}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>

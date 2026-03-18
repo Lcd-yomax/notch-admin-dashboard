@@ -393,7 +393,7 @@ export default function OrdersPage() {
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>{t("updateOrderStatus")}</DialogTitle>
-              <DialogDescription>{t("changeStatus", { orderNumber: editingOrder?.order_number })}</DialogDescription>
+              <DialogDescription>{t("changeStatus", { orderNumber: editingOrder?.order_number ?? "" })}</DialogDescription>
             </DialogHeader>
             {editingOrder && <OrderStatusForm order={editingOrder} onSave={handleUpdateStatus} onCancel={() => setEditingOrder(null)} />}
           </DialogContent>

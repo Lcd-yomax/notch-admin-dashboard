@@ -45,22 +45,16 @@ export async function PUT(
   const supabase = createAdminClient()
   const { keepIds, newUrls, variationId } = await request.json()
 
-  // Build base query scoped to product (and optionally variation)
-  const scopeQuery = (query: ReturnType<typeof supabase.from>) => {
-    const q = query.eq("product_id", id)
-    if (variationId) return q.eq("variation_id", variationId)
-    return q.is("variation_id", null)
-  }
-
   // Delete images that are no longer kept
   if (Array.isArray(keepIds)) {
-    const { data: existing } = await scopeQuery(
-      supabase.from("product_images").select("id")
-    )
+    const baseQuery = supabase.from("product_images").select("id").eq("product_id", id)
+    const { data: existing } = variationId
+      ? await baseQuery.eq("variation_id", variationId)
+      : await baseQuery.is("variation_id", null)
 
     const toDelete = (existing || [])
-      .filter((img) => !keepIds.includes(img.id))
-      .map((img) => img.id)
+      .filter((img: { id: string }) => !keepIds.includes(img.id))
+      .map((img: { id: string }) => img.id)
 
     if (toDelete.length > 0) {
       await supabase

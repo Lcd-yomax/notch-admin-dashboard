@@ -424,7 +424,7 @@ export default function RolesPage() {
             <DialogHeader>
               <DialogTitle>{t("deleteRole")}</DialogTitle>
               <DialogDescription>
-                {t("deleteRoleConfirm", { name: deletingRole?.name })}
+                {t("deleteRoleConfirm", { name: deletingRole?.name ?? "" })}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
