@@ -75,7 +75,7 @@ interface OrderDetail {
   phone: string | null
   city: string
   address: string
-  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled"
+  status: string
   total_amount: number
   notes: string | null
   created_at: string
@@ -96,18 +96,36 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
 const statusClasses: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800",
-  processing: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800",
-  shipped: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800",
-  delivered: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800",
+  confirmed: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800",
+  call_1: "bg-gray-100 text-gray-800 dark:bg-gray-800/30 dark:text-gray-400 border-gray-200 dark:border-gray-700",
+  call_2: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400 border-orange-200 dark:border-orange-800",
+  call_3: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400 border-orange-200 dark:border-orange-800",
+  call_whatsapp: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200 dark:border-purple-800",
+  call_sms: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800",
+  no_response: "bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-400 border-violet-200 dark:border-violet-800",
+  postponed: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800",
+  unreachable: "bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-400 border-sky-200 dark:border-sky-800",
+  voicemail: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800",
   cancelled: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800",
+  not_serious: "bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900/30 dark:text-fuchsia-400 border-fuchsia-200 dark:border-fuchsia-800",
+  fake_order: "bg-zinc-200 text-zinc-900 dark:bg-zinc-800/50 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700",
 }
 
 const statusButtonClasses: Record<string, string> = {
   pending: "bg-yellow-600 hover:bg-yellow-700 text-white",
-  processing: "bg-blue-600 hover:bg-blue-700 text-white",
-  shipped: "bg-indigo-600 hover:bg-indigo-700 text-white",
-  delivered: "bg-green-600 hover:bg-green-700 text-white",
+  confirmed: "bg-green-600 hover:bg-green-700 text-white",
+  call_1: "bg-gray-600 hover:bg-gray-700 text-white",
+  call_2: "bg-orange-600 hover:bg-orange-700 text-white",
+  call_3: "bg-orange-600 hover:bg-orange-700 text-white",
+  call_whatsapp: "bg-purple-600 hover:bg-purple-700 text-white",
+  call_sms: "bg-blue-600 hover:bg-blue-700 text-white",
+  no_response: "bg-violet-600 hover:bg-violet-700 text-white",
+  postponed: "bg-amber-600 hover:bg-amber-700 text-white",
+  unreachable: "bg-sky-600 hover:bg-sky-700 text-white",
+  voicemail: "bg-indigo-600 hover:bg-indigo-700 text-white",
   cancelled: "bg-red-600 hover:bg-red-700 text-white",
+  not_serious: "bg-fuchsia-600 hover:bg-fuchsia-700 text-white",
+  fake_order: "bg-zinc-700 hover:bg-zinc-800 text-white",
 }
 
 export default function OrderDetailPage() {
@@ -428,10 +446,19 @@ export default function OrderDetailPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="pending">{t("pending")}</SelectItem>
-                  <SelectItem value="processing">{t("processing")}</SelectItem>
-                  <SelectItem value="shipped">{t("shipped")}</SelectItem>
-                  <SelectItem value="delivered">{t("delivered")}</SelectItem>
+                  <SelectItem value="confirmed">{t("confirmed")}</SelectItem>
+                  <SelectItem value="call_1">{t("call_1")}</SelectItem>
+                  <SelectItem value="call_2">{t("call_2")}</SelectItem>
+                  <SelectItem value="call_3">{t("call_3")}</SelectItem>
+                  <SelectItem value="call_whatsapp">{t("call_whatsapp")}</SelectItem>
+                  <SelectItem value="call_sms">{t("call_sms")}</SelectItem>
+                  <SelectItem value="no_response">{t("no_response")}</SelectItem>
+                  <SelectItem value="postponed">{t("postponed")}</SelectItem>
+                  <SelectItem value="unreachable">{t("unreachable")}</SelectItem>
+                  <SelectItem value="voicemail">{t("voicemail")}</SelectItem>
                   <SelectItem value="cancelled">{t("cancelled")}</SelectItem>
+                  <SelectItem value="not_serious">{t("not_serious")}</SelectItem>
+                  <SelectItem value="fake_order">{t("fake_order")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>

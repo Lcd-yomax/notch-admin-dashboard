@@ -114,10 +114,19 @@ const fetcher = (url: string) => fetch(url).then(r => r.json())
 
 const orderStatusClasses: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
-  processing: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
-  shipped: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300",
-  delivered: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+  confirmed: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+  call_1: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300",
+  call_2: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
+  call_3: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
+  call_whatsapp: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
+  call_sms: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
+  no_response: "bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-300",
+  postponed: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-300",
+  unreachable: "bg-sky-100 text-sky-800 dark:bg-sky-900 dark:text-sky-300",
+  voicemail: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300",
   cancelled: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
+  not_serious: "bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900 dark:text-fuchsia-300",
+  fake_order: "bg-zinc-200 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-300",
 }
 
 function useGenericTable<T>(data: T[], columns: ColumnDef<T>[]) {
