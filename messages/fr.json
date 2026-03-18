@@ -22,7 +22,8 @@
     "share": "Partager",
     "more": "Plus",
     "confirm": "Confirmer",
-    "back": "Retour"
+    "back": "Retour",
+    "upload": "Télécharger"
   },
   "brand": {
     "name": "E-Commerce Admin",
@@ -101,7 +102,8 @@
     "noImg": "Pas d'img",
     "enterProductName": "Entrer le nom du produit",
     "productSlug": "slug-du-produit",
-    "enterProductDescription": "Entrer la description du produit"
+    "enterProductDescription": "Entrer la description du produit",
+    "variationsHint": "Vous pouvez ajouter des variantes (couleurs, tailles, prix) maintenant ou plus tard depuis la page détail du produit."
   },
   "productDetail": {
     "overview": "Aperçu",
@@ -176,8 +178,8 @@
     "enterCategoryName": "Entrer le nom de la catégorie",
     "categorySlug": "slug-de-categorie",
     "imageUrl": "URL de l'image",
-    "imageUrlPlaceholder": "https://exemple.com/image.jpg",
-    "productsCount": "Produits"
+    "imageUrlPlaceholder": "https://exemple.com/image.jpg",    "uploadImage": "Cliquez pour télécharger une image",
+    "uploadImageHint": "PNG, JPG ou WEBP",    "productsCount": "Produits"
   },
   "orders": {
     "title": "Commandes",
@@ -201,7 +203,18 @@
     "delivered": "Livré",
     "cancelled": "Annulé",
     "shipping": "Livraison",
-    "notes": "Notes"
+    "notes": "Notes",
+    "product": "Produit",
+    "variation": "Variante",
+    "qty": "Qté",
+    "unitPrice": "Prix unitaire",
+    "lineTotal": "Total ligne",
+    "activityLog": "Journal d'activité",
+    "noActivity": "Aucune activité enregistrée",
+    "statusChanged": "Statut changé de {from} à {to}",
+    "orderCreated": "Commande créée",
+    "activityNote": "Note (optionnel)",
+    "activityNotePlaceholder": "Ajouter une note à propos de ce changement..."
   },
   "reviews": {
     "title": "Avis",
@@ -220,7 +233,10 @@
     "deleteReview": "Supprimer l'avis",
     "deleteReviewConfirm": "Êtes-vous sûr de vouloir supprimer cet avis de {name} ?",
     "noReviews": "Aucun avis pour le moment",
-    "reviewsWillAppear": "Les avis des clients apparaîtront ici"
+    "reviewsWillAppear": "Les avis des clients appara\u00eetront ici",
+    "approve": "Approuver",
+    "reject": "Rejeter",
+    "reviewImage": "Image de l'avis"
   },
   "announcements": {
     "title": "Annonces",
@@ -343,6 +359,51 @@
     "horizontalRule": "Ligne horizontale",
     "clearFormatting": "Effacer le formatage",
     "placeholder": "Commencez à écrire..."
+  },
+  "chart": {
+    "salesOverview": "Aperçu des ventes",
+    "orderActivity": "Activité des commandes pour la période sélectionnée",
+    "orderActivityShort": "Activité des commandes",
+    "last3Months": "3 derniers mois",
+    "last30Days": "30 derniers jours",
+    "last7Days": "7 derniers jours",
+    "orders": "Commandes",
+    "sales": "Ventes"
+  },
+  "dataTable": {
+    "products": "Produits",
+    "orders": "Commandes",
+    "categories": "Catégories",
+    "reviews": "Avis",
+    "selectView": "Sélectionner une vue",
+    "customizeColumns": "Personnaliser les colonnes",
+    "columns": "Colonnes",
+    "addProduct": "Ajouter un produit",
+    "productName": "Nom du produit",
+    "category": "Catégorie",
+    "uncategorized": "Non catégorisé",
+    "variations": "Variantes",
+    "status": "Statut",
+    "active": "Actif",
+    "inactive": "Inactif",
+    "created": "Créé",
+    "noImg": "Pas d'img",
+    "edit": "Modifier",
+    "viewDetails": "Voir les détails",
+    "duplicate": "Dupliquer",
+    "delete": "Supprimer",
+    "noProductsFound": "Aucun produit trouvé",
+    "addFirstProduct": "Ajoutez votre premier produit pour commencer",
+    "noOrdersYet": "Aucune commande",
+    "ordersWillAppear": "Les commandes apparaîtront ici lorsque les clients feront des achats",
+    "noCategoriesYet": "Aucune catégorie",
+    "createCategories": "Créez des catégories pour organiser vos produits",
+    "addCategory": "Ajouter une catégorie",
+    "noReviewsYet": "Aucun avis",
+    "reviewsWillAppear": "Les avis clients apparaîtront ici",
+    "rowsSelected": "{selected} sur {total} ligne(s) sélectionnée(s).",
+    "rowsPerPage": "Lignes par page",
+    "pageOf": "Page {current} sur {total}"
   },
   "language": {
     "label": "Langue",

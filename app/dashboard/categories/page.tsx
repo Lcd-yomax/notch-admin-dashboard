@@ -85,11 +85,30 @@ function CategoryForm({
   const [name, setName] = React.useState(category?.name || "")
   const [slug, setSlug] = React.useState(category?.slug || "")
   const [imageUrl, setImageUrl] = React.useState(category?.image_url || "")
+  const [uploading, setUploading] = React.useState(false)
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
 
   const handleNameChange = (value: string) => {
     setName(value)
     if (!category) {
       setSlug(value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""))
+    }
+  }
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+      const res = await fetch("/api/upload", { method: "POST", body: formData })
+      const data = await res.json()
+      if (data.url) {
+        setImageUrl(data.url)
+      }
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -121,13 +140,69 @@ function CategoryForm({
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="image_url">{t("imageUrl")}</Label>
-        <Input
-          id="image_url"
-          value={imageUrl}
-          onChange={(e) => setImageUrl(e.target.value)}
-          placeholder={t("imageUrlPlaceholder")}
+        <Label>{t("imageUrl")}</Label>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleImageUpload}
         />
+        {imageUrl ? (
+          <div className="relative group w-full">
+            <div className="overflow-hidden rounded-lg border bg-muted">
+              <img
+                src={imageUrl}
+                alt=""
+                className="mx-auto h-40 w-full object-contain"
+              />
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center gap-2 rounded-lg bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+              >
+                {tc("edit")}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="destructive"
+                onClick={() => setImageUrl("")}
+              >
+                {tc("delete")}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="flex w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/50 py-8 text-muted-foreground transition-colors hover:border-primary/50 hover:bg-muted hover:text-foreground"
+          >
+            {uploading ? (
+              <div className="flex items-center gap-2 text-sm">
+                <svg className="size-5 animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                {tc("loading")}
+              </div>
+            ) : (
+              <>
+                <svg className="size-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.41a2.25 2.25 0 013.182 0l2.909 2.91m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                </svg>
+                <span className="text-sm font-medium">{t("uploadImage")}</span>
+                <span className="text-xs">{t("uploadImageHint")}</span>
+              </>
+            )}
+          </button>
+        )}
       </div>
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onCancel}>{tc("cancel")}</Button>

@@ -25,7 +25,8 @@ import {
   type SortingState,
   type VisibilityState,
 } from "@tanstack/react-table"
-import { z } from "zod"
+import useSWR from "swr"
+import { useTranslations } from "next-intl"
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -61,137 +62,137 @@ import {
   TabsTrigger,
 } from '@/components/ui/tabs'
 
-// Schema matching the database products table
-export const productSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  slug: z.string(),
-  category: z.string().nullable(),
-  thumbnail_url: z.string().nullable(),
-  is_active: z.boolean(),
-  variations_count: z.number(),
-  created_at: z.string(),
-})
+type Product = {
+  id: string
+  name: string
+  slug: string
+  category_name: string | null
+  thumbnail_url: string | null
+  is_active: boolean
+  variations_count: number
+  created_at: string
+}
 
-type Product = z.infer<typeof productSchema>
+const fetcher = (url: string) => fetch(url).then(r => r.json())
 
-const columns: ColumnDef<Product>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <div className="flex items-center justify-center">
-        <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
-          }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-        />
-      </div>
-    ),
-    cell: ({ row }) => (
-      <div className="flex items-center justify-center">
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-        />
-      </div>
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "name",
-    header: "Product Name",
-    cell: ({ row }) => (
-      <div className="flex items-center gap-3">
-        {row.original.thumbnail_url ? (
-          <img
-            src={row.original.thumbnail_url}
-            alt={row.original.name}
-            className="size-10 rounded-md object-cover"
+export function DataTable() {
+  const t = useTranslations("dataTable")
+  const { data: products } = useSWR<Product[]>("/api/products", fetcher)
+  const { data: ordersData } = useSWR("/api/orders", fetcher)
+  const data = Array.isArray(products) ? products : []
+  const orderCount = Array.isArray(ordersData) ? ordersData.length : 0
+
+  const columns = React.useMemo<ColumnDef<Product>[]>(() => [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <div className="flex items-center justify-center">
+          <Checkbox
+            checked={
+              table.getIsAllPageRowsSelected() ||
+              (table.getIsSomePageRowsSelected() && "indeterminate")
+            }
+            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+            aria-label="Select all"
           />
-        ) : (
-          <div className="flex size-10 items-center justify-center rounded-md bg-muted text-xs text-muted-foreground">
-            No img
-          </div>
-        )}
-        <div>
-          <div className="font-medium">{row.original.name}</div>
-          <div className="text-xs text-muted-foreground">{row.original.slug}</div>
         </div>
-      </div>
-    ),
-    enableHiding: false,
-  },
-  {
-    accessorKey: "category",
-    header: "Category",
-    cell: ({ row }) => (
-      <Badge variant="outline" className="text-muted-foreground">
-        {row.original.category || "Uncategorized"}
-      </Badge>
-    ),
-  },
-  {
-    accessorKey: "variations_count",
-    header: "Variations",
-    cell: ({ row }) => (
-      <div className="text-center">{row.original.variations_count}</div>
-    ),
-  },
-  {
-    accessorKey: "is_active",
-    header: "Status",
-    cell: ({ row }) => (
-      <Badge variant={row.original.is_active ? "default" : "secondary"}>
-        {row.original.is_active ? "Active" : "Inactive"}
-      </Badge>
-    ),
-  },
-  {
-    accessorKey: "created_at",
-    header: "Created",
-    cell: ({ row }) => (
-      <div className="text-muted-foreground">
-        {new Date(row.original.created_at).toLocaleDateString()}
-      </div>
-    ),
-  },
-  {
-    id: "actions",
-    cell: () => (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
-            size="icon"
-          >
-            <IconDotsVertical />
-            <span className="sr-only">Open menu</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-32">
-          <DropdownMenuItem>Edit</DropdownMenuItem>
-          <DropdownMenuItem>View Details</DropdownMenuItem>
-          <DropdownMenuItem>Duplicate</DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    ),
-  },
-]
+      ),
+      cell: ({ row }) => (
+        <div className="flex items-center justify-center">
+          <Checkbox
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(!!value)}
+            aria-label="Select row"
+          />
+        </div>
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      accessorKey: "name",
+      header: t("productName"),
+      cell: ({ row }) => (
+        <div className="flex items-center gap-3">
+          {row.original.thumbnail_url ? (
+            <img
+              src={row.original.thumbnail_url}
+              alt={row.original.name}
+              className="size-10 rounded-md object-cover"
+            />
+          ) : (
+            <div className="flex size-10 items-center justify-center rounded-md bg-muted text-xs text-muted-foreground">
+              {t("noImg")}
+            </div>
+          )}
+          <div>
+            <div className="font-medium">{row.original.name}</div>
+            <div className="text-xs text-muted-foreground">{row.original.slug}</div>
+          </div>
+        </div>
+      ),
+      enableHiding: false,
+    },
+    {
+      accessorKey: "category_name",
+      header: t("category"),
+      cell: ({ row }) => (
+        <Badge variant="outline" className="text-muted-foreground">
+          {row.original.category_name || t("uncategorized")}
+        </Badge>
+      ),
+    },
+    {
+      accessorKey: "variations_count",
+      header: t("variations"),
+      cell: ({ row }) => (
+        <div className="text-center">{row.original.variations_count}</div>
+      ),
+    },
+    {
+      accessorKey: "is_active",
+      header: t("status"),
+      cell: ({ row }) => (
+        <Badge variant={row.original.is_active ? "default" : "secondary"}>
+          {row.original.is_active ? t("active") : t("inactive")}
+        </Badge>
+      ),
+    },
+    {
+      accessorKey: "created_at",
+      header: t("created"),
+      cell: ({ row }) => (
+        <div className="text-muted-foreground">
+          {new Date(row.original.created_at).toLocaleDateString()}
+        </div>
+      ),
+    },
+    {
+      id: "actions",
+      cell: () => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className="flex size-8 text-muted-foreground data-[state=open]:bg-muted"
+              size="icon"
+            >
+              <IconDotsVertical />
+              <span className="sr-only">Open menu</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-32">
+            <DropdownMenuItem>{t("edit")}</DropdownMenuItem>
+            <DropdownMenuItem>{t("viewDetails")}</DropdownMenuItem>
+            <DropdownMenuItem>{t("duplicate")}</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem variant="destructive">{t("delete")}</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
+    },
+  ], [t])
 
-export function DataTable({
-  data: initialData,
-}: {
-  data: Product[]
-}) {
-  const [data] = React.useState(() => initialData)
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
@@ -244,30 +245,30 @@ export function DataTable({
             size="sm"
             id="view-selector"
           >
-            <SelectValue placeholder="Select a view" />
+            <SelectValue placeholder={t("selectView")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="products">Products</SelectItem>
-            <SelectItem value="orders">Orders</SelectItem>
-            <SelectItem value="categories">Categories</SelectItem>
-            <SelectItem value="reviews">Reviews</SelectItem>
+            <SelectItem value="products">{t("products")}</SelectItem>
+            <SelectItem value="orders">{t("orders")}</SelectItem>
+            <SelectItem value="categories">{t("categories")}</SelectItem>
+            <SelectItem value="reviews">{t("reviews")}</SelectItem>
           </SelectContent>
         </Select>
         <TabsList className="hidden **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:bg-muted-foreground/30 **:data-[slot=badge]:px-1 @4xl/main:flex">
-          <TabsTrigger value="products">Products</TabsTrigger>
+          <TabsTrigger value="products">{t("products")}</TabsTrigger>
           <TabsTrigger value="orders">
-            Orders <Badge variant="secondary">0</Badge>
+            {t("orders")} <Badge variant="secondary">{orderCount}</Badge>
           </TabsTrigger>
-          <TabsTrigger value="categories">Categories</TabsTrigger>
-          <TabsTrigger value="reviews">Reviews</TabsTrigger>
+          <TabsTrigger value="categories">{t("categories")}</TabsTrigger>
+          <TabsTrigger value="reviews">{t("reviews")}</TabsTrigger>
         </TabsList>
         <div className="flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
                 <IconLayoutColumns />
-                <span className="hidden lg:inline">Customize Columns</span>
-                <span className="lg:hidden">Columns</span>
+                <span className="hidden lg:inline">{t("customizeColumns")}</span>
+                <span className="lg:hidden">{t("columns")}</span>
                 <IconChevronDown />
               </Button>
             </DropdownMenuTrigger>
@@ -297,7 +298,7 @@ export function DataTable({
           </DropdownMenu>
           <Button variant="outline" size="sm">
             <IconPlus />
-            <span className="hidden lg:inline">Add Product</span>
+            <span className="hidden lg:inline">{t("addProduct")}</span>
           </Button>
         </div>
       </div>
@@ -346,13 +347,13 @@ export function DataTable({
                     className="h-24 text-center"
                   >
                     <div className="flex flex-col items-center gap-2 py-8">
-                      <div className="text-muted-foreground">No products found</div>
+                      <div className="text-muted-foreground">{t("noProductsFound")}</div>
                       <div className="text-sm text-muted-foreground">
-                        Add your first product to get started
+                        {t("addFirstProduct")}
                       </div>
                       <Button size="sm" className="mt-2">
                         <IconPlus className="size-4" />
-                        Add Product
+                        {t("addProduct")}
                       </Button>
                     </div>
                   </TableCell>
@@ -363,13 +364,15 @@ export function DataTable({
         </div>
         <div className="flex items-center justify-between px-4">
           <div className="hidden flex-1 text-sm text-muted-foreground lg:flex">
-            {table.getFilteredSelectedRowModel().rows.length} of{" "}
-            {table.getFilteredRowModel().rows.length} row(s) selected.
+            {t("rowsSelected", {
+              selected: table.getFilteredSelectedRowModel().rows.length,
+              total: table.getFilteredRowModel().rows.length,
+            })}
           </div>
           <div className="flex w-full items-center gap-8 lg:w-fit">
             <div className="hidden items-center gap-2 lg:flex">
               <Label htmlFor="rows-per-page" className="text-sm font-medium">
-                Rows per page
+                {t("rowsPerPage")}
               </Label>
               <Select
                 value={`${table.getState().pagination.pageSize}`}
@@ -392,8 +395,10 @@ export function DataTable({
               </Select>
             </div>
             <div className="flex w-fit items-center justify-center text-sm font-medium">
-              Page {table.getState().pagination.pageIndex + 1} of{" "}
-              {table.getPageCount() || 1}
+              {t("pageOf", {
+                current: table.getState().pagination.pageIndex + 1,
+                total: table.getPageCount() || 1,
+              })}
             </div>
             <div className="ml-auto flex items-center gap-2 lg:ml-0">
               <Button
@@ -445,19 +450,19 @@ export function DataTable({
       >
         <div className="flex h-64 items-center justify-center rounded-lg border border-dashed">
           <div className="text-center">
-            <div className="text-muted-foreground">No orders yet</div>
-            <div className="text-sm text-muted-foreground">Orders will appear here when customers make purchases</div>
+            <div className="text-muted-foreground">{t("noOrdersYet")}</div>
+            <div className="text-sm text-muted-foreground">{t("ordersWillAppear")}</div>
           </div>
         </div>
       </TabsContent>
       <TabsContent value="categories" className="flex flex-col px-4 lg:px-6">
         <div className="flex h-64 items-center justify-center rounded-lg border border-dashed">
           <div className="text-center">
-            <div className="text-muted-foreground">No categories yet</div>
-            <div className="text-sm text-muted-foreground">Create categories to organize your products</div>
+            <div className="text-muted-foreground">{t("noCategoriesYet")}</div>
+            <div className="text-sm text-muted-foreground">{t("createCategories")}</div>
             <Button size="sm" className="mt-4">
               <IconPlus className="size-4" />
-              Add Category
+              {t("addCategory")}
             </Button>
           </div>
         </div>
@@ -468,8 +473,8 @@ export function DataTable({
       >
         <div className="flex h-64 items-center justify-center rounded-lg border border-dashed">
           <div className="text-center">
-            <div className="text-muted-foreground">No reviews yet</div>
-            <div className="text-sm text-muted-foreground">Customer reviews will appear here</div>
+            <div className="text-muted-foreground">{t("noReviewsYet")}</div>
+            <div className="text-sm text-muted-foreground">{t("reviewsWillAppear")}</div>
           </div>
         </div>
       </TabsContent>

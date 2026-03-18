@@ -30,6 +30,7 @@ import {
 import { Toggle } from "@/components/ui/toggle"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
+import { useTranslations } from "next-intl"
 
 function ToolbarButton({
   pressed,
@@ -60,6 +61,7 @@ function ToolbarButton({
 }
 
 function EditorToolbar({ editor }: { editor: Editor }) {
+  const t = useTranslations("editor")
   const setLink = React.useCallback(() => {
     const previousUrl = editor.getAttributes("link").href
     const url = window.prompt("URL", previousUrl)
@@ -92,7 +94,7 @@ function EditorToolbar({ editor }: { editor: Editor }) {
         pressed={false}
         onPressedChange={() => editor.chain().focus().undo().run()}
         disabled={!editor.can().undo()}
-        title="Undo"
+        title={t("undo")}
       >
         <IconArrowBackUp className="size-4" />
       </ToolbarButton>
@@ -100,7 +102,7 @@ function EditorToolbar({ editor }: { editor: Editor }) {
         pressed={false}
         onPressedChange={() => editor.chain().focus().redo().run()}
         disabled={!editor.can().redo()}
-        title="Redo"
+        title={t("redo")}
       >
         <IconArrowForwardUp className="size-4" />
       </ToolbarButton>
@@ -111,21 +113,21 @@ function EditorToolbar({ editor }: { editor: Editor }) {
       <ToolbarButton
         pressed={editor.isActive("heading", { level: 1 })}
         onPressedChange={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-        title="Heading 1"
+        title={t("heading1")}
       >
         <IconH1 className="size-4" />
       </ToolbarButton>
       <ToolbarButton
         pressed={editor.isActive("heading", { level: 2 })}
         onPressedChange={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-        title="Heading 2"
+        title={t("heading2")}
       >
         <IconH2 className="size-4" />
       </ToolbarButton>
       <ToolbarButton
         pressed={editor.isActive("heading", { level: 3 })}
         onPressedChange={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-        title="Heading 3"
+        title={t("heading3")}
       >
         <IconH3 className="size-4" />
       </ToolbarButton>
@@ -136,28 +138,28 @@ function EditorToolbar({ editor }: { editor: Editor }) {
       <ToolbarButton
         pressed={editor.isActive("bold")}
         onPressedChange={() => editor.chain().focus().toggleBold().run()}
-        title="Bold"
+        title={t("bold")}
       >
         <IconBold className="size-4" />
       </ToolbarButton>
       <ToolbarButton
         pressed={editor.isActive("italic")}
         onPressedChange={() => editor.chain().focus().toggleItalic().run()}
-        title="Italic"
+        title={t("italic")}
       >
         <IconItalic className="size-4" />
       </ToolbarButton>
       <ToolbarButton
         pressed={editor.isActive("underline")}
         onPressedChange={() => editor.chain().focus().toggleUnderline().run()}
-        title="Underline"
+        title={t("underline")}
       >
         <IconUnderline className="size-4" />
       </ToolbarButton>
       <ToolbarButton
         pressed={editor.isActive("strike")}
         onPressedChange={() => editor.chain().focus().toggleStrike().run()}
-        title="Strikethrough"
+        title={t("strikethrough")}
       >
         <IconStrikethrough className="size-4" />
       </ToolbarButton>
@@ -168,14 +170,14 @@ function EditorToolbar({ editor }: { editor: Editor }) {
       <ToolbarButton
         pressed={editor.isActive("bulletList")}
         onPressedChange={() => editor.chain().focus().toggleBulletList().run()}
-        title="Bullet List"
+        title={t("bulletList")}
       >
         <IconList className="size-4" />
       </ToolbarButton>
       <ToolbarButton
         pressed={editor.isActive("orderedList")}
         onPressedChange={() => editor.chain().focus().toggleOrderedList().run()}
-        title="Numbered List"
+        title={t("numberedList")}
       >
         <IconListNumbers className="size-4" />
       </ToolbarButton>
@@ -186,21 +188,21 @@ function EditorToolbar({ editor }: { editor: Editor }) {
       <ToolbarButton
         pressed={editor.isActive({ textAlign: "left" })}
         onPressedChange={() => editor.chain().focus().setTextAlign("left").run()}
-        title="Align Left"
+        title={t("alignLeft")}
       >
         <IconAlignLeft className="size-4" />
       </ToolbarButton>
       <ToolbarButton
         pressed={editor.isActive({ textAlign: "center" })}
         onPressedChange={() => editor.chain().focus().setTextAlign("center").run()}
-        title="Align Center"
+        title={t("alignCenter")}
       >
         <IconAlignCenter className="size-4" />
       </ToolbarButton>
       <ToolbarButton
         pressed={editor.isActive({ textAlign: "right" })}
         onPressedChange={() => editor.chain().focus().setTextAlign("right").run()}
-        title="Align Right"
+        title={t("alignRight")}
       >
         <IconAlignRight className="size-4" />
       </ToolbarButton>
@@ -211,7 +213,7 @@ function EditorToolbar({ editor }: { editor: Editor }) {
       <ToolbarButton
         pressed={editor.isActive("link")}
         onPressedChange={setLink}
-        title="Add Link"
+        title={t("addLink")}
       >
         <IconLink className="size-4" />
       </ToolbarButton>
@@ -219,7 +221,7 @@ function EditorToolbar({ editor }: { editor: Editor }) {
         <ToolbarButton
           pressed={false}
           onPressedChange={() => editor.chain().focus().unsetLink().run()}
-          title="Remove Link"
+          title={t("removeLink")}
         >
           <IconLinkOff className="size-4" />
         </ToolbarButton>
@@ -229,7 +231,7 @@ function EditorToolbar({ editor }: { editor: Editor }) {
       <ToolbarButton
         pressed={false}
         onPressedChange={() => editor.chain().focus().setHorizontalRule().run()}
-        title="Horizontal Rule"
+        title={t("horizontalRule")}
       >
         <IconSeparator className="size-4" />
       </ToolbarButton>
@@ -238,7 +240,7 @@ function EditorToolbar({ editor }: { editor: Editor }) {
       <ToolbarButton
         pressed={false}
         onPressedChange={() => editor.chain().focus().clearNodes().unsetAllMarks().run()}
-        title="Clear Formatting"
+        title={t("clearFormatting")}
       >
         <IconClearFormatting className="size-4" />
       </ToolbarButton>
@@ -256,9 +258,11 @@ interface RichTextEditorProps {
 export function RichTextEditor({
   content,
   onChange,
-  placeholder = "Start writing...",
+  placeholder,
   className,
 }: RichTextEditorProps) {
+  const t = useTranslations("editor")
+  const resolvedPlaceholder = placeholder || t("placeholder")
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -276,7 +280,7 @@ export function RichTextEditor({
         },
       }),
       Placeholder.configure({
-        placeholder,
+        placeholder: resolvedPlaceholder,
       }),
     ],
     content,

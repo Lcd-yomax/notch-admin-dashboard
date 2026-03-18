@@ -22,7 +22,8 @@
     "share": "مشاركة",
     "more": "المزيد",
     "confirm": "تأكيد",
-    "back": "رجوع"
+    "back": "رجوع",
+    "upload": "رفع"
   },
   "brand": {
     "name": "لوحة إدارة المتجر",
@@ -101,7 +102,8 @@
     "noImg": "بدون صورة",
     "enterProductName": "أدخل اسم المنتج",
     "productSlug": "رابط-المنتج",
-    "enterProductDescription": "أدخل وصف المنتج"
+    "enterProductDescription": "أدخل وصف المنتج",
+    "variationsHint": "يمكنك إضافة المتغيرات (الألوان، الأحجام، الأسعار) الآن أو لاحقاً من صفحة تفاصيل المنتج."
   },
   "productDetail": {
     "overview": "نظرة عامة",
@@ -177,6 +179,8 @@
     "categorySlug": "رابط-الفئة",
     "imageUrl": "رابط الصورة",
     "imageUrlPlaceholder": "https://example.com/image.jpg",
+    "uploadImage": "انقر لرفع صورة",
+    "uploadImageHint": "PNG، JPG أو WEBP",
     "productsCount": "المنتجات"
   },
   "orders": {
@@ -201,7 +205,18 @@
     "delivered": "تم التوصيل",
     "cancelled": "ملغي",
     "shipping": "الشحن",
-    "notes": "ملاحظات"
+    "notes": "ملاحظات",
+    "product": "المنتج",
+    "variation": "المتغير",
+    "qty": "الكمية",
+    "unitPrice": "سعر الوحدة",
+    "lineTotal": "إجمالي السطر",
+    "activityLog": "سجل النشاط",
+    "noActivity": "لم يتم تسجيل أي نشاط بعد",
+    "statusChanged": "تم تغيير الحالة من {from} إلى {to}",
+    "orderCreated": "تم إنشاء الطلب",
+    "activityNote": "ملاحظة (اختياري)",
+    "activityNotePlaceholder": "أضف ملاحظة حول هذا التغيير..."
   },
   "reviews": {
     "title": "التقييمات",
@@ -220,7 +235,10 @@
     "deleteReview": "حذف التقييم",
     "deleteReviewConfirm": "هل أنت متأكد من حذف هذا التقييم من {name}؟",
     "noReviews": "لا توجد تقييمات بعد",
-    "reviewsWillAppear": "ستظهر تقييمات العملاء هنا"
+    "reviewsWillAppear": "ستظهر تقييمات العملاء هنا",
+    "approve": "موافقة",
+    "reject": "رفض",
+    "reviewImage": "صورة التقييم"
   },
   "announcements": {
     "title": "الإعلانات",
@@ -343,6 +361,51 @@
     "horizontalRule": "خط أفقي",
     "clearFormatting": "مسح التنسيق",
     "placeholder": "ابدأ الكتابة..."
+  },
+  "chart": {
+    "salesOverview": "نظرة عامة على المبيعات",
+    "orderActivity": "نشاط الطلبات للفترة المحددة",
+    "orderActivityShort": "نشاط الطلبات",
+    "last3Months": "آخر 3 أشهر",
+    "last30Days": "آخر 30 يومًا",
+    "last7Days": "آخر 7 أيام",
+    "orders": "الطلبات",
+    "sales": "المبيعات"
+  },
+  "dataTable": {
+    "products": "المنتجات",
+    "orders": "الطلبات",
+    "categories": "الفئات",
+    "reviews": "التقييمات",
+    "selectView": "اختر عرضًا",
+    "customizeColumns": "تخصيص الأعمدة",
+    "columns": "الأعمدة",
+    "addProduct": "إضافة منتج",
+    "productName": "اسم المنتج",
+    "category": "الفئة",
+    "uncategorized": "غير مصنف",
+    "variations": "المتغيرات",
+    "status": "الحالة",
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "created": "تاريخ الإنشاء",
+    "noImg": "لا صورة",
+    "edit": "تعديل",
+    "viewDetails": "عرض التفاصيل",
+    "duplicate": "نسخ",
+    "delete": "حذف",
+    "noProductsFound": "لا توجد منتجات",
+    "addFirstProduct": "أضف منتجك الأول للبدء",
+    "noOrdersYet": "لا توجد طلبات بعد",
+    "ordersWillAppear": "ستظهر الطلبات هنا عندما يقوم العملاء بعمليات شراء",
+    "noCategoriesYet": "لا توجد فئات بعد",
+    "createCategories": "أنشئ فئات لتنظيم منتجاتك",
+    "addCategory": "إضافة فئة",
+    "noReviewsYet": "لا توجد تقييمات بعد",
+    "reviewsWillAppear": "ستظهر تقييمات العملاء هنا",
+    "rowsSelected": "{selected} من {total} صف(صفوف) محدد.",
+    "rowsPerPage": "صفوف في الصفحة",
+    "pageOf": "صفحة {current} من {total}"
   },
   "language": {
     "label": "اللغة",

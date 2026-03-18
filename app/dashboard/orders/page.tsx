@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useTranslations } from "next-intl"
+import { useRouter } from "next/navigation"
 import {
   IconChevronDown,
   IconChevronLeft,
@@ -83,12 +84,12 @@ interface Order {
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
-const statusColors: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  pending: "outline",
-  processing: "secondary",
-  shipped: "default",
-  delivered: "default",
-  cancelled: "destructive",
+const statusClasses: Record<string, string> = {
+  pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800",
+  processing: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800",
+  shipped: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800",
+  delivered: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800",
+  cancelled: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800",
 }
 
 function OrderStatusForm({
@@ -135,13 +136,13 @@ function OrderStatusForm({
 }
 
 export default function OrdersPage() {
-  const { hasPermission } = usePermissions()
+  const router = useRouter()
+  const { user, hasPermission } = usePermissions()
   const t = useTranslations("orders")
   const tc = useTranslations("common")
   const { data: orders = [], mutate, isLoading } = useSWR<Order[]>("/api/orders", fetcher)
   
   const [editingOrder, setEditingOrder] = React.useState<Order | null>(null)
-  const [viewingOrder, setViewingOrder] = React.useState<Order | null>(null)
   
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
@@ -154,7 +155,7 @@ export default function OrdersPage() {
     await fetch(`/api/orders/${editingOrder.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, user_id: user?.id }),
     })
     mutate()
     setEditingOrder(null)
@@ -218,8 +219,8 @@ export default function OrdersPage() {
       accessorKey: "status",
       header: tc("status"),
       cell: ({ row }) => (
-        <Badge variant={statusColors[row.original.status]}>
-          {row.original.status.charAt(0).toUpperCase() + row.original.status.slice(1)}
+        <Badge variant="outline" className={statusClasses[row.original.status]}>
+          {t(row.original.status)}
         </Badge>
       ),
     },
@@ -243,7 +244,7 @@ export default function OrdersPage() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
-            <DropdownMenuItem onClick={() => setViewingOrder(row.original)}>
+            <DropdownMenuItem onClick={() => router.push(`/dashboard/orders/${row.original.id}`)}>
               <IconEye className="mr-2 size-4" />
               {t("viewDetails")}
             </DropdownMenuItem>
@@ -398,57 +399,6 @@ export default function OrdersPage() {
           </DialogContent>
         </Dialog>
 
-        <Dialog open={!!viewingOrder} onOpenChange={() => setViewingOrder(null)}>
-          <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle>{t("orderDetails")}</DialogTitle>
-              <DialogDescription>{t("order")} {viewingOrder?.order_number}</DialogDescription>
-            </DialogHeader>
-            {viewingOrder && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-muted-foreground">{t("customer")}</Label>
-                    <p className="font-medium">{viewingOrder.full_name}</p>
-                    {viewingOrder.email && <p className="text-sm text-muted-foreground">{viewingOrder.email}</p>}
-                    {viewingOrder.phone && <p className="text-sm text-muted-foreground">{viewingOrder.phone}</p>}
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">{tc("status")}</Label>
-                    <div className="mt-1">
-                      <Badge variant={statusColors[viewingOrder.status]}>
-                        {viewingOrder.status.charAt(0).toUpperCase() + viewingOrder.status.slice(1)}
-                      </Badge>
-                    </div>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">{t("shipping")}</Label>
-                    <p className="font-medium">{viewingOrder.city}</p>
-                    <p className="text-sm text-muted-foreground">{viewingOrder.address}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">{t("total")}</Label>
-                    <p className="text-lg font-semibold">${viewingOrder.total_amount.toFixed(2)}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">{tc("date")}</Label>
-                    <p>{new Date(viewingOrder.created_at).toLocaleString()}</p>
-                  </div>
-                  {viewingOrder.notes && (
-                    <div className="col-span-2">
-                      <Label className="text-muted-foreground">{t("notes")}</Label>
-                      <p className="text-sm">{viewingOrder.notes}</p>
-                    </div>
-                  )}
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setViewingOrder(null)}>{tc("close")}</Button>
-                  <Button onClick={() => { setViewingOrder(null); setEditingOrder(viewingOrder); }}>{t("updateStatus")}</Button>
-                </DialogFooter>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
     </div>
   )
 }

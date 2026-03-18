@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import {
+  IconCheck,
   IconChevronDown,
   IconChevronLeft,
   IconChevronRight,
@@ -13,6 +14,7 @@ import {
   IconStar,
   IconStarFilled,
   IconTrash,
+  IconX,
 } from "@tabler/icons-react"
 import {
   flexRender,
@@ -98,6 +100,19 @@ export default function ReviewsPage() {
   
   const [viewingReview, setViewingReview] = React.useState<Review | null>(null)
   const [deletingReview, setDeletingReview] = React.useState<Review | null>(null)
+
+  const handleApprove = async (review: Review, approve: boolean) => {
+    await fetch(`/api/reviews/${review.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ is_approved: approve }),
+    })
+    mutate()
+    // Update the viewing dialog if open
+    if (viewingReview?.id === review.id) {
+      setViewingReview({ ...review, is_approved: approve })
+    }
+  }
   
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
@@ -172,7 +187,13 @@ export default function ReviewsPage() {
       accessorKey: "is_approved",
       header: tc("status"),
       cell: ({ row }) => (
-        <Badge variant={row.original.is_approved ? "default" : "outline"}>
+        <Badge
+          variant="outline"
+          className={row.original.is_approved
+            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800"
+            : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800"
+          }
+        >
           {row.original.is_approved ? t("approved") : t("pending")}
         </Badge>
       ),
@@ -196,11 +217,27 @@ export default function ReviewsPage() {
               <span className="sr-only">Open menu</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-32">
+          <DropdownMenuContent align="end" className="w-40">
             <DropdownMenuItem onClick={() => setViewingReview(row.original)}>
               <IconEye className="mr-2 size-4" />
               {tc("view")}
             </DropdownMenuItem>
+            {hasPermission("reviews:approve") && (
+              <>
+                <DropdownMenuSeparator />
+                {row.original.is_approved ? (
+                  <DropdownMenuItem onClick={() => handleApprove(row.original, false)}>
+                    <IconX className="mr-2 size-4" />
+                    {t("reject")}
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem onClick={() => handleApprove(row.original, true)}>
+                    <IconCheck className="mr-2 size-4" />
+                    {t("approve")}
+                  </DropdownMenuItem>
+                )}
+              </>
+            )}
             {hasPermission("reviews:delete") && (
               <>
                 <DropdownMenuSeparator />
@@ -352,36 +389,75 @@ export default function ReviewsPage() {
             </DialogHeader>
             {viewingReview && (
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-muted-foreground">{t("customer")}</Label>
-                    <p className="font-medium">{viewingReview.full_name}</p>
-                    <p className="text-sm text-muted-foreground">{viewingReview.email}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">{t("rating")}</Label>
-                    <div className="mt-1">
-                      <StarRating stars={viewingReview.stars} />
-                    </div>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">{tc("status")}</Label>
-                    <div className="mt-1">
-                      <Badge variant={viewingReview.is_approved ? "default" : "outline"}>
-                        {viewingReview.is_approved ? t("approved") : t("pending")}
-                      </Badge>
-                    </div>
-                  </div>
+                {/* Status badge */}
+                <div className="flex items-center justify-between">
+                  <Badge
+                    variant="outline"
+                    className={viewingReview.is_approved
+                      ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800"
+                      : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800"
+                    }
+                  >
+                    {viewingReview.is_approved ? t("approved") : t("pending")}
+                  </Badge>
+                  <StarRating stars={viewingReview.stars} />
                 </div>
-                <div>
+
+                {/* Customer info */}
+                <div className="rounded-lg border p-4 space-y-1">
+                  <p className="font-medium">{viewingReview.full_name}</p>
+                  <p className="text-sm text-muted-foreground">{viewingReview.email}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(viewingReview.created_at).toLocaleString()}
+                  </p>
+                </div>
+
+                {/* Comment */}
+                <div className="space-y-1">
                   <Label className="text-muted-foreground">{t("comment")}</Label>
-                  <p className="mt-1">{viewingReview.comment || t("noCommentProvided")}</p>
+                  <div className="rounded-lg border p-3">
+                    <p className="text-sm whitespace-pre-wrap">
+                      {viewingReview.comment || <span className="text-muted-foreground italic">{t("noCommentProvided")}</span>}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <Label className="text-muted-foreground">{tc("date")}</Label>
-                  <p>{new Date(viewingReview.created_at).toLocaleString()}</p>
-                </div>
-                <DialogFooter>
+
+                {/* Review image */}
+                {viewingReview.image_url && (
+                  <div className="space-y-1">
+                    <Label className="text-muted-foreground">{t("reviewImage")}</Label>
+                    <div className="overflow-hidden rounded-lg border">
+                      <img
+                        src={viewingReview.image_url}
+                        alt="Review"
+                        className="w-full max-h-64 object-contain bg-muted/30"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Actions */}
+                <DialogFooter className="gap-2 sm:gap-0">
+                  {hasPermission("reviews:approve") && (
+                    viewingReview.is_approved ? (
+                      <Button
+                        variant="outline"
+                        className="border-red-200 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
+                        onClick={() => handleApprove(viewingReview, false)}
+                      >
+                        <IconX className="mr-2 size-4" />
+                        {t("reject")}
+                      </Button>
+                    ) : (
+                      <Button
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                        onClick={() => handleApprove(viewingReview, true)}
+                      >
+                        <IconCheck className="mr-2 size-4" />
+                        {t("approve")}
+                      </Button>
+                    )
+                  )}
                   <Button variant="outline" onClick={() => setViewingReview(null)}>{tc("close")}</Button>
                 </DialogFooter>
               </div>

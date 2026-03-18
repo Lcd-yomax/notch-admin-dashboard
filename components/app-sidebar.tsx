@@ -2,7 +2,9 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { useTranslations } from "next-intl"
+import { useTranslations, useLocale } from "next-intl"
+import { isRtl } from "@/i18n/config"
+import type { Locale } from "@/i18n/config"
 
 import {
   IconBox,
@@ -36,6 +38,7 @@ import { usePermissions } from '@/hooks/use-permissions'
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user, hasPermission } = usePermissions()
+  const locale = useLocale() as Locale
   const t = useTranslations("nav")
   const tBrand = useTranslations("brand")
 
@@ -102,7 +105,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   )
 
   return (
-    <Sidebar collapsible="offcanvas" {...props}>
+    <Sidebar collapsible="offcanvas" side={isRtl(locale) ? "right" : "left"} {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>

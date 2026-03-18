@@ -1,5 +1,7 @@
 "use client"
 
+import * as React from "react"
+import useSWR from "swr"
 import { useTranslations } from "next-intl"
 import { IconBox, IconShoppingCart, IconStar, IconUsers } from "@tabler/icons-react"
 
@@ -11,8 +13,21 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 
+const fetcher = (url: string) => fetch(url).then(r => r.json())
+
 export function SectionCards() {
   const t = useTranslations("cards")
+  const { data: products } = useSWR("/api/products", fetcher)
+  const { data: orders } = useSWR("/api/orders", fetcher)
+  const { data: reviews } = useSWR("/api/reviews", fetcher)
+  const { data: users } = useSWR("/api/users", fetcher)
+  const { data: roles } = useSWR("/api/roles", fetcher)
+
+  const productCount = Array.isArray(products) ? products.length : 0
+  const orderCount = Array.isArray(orders) ? orders.length : 0
+  const reviewCount = Array.isArray(reviews) ? reviews.length : 0
+  const userCount = Array.isArray(users) ? users.length : 0
+  const roleCount = Array.isArray(roles) ? roles.length : 0
 
   return (
     <div className="grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4 dark:*:data-[slot=card]:bg-card">
@@ -23,12 +38,12 @@ export function SectionCards() {
             {t("totalOrders")}
           </CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            0
+            {orderCount}
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="text-muted-foreground">
-            {t("noOrders")}
+            {orderCount === 0 ? t("noOrders") : t("totalOrders")}
           </div>
         </CardFooter>
       </Card>
@@ -39,12 +54,12 @@ export function SectionCards() {
             {t("products")}
           </CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            0
+            {productCount}
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="text-muted-foreground">
-            {t("noProducts")}
+            {productCount === 0 ? t("noProducts") : t("products")}
           </div>
         </CardFooter>
       </Card>
@@ -55,12 +70,12 @@ export function SectionCards() {
             {t("reviews")}
           </CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            0
+            {reviewCount}
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="text-muted-foreground">
-            {t("noReviews")}
+            {reviewCount === 0 ? t("noReviews") : t("reviews")}
           </div>
         </CardFooter>
       </Card>
@@ -71,12 +86,12 @@ export function SectionCards() {
             {t("adminUsers")}
           </CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            0
+            {userCount}
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="text-muted-foreground">
-            {t("rolesConfigured", { count: 3 })}
+            {t("rolesConfigured", { count: roleCount })}
           </div>
         </CardFooter>
       </Card>
