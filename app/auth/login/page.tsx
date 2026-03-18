@@ -5,10 +5,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { IconPackage } from '@tabler/icons-react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { Spinner } from '@/components/ui/spinner'
 
 export default function LoginPage() {
   const t = useTranslations('auth')
@@ -101,16 +101,10 @@ export default function LoginPage() {
               className="h-12 w-full text-base font-medium"
               disabled={isLoading}
             >
+              {isLoading && <Spinner className="mr-2 size-4" />}
               {isLoading ? t('signingIn') : t('signIn')}
             </Button>
           </form>
-
-          <p className="text-center text-sm text-muted-foreground">
-            {t('noAccount')}{' '}
-            <Link href="/auth/sign-up" className="text-primary underline underline-offset-4 hover:text-primary/80">
-              {t('createSuperadmin')}
-            </Link>
-          </p>
         </div>
       </main>
     </div>

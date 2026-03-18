@@ -52,14 +52,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet"
 import {
   Table,
   TableBody,
@@ -390,23 +382,23 @@ export default function ReviewsPage() {
             </div>
           </div>
 
-        <Sheet open={!!viewingReview} onOpenChange={() => setViewingReview(null)}>
-          <SheetContent className="sm:max-w-md overflow-y-auto">
-            <SheetHeader className="pb-0">
-              <SheetTitle>{t("reviewDetails")}</SheetTitle>
-              <SheetDescription className="sr-only">{t("reviewFor", { productName: viewingReview?.product_name })}</SheetDescription>
-            </SheetHeader>
+        <Dialog open={!!viewingReview} onOpenChange={() => setViewingReview(null)}>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>{t("reviewDetails")}</DialogTitle>
+              <DialogDescription>{t("reviewFor", { productName: viewingReview?.product_name })}</DialogDescription>
+            </DialogHeader>
             {viewingReview && (
-              <div className="flex flex-col gap-6 px-4 pb-6">
+              <div className="flex flex-col gap-5">
                 {/* Reviewer header */}
                 <div className="flex items-start gap-4">
-                  <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                    <IconUser className="size-6" />
+                  <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <IconUser className="size-5" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-base">{viewingReview.full_name}</p>
+                    <p className="font-semibold">{viewingReview.full_name}</p>
                     <p className="text-sm text-muted-foreground truncate">{viewingReview.email}</p>
-                    <div className="flex items-center gap-3 mt-1.5">
+                    <div className="flex items-center gap-3 mt-1">
                       <StarRating stars={viewingReview.stars} />
                       <span className="text-xs text-muted-foreground">
                         {new Date(viewingReview.created_at).toLocaleDateString()}
@@ -433,40 +425,32 @@ export default function ReviewsPage() {
                 </div>
 
                 {/* Comment */}
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">{t("comment")}</p>
-                  {viewingReview.comment ? (
-                    <div className="relative rounded-lg border-s-4 border-primary/30 bg-muted/30 px-4 py-3">
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{viewingReview.comment}</p>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground italic">{t("noCommentProvided")}</p>
-                  )}
-                </div>
+                {viewingReview.comment ? (
+                  <div className="rounded-lg border-s-4 border-primary/30 bg-muted/30 px-4 py-3">
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{viewingReview.comment}</p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">{t("noCommentProvided")}</p>
+                )}
 
                 {/* Review image */}
                 {viewingReview.image_url && (
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">{t("reviewImage")}</p>
-                    <div className="overflow-hidden rounded-xl">
-                      <img
-                        src={viewingReview.image_url}
-                        alt="Review"
-                        className="w-full max-h-72 object-cover"
-                      />
-                    </div>
+                  <div className="overflow-hidden rounded-xl">
+                    <img
+                      src={viewingReview.image_url}
+                      alt="Review"
+                      className="w-full max-h-64 object-cover"
+                    />
                   </div>
                 )}
 
-                <Separator />
-
                 {/* Actions */}
-                {hasPermission("reviews:approve") && (
-                  <div className="flex gap-3">
-                    {viewingReview.is_approved ? (
+                <DialogFooter className="gap-2">
+                  {hasPermission("reviews:approve") && (
+                    viewingReview.is_approved ? (
                       <Button
                         variant="outline"
-                        className="flex-1 border-red-200 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
+                        className="border-red-200 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
                         onClick={() => handleApprove(viewingReview, false)}
                       >
                         <IconX className="mr-2 size-4" />
@@ -474,32 +458,20 @@ export default function ReviewsPage() {
                       </Button>
                     ) : (
                       <Button
-                        className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                        className="bg-green-600 hover:bg-green-700 text-white"
                         onClick={() => handleApprove(viewingReview, true)}
                       >
                         <IconCheck className="mr-2 size-4" />
                         {t("approve")}
                       </Button>
-                    )}
-                    {hasPermission("reviews:delete") && (
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="text-destructive hover:bg-destructive/10"
-                        onClick={() => {
-                          setViewingReview(null)
-                          setDeletingReview(viewingReview)
-                        }}
-                      >
-                        <IconTrash className="size-4" />
-                      </Button>
-                    )}
-                  </div>
-                )}
+                    )
+                  )}
+                  <Button variant="outline" onClick={() => setViewingReview(null)}>{tc("close")}</Button>
+                </DialogFooter>
               </div>
             )}
-          </SheetContent>
-        </Sheet>
+          </DialogContent>
+        </Dialog>
 
         <Dialog open={!!deletingReview} onOpenChange={() => setDeletingReview(null)}>
           <DialogContent className="sm:max-w-md">
