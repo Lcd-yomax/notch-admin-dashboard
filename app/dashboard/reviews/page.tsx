@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import {
+  IconCheck,
   IconChevronDown,
   IconChevronLeft,
   IconChevronRight,
@@ -13,6 +14,8 @@ import {
   IconStar,
   IconStarFilled,
   IconTrash,
+  IconUser,
+  IconX,
 } from "@tabler/icons-react"
 import {
   flexRender,
@@ -47,6 +50,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
   Table,
@@ -57,6 +61,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { PageHeader } from "@/components/page-header"
+import { usePermissions } from "@/hooks/use-permissions"
+import { useTranslations } from "next-intl"
 
 interface Review {
   id: string
@@ -88,14 +94,31 @@ function StarRating({ stars }: { stars: number }) {
 }
 
 export default function ReviewsPage() {
+  const { hasPermission } = usePermissions()
+  const t = useTranslations("reviews")
+  const tc = useTranslations("common")
   const { data: reviews = [], mutate, isLoading } = useSWR<Review[]>("/api/reviews", fetcher)
   
   const [viewingReview, setViewingReview] = React.useState<Review | null>(null)
   const [deletingReview, setDeletingReview] = React.useState<Review | null>(null)
+
+  const handleApprove = async (review: Review, approve: boolean) => {
+    await fetch(`/api/reviews/${review.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ is_approved: approve }),
+    })
+    mutate()
+    // Update the viewing dialog if open
+    if (viewingReview?.id === review.id) {
+      setViewingReview({ ...review, is_approved: approve })
+    }
+  }
   
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [sorting, setSorting] = React.useState<SortingState>([])
+  const [globalFilter, setGlobalFilter] = React.useState("")
   const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
 
   const handleDelete = async () => {
@@ -131,7 +154,7 @@ export default function ReviewsPage() {
     },
     {
       accessorKey: "product_name",
-      header: "Product",
+      header: t("product"),
       cell: ({ row }) => (
         <div className="font-medium">{row.original.product_name}</div>
       ),
@@ -139,7 +162,7 @@ export default function ReviewsPage() {
     },
     {
       accessorKey: "full_name",
-      header: "Customer",
+      header: t("customer"),
       cell: ({ row }) => (
         <div>
           <div>{row.original.full_name}</div>
@@ -149,30 +172,36 @@ export default function ReviewsPage() {
     },
     {
       accessorKey: "stars",
-      header: "Rating",
+      header: t("rating"),
       cell: ({ row }) => <StarRating stars={row.original.stars} />,
     },
     {
       accessorKey: "comment",
-      header: "Comment",
+      header: t("comment"),
       cell: ({ row }) => (
         <div className="max-w-xs truncate text-muted-foreground">
-          {row.original.comment || "No comment"}
+          {row.original.comment || t("noComment")}
         </div>
       ),
     },
     {
       accessorKey: "is_approved",
-      header: "Status",
+      header: tc("status"),
       cell: ({ row }) => (
-        <Badge variant={row.original.is_approved ? "default" : "outline"}>
-          {row.original.is_approved ? "Approved" : "Pending"}
+        <Badge
+          variant="outline"
+          className={row.original.is_approved
+            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800"
+            : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800"
+          }
+        >
+          {row.original.is_approved ? t("approved") : t("pending")}
         </Badge>
       ),
     },
     {
       accessorKey: "created_at",
-      header: "Date",
+      header: tc("date"),
       cell: ({ row }) => (
         <div className="text-muted-foreground">
           {new Date(row.original.created_at).toLocaleDateString()}
@@ -189,19 +218,39 @@ export default function ReviewsPage() {
               <span className="sr-only">Open menu</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-32">
+          <DropdownMenuContent align="end" className="w-40">
             <DropdownMenuItem onClick={() => setViewingReview(row.original)}>
               <IconEye className="mr-2 size-4" />
-              View
+              {tc("view")}
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => setDeletingReview(row.original)}
-              className="text-destructive focus:text-destructive"
-            >
-              <IconTrash className="mr-2 size-4" />
-              Delete
-            </DropdownMenuItem>
+            {hasPermission("reviews:approve") && (
+              <>
+                <DropdownMenuSeparator />
+                {row.original.is_approved ? (
+                  <DropdownMenuItem onClick={() => handleApprove(row.original, false)}>
+                    <IconX className="mr-2 size-4" />
+                    {t("reject")}
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem onClick={() => handleApprove(row.original, true)}>
+                    <IconCheck className="mr-2 size-4" />
+                    {t("approve")}
+                  </DropdownMenuItem>
+                )}
+              </>
+            )}
+            {hasPermission("reviews:delete") && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => setDeletingReview(row.original)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <IconTrash className="mr-2 size-4" />
+                  {tc("delete")}
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       ),
@@ -211,11 +260,19 @@ export default function ReviewsPage() {
   const table = useReactTable({
     data: reviews,
     columns,
-    state: { sorting, columnVisibility, rowSelection, pagination },
+    state: { sorting, columnVisibility, rowSelection, globalFilter, pagination },
     getRowId: (row) => row.id,
     enableRowSelection: true,
+    globalFilterFn: (row, _columnId, filterValue) => {
+      const q = String(filterValue).toLowerCase()
+      const r = row.original
+      return [
+        r.product_name, r.full_name, r.email, r.comment,
+      ].some((v) => v && String(v).toLowerCase().includes(q))
+    },
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
     onColumnVisibilityChange: setColumnVisibility,
     onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
@@ -227,14 +284,14 @@ export default function ReviewsPage() {
   return (
     <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 px-4 lg:px-6">
       <PageHeader
-        title="Reviews"
-        description="Manage customer reviews and ratings"
+        title={t("title")}
+        description={t("description")}
       >
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">
                     <IconLayoutColumns />
-                    Columns
+                    {tc("columns")}
                     <IconChevronDown />
                   </Button>
                 </DropdownMenuTrigger>
@@ -252,6 +309,15 @@ export default function ReviewsPage() {
                 </DropdownMenuContent>
               </DropdownMenu>
       </PageHeader>
+
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder={t("searchReviews")}
+              value={globalFilter}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              className="max-w-sm"
+            />
+          </div>
 
           <div className="overflow-hidden rounded-lg border">
             <Table>
@@ -283,9 +349,9 @@ export default function ReviewsPage() {
                   <TableRow>
                     <TableCell colSpan={columns.length} className="h-24 text-center">
                       <div className="flex flex-col items-center gap-2 py-8">
-                        <div className="text-muted-foreground">No reviews yet</div>
+                        <div className="text-muted-foreground">{t("noReviews")}</div>
                         <div className="text-sm text-muted-foreground">
-                          Customer reviews will appear here
+                          {t("reviewsWillAppear")}
                         </div>
                       </div>
                     </TableCell>
@@ -319,42 +385,88 @@ export default function ReviewsPage() {
         <Dialog open={!!viewingReview} onOpenChange={() => setViewingReview(null)}>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
-              <DialogTitle>Review Details</DialogTitle>
-              <DialogDescription>Review for {viewingReview?.product_name}</DialogDescription>
+              <DialogTitle>{t("reviewDetails")}</DialogTitle>
+              <DialogDescription>{t("reviewFor", { productName: viewingReview?.product_name })}</DialogDescription>
             </DialogHeader>
             {viewingReview && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-muted-foreground">Customer</Label>
-                    <p className="font-medium">{viewingReview.full_name}</p>
-                    <p className="text-sm text-muted-foreground">{viewingReview.email}</p>
+              <div className="flex flex-col gap-5">
+                {/* Reviewer header */}
+                <div className="flex items-start gap-4">
+                  <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <IconUser className="size-5" />
                   </div>
-                  <div>
-                    <Label className="text-muted-foreground">Rating</Label>
-                    <div className="mt-1">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold">{viewingReview.full_name}</p>
+                    <p className="text-sm text-muted-foreground truncate">{viewingReview.email}</p>
+                    <div className="flex items-center gap-3 mt-1">
                       <StarRating stars={viewingReview.stars} />
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(viewingReview.created_at).toLocaleDateString()}
+                      </span>
                     </div>
                   </div>
+                </div>
+
+                {/* Product & Status */}
+                <div className="flex items-center justify-between rounded-lg bg-muted/50 px-4 py-3">
                   <div>
-                    <Label className="text-muted-foreground">Status</Label>
-                    <div className="mt-1">
-                      <Badge variant={viewingReview.is_approved ? "default" : "outline"}>
-                        {viewingReview.is_approved ? "Approved" : "Pending"}
-                      </Badge>
-                    </div>
+                    <p className="text-xs text-muted-foreground">{t("product")}</p>
+                    <p className="text-sm font-medium">{viewingReview.product_name}</p>
                   </div>
+                  <Badge
+                    variant="outline"
+                    className={viewingReview.is_approved
+                      ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800"
+                      : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800"
+                    }
+                  >
+                    {viewingReview.is_approved ? t("approved") : t("pending")}
+                  </Badge>
                 </div>
-                <div>
-                  <Label className="text-muted-foreground">Comment</Label>
-                  <p className="mt-1">{viewingReview.comment || "No comment provided"}</p>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">Date</Label>
-                  <p>{new Date(viewingReview.created_at).toLocaleString()}</p>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setViewingReview(null)}>Close</Button>
+
+                {/* Comment */}
+                {viewingReview.comment ? (
+                  <div className="rounded-lg border-s-4 border-primary/30 bg-muted/30 px-4 py-3">
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{viewingReview.comment}</p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">{t("noCommentProvided")}</p>
+                )}
+
+                {/* Review image */}
+                {viewingReview.image_url && (
+                  <div className="overflow-hidden rounded-xl">
+                    <img
+                      src={viewingReview.image_url}
+                      alt="Review"
+                      className="w-full max-h-64 object-cover"
+                    />
+                  </div>
+                )}
+
+                {/* Actions */}
+                <DialogFooter className="gap-2">
+                  {hasPermission("reviews:approve") && (
+                    viewingReview.is_approved ? (
+                      <Button
+                        variant="outline"
+                        className="border-red-200 text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
+                        onClick={() => handleApprove(viewingReview, false)}
+                      >
+                        <IconX className="mr-2 size-4" />
+                        {t("reject")}
+                      </Button>
+                    ) : (
+                      <Button
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                        onClick={() => handleApprove(viewingReview, true)}
+                      >
+                        <IconCheck className="mr-2 size-4" />
+                        {t("approve")}
+                      </Button>
+                    )
+                  )}
+                  <Button variant="outline" onClick={() => setViewingReview(null)}>{tc("close")}</Button>
                 </DialogFooter>
               </div>
             )}
@@ -364,14 +476,14 @@ export default function ReviewsPage() {
         <Dialog open={!!deletingReview} onOpenChange={() => setDeletingReview(null)}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Delete Review</DialogTitle>
+              <DialogTitle>{t("deleteReview")}</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete this review from {deletingReview?.full_name}?
+                {t("deleteReviewConfirm", { name: deletingReview?.full_name })}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setDeletingReview(null)}>Cancel</Button>
-              <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+              <Button variant="outline" onClick={() => setDeletingReview(null)}>{tc("cancel")}</Button>
+              <Button variant="destructive" onClick={handleDelete}>{tc("delete")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

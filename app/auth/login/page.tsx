@@ -5,11 +5,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { IconPackage } from '@tabler/icons-react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
+import { Spinner } from '@/components/ui/spinner'
 
 export default function LoginPage() {
+  const t = useTranslations('auth')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -42,7 +44,7 @@ export default function LoginPage() {
       <header className="flex items-center justify-between border-b border-border px-6 py-4">
         <div className="flex items-center gap-2">
           <IconPackage className="size-6" />
-          <span className="text-lg font-semibold">E-Commerce Admin</span>
+          <span className="text-lg font-semibold">{t('brandName')}</span>
         </div>
       </header>
 
@@ -50,9 +52,9 @@ export default function LoginPage() {
       <main className="flex flex-1 items-center justify-center p-6">
         <div className="w-full max-w-md space-y-8">
           <div className="space-y-2 text-center">
-            <h1 className="text-3xl font-bold tracking-tight">Welcome back</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{t('welcomeBack')}</h1>
             <p className="text-muted-foreground">
-              Sign in to your admin account to continue
+              {t('signInDescription')}
             </p>
           </div>
 
@@ -60,12 +62,12 @@ export default function LoginPage() {
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-                  Email
+                  {t('email')}
                 </Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="admin@store.com"
+                  placeholder={t('emailPlaceholder')}
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -74,12 +76,12 @@ export default function LoginPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-                  Password
+                  {t('password')}
                 </Label>
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Enter your password"
+                  placeholder={t('passwordPlaceholder')}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -99,16 +101,10 @@ export default function LoginPage() {
               className="h-12 w-full text-base font-medium"
               disabled={isLoading}
             >
-              {isLoading ? 'Signing in...' : 'Sign in'}
+              {isLoading && <Spinner className="mr-2 size-4" />}
+              {isLoading ? t('signingIn') : t('signIn')}
             </Button>
           </form>
-
-          <p className="text-center text-sm text-muted-foreground">
-            Don't have an account?{' '}
-            <Link href="/auth/sign-up" className="text-primary underline underline-offset-4 hover:text-primary/80">
-              Create superadmin account
-            </Link>
-          </p>
         </div>
       </main>
     </div>

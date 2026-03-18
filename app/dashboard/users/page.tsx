@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useSearchParams } from "next/navigation"
 import {
   IconChevronDown,
   IconChevronLeft,
@@ -65,6 +66,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { PageHeader } from "@/components/page-header"
+import { usePermissions } from "@/hooks/use-permissions"
+import { useTranslations } from "next-intl"
 
 interface User {
   id: string
@@ -94,6 +97,8 @@ function UserForm({
   onSave: (data: Partial<User>) => void
   onCancel: () => void
 }) {
+  const t = useTranslations("users")
+  const tc = useTranslations("common")
   const [email, setEmail] = React.useState(user?.email || "")
   const [password, setPassword] = React.useState("")
   const [fullName, setFullName] = React.useState(user?.full_name || "")
@@ -114,45 +119,45 @@ function UserForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="email">Email *</Label>
+        <Label htmlFor="email">{t("email")} *</Label>
         <Input
           id="email"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="user@example.com"
+          placeholder={t("emailPlaceholder")}
           required
           disabled={!!user}
         />
       </div>
       {!user && (
         <div className="space-y-2">
-          <Label htmlFor="password">Password *</Label>
+          <Label htmlFor="password">{t("password")} *</Label>
           <Input
             id="password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Min 6 characters"
+            placeholder={t("passwordPlaceholder")}
             required
             minLength={6}
           />
         </div>
       )}
       <div className="space-y-2">
-        <Label htmlFor="fullName">Full Name</Label>
+        <Label htmlFor="fullName">{t("fullName")}</Label>
         <Input
           id="fullName"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
-          placeholder="John Doe"
+          placeholder={t("fullNamePlaceholder")}
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="role">Role</Label>
+        <Label htmlFor="role">{t("role")}</Label>
         <Select value={roleId} onValueChange={setRoleId}>
           <SelectTrigger id="role">
-            <SelectValue placeholder="Select role" />
+            <SelectValue placeholder={t("selectRole")} />
           </SelectTrigger>
           <SelectContent>
             {roles.map((role) => (
@@ -163,27 +168,36 @@ function UserForm({
       </div>
       <div className="flex items-center gap-2">
         <Switch id="is_active" checked={isActive} onCheckedChange={setIsActive} />
-        <Label htmlFor="is_active">Active</Label>
+        <Label htmlFor="is_active">{tc("active")}</Label>
       </div>
       <DialogFooter>
-        <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-        <Button type="submit">{user ? "Update" : "Create"} User</Button>
+        <Button type="button" variant="outline" onClick={onCancel}>{tc("cancel")}</Button>
+        <Button type="submit">{user ? t("updateUser") : t("createUser")}</Button>
       </DialogFooter>
     </form>
   )
 }
 
 export default function UsersPage() {
+  const { hasPermission } = usePermissions()
+  const t = useTranslations("users")
+  const tc = useTranslations("common")
   const { data: users = [], mutate, isLoading } = useSWR<User[]>("/api/users", fetcher)
   const { data: roles = [] } = useSWR<Role[]>("/api/roles", fetcher)
   
+  const searchParams = useSearchParams()
   const [isCreateOpen, setIsCreateOpen] = React.useState(false)
   const [editingUser, setEditingUser] = React.useState<User | null>(null)
   const [deletingUser, setDeletingUser] = React.useState<User | null>(null)
+
+  React.useEffect(() => {
+    if (searchParams.get("create") === "true") setIsCreateOpen(true)
+  }, [searchParams])
   
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [sorting, setSorting] = React.useState<SortingState>([])
+  const [globalFilter, setGlobalFilter] = React.useState("")
   const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
 
   const handleCreate = async (data: Partial<User>) => {
@@ -240,10 +254,10 @@ export default function UsersPage() {
     },
     {
       accessorKey: "full_name",
-      header: "User",
+      header: t("user"),
       cell: ({ row }) => (
         <div>
-          <div className="font-medium">{row.original.full_name || "Unnamed"}</div>
+          <div className="font-medium">{row.original.full_name || t("unnamed")}</div>
           <div className="text-xs text-muted-foreground">{row.original.email}</div>
         </div>
       ),
@@ -251,23 +265,23 @@ export default function UsersPage() {
     },
     {
       accessorKey: "role_name",
-      header: "Role",
+      header: t("role"),
       cell: ({ row }) => (
-        <Badge variant="outline">{row.original.role_name || "No Role"}</Badge>
+        <Badge variant="outline">{row.original.role_name || t("noRole")}</Badge>
       ),
     },
     {
       accessorKey: "is_active",
-      header: "Status",
+      header: tc("status"),
       cell: ({ row }) => (
         <Badge variant={row.original.is_active ? "default" : "secondary"}>
-          {row.original.is_active ? "Active" : "Inactive"}
+          {row.original.is_active ? tc("active") : tc("inactive")}
         </Badge>
       ),
     },
     {
       accessorKey: "created_at",
-      header: "Created",
+      header: tc("created"),
       cell: ({ row }) => (
         <div className="text-muted-foreground">
           {new Date(row.original.created_at).toLocaleDateString()}
@@ -285,18 +299,24 @@ export default function UsersPage() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-32">
-            <DropdownMenuItem onClick={() => setEditingUser(row.original)}>
-              <IconEdit className="mr-2 size-4" />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => setDeletingUser(row.original)}
-              className="text-destructive focus:text-destructive"
-            >
-              <IconTrash className="mr-2 size-4" />
-              Delete
-            </DropdownMenuItem>
+            {hasPermission("users:write") && (
+              <DropdownMenuItem onClick={() => setEditingUser(row.original)}>
+                <IconEdit className="mr-2 size-4" />
+                {tc("edit")}
+              </DropdownMenuItem>
+            )}
+            {hasPermission("users:delete") && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => setDeletingUser(row.original)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <IconTrash className="mr-2 size-4" />
+                  {tc("delete")}
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       ),
@@ -306,11 +326,19 @@ export default function UsersPage() {
   const table = useReactTable({
     data: users,
     columns,
-    state: { sorting, columnVisibility, rowSelection, pagination },
+    state: { sorting, columnVisibility, rowSelection, globalFilter, pagination },
     getRowId: (row) => row.id,
     enableRowSelection: true,
+    globalFilterFn: (row, _columnId, filterValue) => {
+      const q = String(filterValue).toLowerCase()
+      const u = row.original
+      return [
+        u.full_name, u.email, u.role_name,
+      ].some((v) => v && String(v).toLowerCase().includes(q))
+    },
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
     onColumnVisibilityChange: setColumnVisibility,
     onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
@@ -322,14 +350,14 @@ export default function UsersPage() {
   return (
     <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 px-4 lg:px-6">
       <PageHeader
-        title="Users"
-        description="Manage admin users and their roles"
+        title={t("title")}
+        description={t("description")}
       >
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">
                     <IconLayoutColumns />
-                    Columns
+                    {tc("columns")}
                     <IconChevronDown />
                   </Button>
                 </DropdownMenuTrigger>
@@ -346,11 +374,22 @@ export default function UsersPage() {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-          <Button onClick={() => setIsCreateOpen(true)}>
-            <IconPlus />
-            Add User
-          </Button>
+          {hasPermission("users:write") && (
+            <Button onClick={() => setIsCreateOpen(true)}>
+              <IconPlus />
+              {t("addUser")}
+            </Button>
+          )}
         </PageHeader>
+
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder={t("searchUsers")}
+              value={globalFilter}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              className="max-w-sm"
+            />
+          </div>
 
           <div className="overflow-hidden rounded-lg border">
             <Table>
@@ -382,11 +421,13 @@ export default function UsersPage() {
                   <TableRow>
                     <TableCell colSpan={columns.length} className="h-24 text-center">
                       <div className="flex flex-col items-center gap-2 py-8">
-                        <div className="text-muted-foreground">No admin users found</div>
-                        <Button size="sm" onClick={() => setIsCreateOpen(true)}>
-                          <IconPlus className="size-4" />
-                          Add User
-                        </Button>
+                        <div className="text-muted-foreground">{t("noUsers")}</div>
+                        {hasPermission("users:write") && (
+                          <Button size="sm" onClick={() => setIsCreateOpen(true)}>
+                            <IconPlus className="size-4" />
+                            {t("addUser")}
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -419,8 +460,8 @@ export default function UsersPage() {
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Create Admin User</DialogTitle>
-              <DialogDescription>Add a new admin user to the dashboard.</DialogDescription>
+              <DialogTitle>{t("createUser")}</DialogTitle>
+              <DialogDescription>{t("createUserDesc")}</DialogDescription>
             </DialogHeader>
             <UserForm roles={roles} onSave={handleCreate} onCancel={() => setIsCreateOpen(false)} />
           </DialogContent>
@@ -429,8 +470,8 @@ export default function UsersPage() {
         <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Edit User</DialogTitle>
-              <DialogDescription>Update user information.</DialogDescription>
+              <DialogTitle>{t("editUser")}</DialogTitle>
+              <DialogDescription>{t("editUserDesc")}</DialogDescription>
             </DialogHeader>
             <UserForm user={editingUser} roles={roles} onSave={handleUpdate} onCancel={() => setEditingUser(null)} />
           </DialogContent>
@@ -439,14 +480,14 @@ export default function UsersPage() {
         <Dialog open={!!deletingUser} onOpenChange={() => setDeletingUser(null)}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Delete User</DialogTitle>
+              <DialogTitle>{t("deleteUser")}</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete "{deletingUser?.email}"?
+                {t("deleteUserConfirm", { email: deletingUser?.email })}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setDeletingUser(null)}>Cancel</Button>
-              <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+              <Button variant="outline" onClick={() => setDeletingUser(null)}>{tc("cancel")}</Button>
+              <Button variant="destructive" onClick={handleDelete}>{tc("delete")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

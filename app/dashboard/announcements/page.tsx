@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useSearchParams } from "next/navigation"
 import {
   IconChevronDown,
   IconChevronLeft,
@@ -60,6 +61,8 @@ import {
 } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
 import { PageHeader } from "@/components/page-header"
+import { usePermissions } from "@/hooks/use-permissions"
+import { useTranslations } from "next-intl"
 
 interface Announcement {
   id: string
@@ -86,8 +89,12 @@ function AnnouncementForm({
   onSave: (data: Partial<Announcement>) => void
   onCancel: () => void
 }) {
+  const t = useTranslations("announcements")
+  const tc = useTranslations("common")
   const [title, setTitle] = React.useState(announcement?.title || "")
   const [body, setBody] = React.useState(announcement?.body || "")
+  const [ctaLabel, setCtaLabel] = React.useState(announcement?.cta_label || "")
+  const [ctaUrl, setCtaUrl] = React.useState(announcement?.cta_url || "")
   const [isActive, setIsActive] = React.useState(announcement?.is_active ?? true)
   const [startsAt, setStartsAt] = React.useState(announcement?.starts_at ? announcement.starts_at.slice(0, 16) : "")
   const [endsAt, setEndsAt] = React.useState(announcement?.ends_at ? announcement.ends_at.slice(0, 16) : "")
@@ -97,6 +104,8 @@ function AnnouncementForm({
     onSave({
       title,
       body,
+      cta_label: ctaLabel || null,
+      cta_url: ctaUrl || null,
       starts_at: new Date(startsAt).toISOString(),
       ends_at: new Date(endsAt).toISOString(),
       is_active: isActive,
@@ -106,28 +115,49 @@ function AnnouncementForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="title">Title *</Label>
+        <Label htmlFor="title">{t("announcementTitle")} *</Label>
         <Input
           id="title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Announcement title"
+          placeholder={t("enterTitle")}
           required
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="body">Body</Label>
+        <Label htmlFor="body">{t("body")}</Label>
         <Textarea
           id="body"
           value={body}
           onChange={(e) => setBody(e.target.value)}
-          placeholder="Write your announcement..."
+          placeholder={t("enterBody")}
           rows={5}
         />
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="starts_at">Starts At *</Label>
+          <Label htmlFor="cta_label">{t("ctaLabel")}</Label>
+          <Input
+            id="cta_label"
+            value={ctaLabel}
+            onChange={(e) => setCtaLabel(e.target.value)}
+            placeholder={t("enterCtaLabel")}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="cta_url">{t("ctaUrl")}</Label>
+          <Input
+            id="cta_url"
+            type="url"
+            value={ctaUrl}
+            onChange={(e) => setCtaUrl(e.target.value)}
+            placeholder="https://example.com"
+          />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="starts_at">{t("startsAt")} *</Label>
           <Input
             id="starts_at"
             type="datetime-local"
@@ -137,7 +167,7 @@ function AnnouncementForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="ends_at">Ends At *</Label>
+          <Label htmlFor="ends_at">{t("endsAt")} *</Label>
           <Input
             id="ends_at"
             type="datetime-local"
@@ -149,27 +179,36 @@ function AnnouncementForm({
       </div>
       <div className="flex items-center gap-2">
         <Switch id="is_active" checked={isActive} onCheckedChange={setIsActive} />
-        <Label htmlFor="is_active">Active (visible to users)</Label>
+        <Label htmlFor="is_active">{t("activeVisible")}</Label>
       </div>
       <DialogFooter>
-        <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-        <Button type="submit">{announcement ? "Update" : "Create"} Announcement</Button>
+        <Button type="button" variant="outline" onClick={onCancel}>{tc("cancel")}</Button>
+        <Button type="submit">{announcement ? t("updateAnnouncement") : t("createAnnouncement")}</Button>
       </DialogFooter>
     </form>
   )
 }
 
 export default function AnnouncementsPage() {
+  const { hasPermission } = usePermissions()
+  const t = useTranslations("announcements")
+  const tc = useTranslations("common")
   const { data: announcements = [], mutate, isLoading } = useSWR<Announcement[]>("/api/announcements", fetcher)
   
+  const searchParams = useSearchParams()
   const [isCreateOpen, setIsCreateOpen] = React.useState(false)
   const [editingAnnouncement, setEditingAnnouncement] = React.useState<Announcement | null>(null)
   const [viewingAnnouncement, setViewingAnnouncement] = React.useState<Announcement | null>(null)
   const [deletingAnnouncement, setDeletingAnnouncement] = React.useState<Announcement | null>(null)
+
+  React.useEffect(() => {
+    if (searchParams.get("create") === "true") setIsCreateOpen(true)
+  }, [searchParams])
   
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [sorting, setSorting] = React.useState<SortingState>([])
+  const [globalFilter, setGlobalFilter] = React.useState("")
   const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
 
   const handleCreate = async (data: Partial<Announcement>) => {
@@ -226,7 +265,7 @@ export default function AnnouncementsPage() {
     },
     {
       accessorKey: "title",
-      header: "Title",
+      header: t("announcementTitle"),
       cell: ({ row }) => (
         <div>
           <div className="font-medium">{row.original.title}</div>
@@ -239,21 +278,21 @@ export default function AnnouncementsPage() {
     },
     {
       accessorKey: "created_by_name",
-      header: "Created By",
-      cell: ({ row }) => row.original.created_by_name || "Unknown",
+      header: t("createdBy"),
+      cell: ({ row }) => row.original.created_by_name || t("unknown"),
     },
     {
       accessorKey: "is_active",
-      header: "Status",
+      header: tc("status"),
       cell: ({ row }) => (
         <Badge variant={row.original.is_active ? "default" : "secondary"}>
-          {row.original.is_active ? "Active" : "Inactive"}
+          {row.original.is_active ? tc("active") : tc("inactive")}
         </Badge>
       ),
     },
     {
       accessorKey: "created_at",
-      header: "Created",
+      header: tc("created"),
       cell: ({ row }) => (
         <div className="text-muted-foreground">
           {new Date(row.original.created_at).toLocaleDateString()}
@@ -273,20 +312,26 @@ export default function AnnouncementsPage() {
           <DropdownMenuContent align="end" className="w-32">
             <DropdownMenuItem onClick={() => setViewingAnnouncement(row.original)}>
               <IconEye className="mr-2 size-4" />
-              View
+              {tc("view")}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setEditingAnnouncement(row.original)}>
-              <IconEdit className="mr-2 size-4" />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => setDeletingAnnouncement(row.original)}
-              className="text-destructive focus:text-destructive"
-            >
-              <IconTrash className="mr-2 size-4" />
-              Delete
-            </DropdownMenuItem>
+            {hasPermission("announcements:write") && (
+              <DropdownMenuItem onClick={() => setEditingAnnouncement(row.original)}>
+                <IconEdit className="mr-2 size-4" />
+                {tc("edit")}
+              </DropdownMenuItem>
+            )}
+            {hasPermission("announcements:delete") && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => setDeletingAnnouncement(row.original)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <IconTrash className="mr-2 size-4" />
+                  {tc("delete")}
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       ),
@@ -296,11 +341,19 @@ export default function AnnouncementsPage() {
   const table = useReactTable({
     data: announcements,
     columns,
-    state: { sorting, columnVisibility, rowSelection, pagination },
+    state: { sorting, columnVisibility, rowSelection, globalFilter, pagination },
     getRowId: (row) => row.id,
     enableRowSelection: true,
+    globalFilterFn: (row, _columnId, filterValue) => {
+      const q = String(filterValue).toLowerCase()
+      const a = row.original
+      return [
+        a.title, a.body, a.cta_label, a.created_by_name,
+      ].some((v) => v && String(v).toLowerCase().includes(q))
+    },
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
     onColumnVisibilityChange: setColumnVisibility,
     onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
@@ -312,14 +365,14 @@ export default function AnnouncementsPage() {
   return (
     <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 px-4 lg:px-6">
       <PageHeader
-        title="Announcements"
-        description="Create and manage system announcements"
+        title={t("title")}
+        description={t("description")}
       >
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">
                     <IconLayoutColumns />
-                    Columns
+                    {tc("columns")}
                     <IconChevronDown />
                   </Button>
                 </DropdownMenuTrigger>
@@ -336,11 +389,22 @@ export default function AnnouncementsPage() {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-          <Button onClick={() => setIsCreateOpen(true)}>
-            <IconPlus />
-            Create Announcement
-          </Button>
+          {hasPermission("announcements:write") && (
+            <Button onClick={() => setIsCreateOpen(true)}>
+              <IconPlus />
+              {t("addAnnouncement")}
+            </Button>
+          )}
         </PageHeader>
+
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder={t("searchAnnouncements")}
+              value={globalFilter}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              className="max-w-sm"
+            />
+          </div>
 
           <div className="overflow-hidden rounded-lg border">
             <Table>
@@ -372,11 +436,13 @@ export default function AnnouncementsPage() {
                   <TableRow>
                     <TableCell colSpan={columns.length} className="h-24 text-center">
                       <div className="flex flex-col items-center gap-2 py-8">
-                        <div className="text-muted-foreground">No announcements</div>
-                        <Button size="sm" onClick={() => setIsCreateOpen(true)}>
-                          <IconPlus className="size-4" />
-                          Add Announcement
-                        </Button>
+                        <div className="text-muted-foreground">{t("noAnnouncements")}</div>
+                        {hasPermission("announcements:write") && (
+                          <Button size="sm" onClick={() => setIsCreateOpen(true)}>
+                            <IconPlus className="size-4" />
+                            {t("addAnnouncementEmpty")}
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -409,8 +475,8 @@ export default function AnnouncementsPage() {
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
-              <DialogTitle>Create Announcement</DialogTitle>
-              <DialogDescription>Add a new announcement for users.</DialogDescription>
+              <DialogTitle>{t("createAnnouncement")}</DialogTitle>
+              <DialogDescription>{t("createAnnouncementDesc")}</DialogDescription>
             </DialogHeader>
             <AnnouncementForm onSave={handleCreate} onCancel={() => setIsCreateOpen(false)} />
           </DialogContent>
@@ -419,8 +485,8 @@ export default function AnnouncementsPage() {
         <Dialog open={!!editingAnnouncement} onOpenChange={() => setEditingAnnouncement(null)}>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
-              <DialogTitle>Edit Announcement</DialogTitle>
-              <DialogDescription>Update announcement details.</DialogDescription>
+              <DialogTitle>{t("editAnnouncement")}</DialogTitle>
+              <DialogDescription>{t("editAnnouncementDesc")}</DialogDescription>
             </DialogHeader>
             <AnnouncementForm announcement={editingAnnouncement} onSave={handleUpdate} onCancel={() => setEditingAnnouncement(null)} />
           </DialogContent>
@@ -438,12 +504,14 @@ export default function AnnouncementsPage() {
               <div className="whitespace-pre-wrap">{viewingAnnouncement?.body}</div>
               <div className="flex items-center gap-2">
                 <Badge variant={viewingAnnouncement?.is_active ? "default" : "secondary"}>
-                  {viewingAnnouncement?.is_active ? "Active" : "Inactive"}
+                  {viewingAnnouncement?.is_active ? tc("active") : tc("inactive")}
                 </Badge>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setViewingAnnouncement(null)}>Close</Button>
-                <Button onClick={() => { setViewingAnnouncement(null); setEditingAnnouncement(viewingAnnouncement); }}>Edit</Button>
+                <Button variant="outline" onClick={() => setViewingAnnouncement(null)}>{tc("close")}</Button>
+                {hasPermission("announcements:write") && (
+                  <Button onClick={() => { setViewingAnnouncement(null); setEditingAnnouncement(viewingAnnouncement); }}>{tc("edit")}</Button>
+                )}
               </DialogFooter>
             </div>
           </DialogContent>
@@ -452,14 +520,14 @@ export default function AnnouncementsPage() {
         <Dialog open={!!deletingAnnouncement} onOpenChange={() => setDeletingAnnouncement(null)}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Delete Announcement</DialogTitle>
+              <DialogTitle>{t("deleteAnnouncement")}</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete "{deletingAnnouncement?.title}"?
+                {t("deleteAnnouncementConfirm", { title: deletingAnnouncement?.title })}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setDeletingAnnouncement(null)}>Cancel</Button>
-              <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+              <Button variant="outline" onClick={() => setDeletingAnnouncement(null)}>{tc("cancel")}</Button>
+              <Button variant="destructive" onClick={handleDelete}>{tc("delete")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

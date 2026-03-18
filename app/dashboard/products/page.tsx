@@ -1,7 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useTranslations } from "next-intl"
 import {
   IconChevronDown,
   IconChevronLeft,
@@ -72,6 +73,8 @@ import {
 } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
 import { PageHeader } from "@/components/page-header"
+import { usePermissions } from "@/hooks/use-permissions"
+import { RichTextEditor } from "@/components/rich-text-editor"
 
 interface Product {
   id: string
@@ -102,6 +105,15 @@ interface Category {
   name: string
 }
 
+interface VariationRow {
+  key: string
+  sku: string
+  color: string
+  size: string
+  price: string
+  stock: string
+}
+
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 function ProductForm({
@@ -112,9 +124,12 @@ function ProductForm({
 }: {
   product?: Product | null
   categories: Category[]
-  onSave: (data: Partial<Product> & { images?: File[]; existingImages?: ProductImage[] }) => void
+  onSave: (data: Partial<Product> & { images?: File[]; existingImages?: ProductImage[]; variations?: VariationRow[] }) => void
   onCancel: () => void
 }) {
+  const t = useTranslations("products")
+  const td = useTranslations("productDetail")
+  const tc = useTranslations("common")
   const [name, setName] = React.useState(product?.name || "")
   const [slug, setSlug] = React.useState(product?.slug || "")
   const [description, setDescription] = React.useState(product?.description || "")
@@ -122,6 +137,26 @@ function ProductForm({
   const [isActive, setIsActive] = React.useState(product?.is_active ?? true)
   const [isFeatured, setIsFeatured] = React.useState(product?.is_featured ?? false)
   const [isBestSeller, setIsBestSeller] = React.useState(product?.is_best_seller ?? false)
+
+  // Variations state (only for creation)
+  const [variations, setVariations] = React.useState<VariationRow[]>([])
+
+  const addVariation = () => {
+    setVariations((prev) => [
+      ...prev,
+      { key: crypto.randomUUID(), sku: "", color: "", size: "", price: "", stock: "0" },
+    ])
+  }
+
+  const updateVariation = (key: string, field: keyof VariationRow, value: string) => {
+    setVariations((prev) =>
+      prev.map((v) => (v.key === key ? { ...v, [field]: value } : v))
+    )
+  }
+
+  const removeVariation = (key: string) => {
+    setVariations((prev) => prev.filter((v) => v.key !== key))
+  }
 
   // Image state
   const [newFiles, setNewFiles] = React.useState<File[]>([])
@@ -173,6 +208,7 @@ function ProductForm({
       is_best_seller: isBestSeller,
       images: newFiles,
       existingImages,
+      ...(!product ? { variations: variations.filter((v) => v.sku && v.price) } : {}),
     })
   }
 
@@ -180,44 +216,42 @@ function ProductForm({
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="name">Product Name *</Label>
+          <Label htmlFor="name">{t("productName")} *</Label>
           <Input
             id="name"
             value={name}
             onChange={(e) => handleNameChange(e.target.value)}
-            placeholder="Enter product name"
+            placeholder={t("enterProductName")}
             required
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="slug">Slug *</Label>
+          <Label htmlFor="slug">{t("slug")} *</Label>
           <Input
             id="slug"
             value={slug}
             onChange={(e) => setSlug(e.target.value)}
-            placeholder="product-slug"
+            placeholder={t("productSlug")}
             required
           />
         </div>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
-        <Textarea
-          id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Enter product description"
-          rows={3}
+        <Label>{t("productDescription")}</Label>
+        <RichTextEditor
+          content={description}
+          onChange={setDescription}
+          placeholder={t("enterProductDescription")}
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="category">Category</Label>
+        <Label htmlFor="category">{t("category")}</Label>
         <Select value={categoryId || "none"} onValueChange={(val) => setCategoryId(val === "none" ? "" : val)}>
           <SelectTrigger id="category">
-            <SelectValue placeholder="Select category" />
+            <SelectValue placeholder={t("selectCategory")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="none">No category</SelectItem>
+            <SelectItem value="none">{t("noCategory")}</SelectItem>
             {categories.map((cat) => (
               <SelectItem key={cat.id} value={cat.id}>
                 {cat.name}
@@ -228,7 +262,7 @@ function ProductForm({
       </div>
       {/* Multi-image upload */}
       <div className="space-y-2">
-        <Label>Product Images</Label>
+        <Label>{t("productImages")}</Label>
         <div className="flex flex-wrap gap-3">
           {existingImages.map((img) => (
             <div key={img.id} className="group relative size-20 rounded-lg border overflow-hidden">
@@ -272,25 +306,104 @@ function ProductForm({
           onChange={handleAddFiles}
         />
       </div>
+      {/* Variations section — only on create */}
+      {!product && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <Label>{t("variations")}</Label>
+            <Button type="button" variant="outline" size="sm" onClick={addVariation}>
+              <IconPlus className="mr-1 size-3.5" />
+              {td("addVariation")}
+            </Button>
+          </div>
+          {variations.length > 0 && (
+            <div className="rounded-lg border divide-y">
+              {/* Header */}
+              <div className="grid grid-cols-[1fr_0.8fr_0.6fr_0.7fr_0.5fr_auto] gap-2 px-3 py-2 bg-muted/50 text-xs font-medium text-muted-foreground">
+                <span>{td("sku")} *</span>
+                <span>{td("color")}</span>
+                <span>{td("size")}</span>
+                <span>{td("price")} *</span>
+                <span>{td("stock")}</span>
+                <span></span>
+              </div>
+              {/* Rows */}
+              {variations.map((v) => (
+                <div key={v.key} className="grid grid-cols-[1fr_0.8fr_0.6fr_0.7fr_0.5fr_auto] gap-2 px-3 py-2 items-center">
+                  <Input
+                    value={v.sku}
+                    onChange={(e) => updateVariation(v.key, "sku", e.target.value)}
+                    placeholder={td("skuPlaceholder")}
+                    className="h-8 text-sm"
+                    required
+                  />
+                  <Input
+                    value={v.color}
+                    onChange={(e) => updateVariation(v.key, "color", e.target.value)}
+                    placeholder={td("colorPlaceholder")}
+                    className="h-8 text-sm"
+                  />
+                  <Input
+                    value={v.size}
+                    onChange={(e) => updateVariation(v.key, "size", e.target.value)}
+                    placeholder={td("sizePlaceholder")}
+                    className="h-8 text-sm"
+                  />
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={v.price}
+                    onChange={(e) => updateVariation(v.key, "price", e.target.value)}
+                    placeholder="0.00"
+                    className="h-8 text-sm"
+                    required
+                  />
+                  <Input
+                    type="number"
+                    min="0"
+                    value={v.stock}
+                    onChange={(e) => updateVariation(v.key, "stock", e.target.value)}
+                    placeholder="0"
+                    className="h-8 text-sm"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="size-8 text-muted-foreground hover:text-destructive"
+                    onClick={() => removeVariation(v.key)}
+                  >
+                    <IconTrash className="size-3.5" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+          {variations.length === 0 && (
+            <p className="text-xs text-muted-foreground">{t("variationsHint")}</p>
+          )}
+        </div>
+      )}
       <div className="flex items-center gap-2">
         <Switch id="is_active" checked={isActive} onCheckedChange={setIsActive} />
-        <Label htmlFor="is_active">Active</Label>
+        <Label htmlFor="is_active">{t("isActive")}</Label>
       </div>
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
           <Switch id="is_featured" checked={isFeatured} onCheckedChange={setIsFeatured} />
-          <Label htmlFor="is_featured">Featured</Label>
+          <Label htmlFor="is_featured">{t("isFeatured")}</Label>
         </div>
         <div className="flex items-center gap-2">
           <Switch id="is_best_seller" checked={isBestSeller} onCheckedChange={setIsBestSeller} />
-          <Label htmlFor="is_best_seller">Best Seller</Label>
+          <Label htmlFor="is_best_seller">{t("isBestSeller")}</Label>
         </div>
       </div>
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
+          {tc("cancel")}
         </Button>
-        <Button type="submit">{product ? "Update" : "Create"} Product</Button>
+        <Button type="submit">{product ? t("updateProduct") : t("createProduct")}</Button>
       </DialogFooter>
     </form>
   )
@@ -298,9 +411,13 @@ function ProductForm({
 
 export default function ProductsPage() {
   const router = useRouter()
+  const { hasPermission } = usePermissions()
+  const t = useTranslations("products")
+  const tc = useTranslations("common")
   const { data: products = [], mutate, isLoading } = useSWR<Product[]>("/api/products", fetcher)
   const { data: categories = [] } = useSWR<Category[]>("/api/categories", fetcher)
   
+  const searchParams = useSearchParams()
   const [isCreateOpen, setIsCreateOpen] = React.useState(false)
   const [editingProduct, setEditingProduct] = React.useState<Product | null>(null)
   const [deletingProduct, setDeletingProduct] = React.useState<Product | null>(null)
@@ -309,10 +426,15 @@ export default function ProductsPage() {
   const [isImporting, setIsImporting] = React.useState(false)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   
+  React.useEffect(() => {
+    if (searchParams.get("create") === "true") setIsCreateOpen(true)
+  }, [searchParams])
+
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [sorting, setSorting] = React.useState<SortingState>([])
+  const [globalFilter, setGlobalFilter] = React.useState("")
   const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
 
   const uploadImages = async (files: File[]): Promise<string[]> => {
@@ -329,8 +451,8 @@ export default function ProductsPage() {
     return urls
   }
 
-  const handleCreate = async (data: Partial<Product> & { images?: File[]; existingImages?: ProductImage[] }) => {
-    const { images, existingImages, ...productData } = data
+  const handleCreate = async (data: Partial<Product> & { images?: File[]; existingImages?: ProductImage[]; variations?: VariationRow[] }) => {
+    const { images, existingImages, variations, ...productData } = data
 
     // Upload new images first
     const imageUrls = images?.length ? await uploadImages(images) : []
@@ -354,6 +476,25 @@ export default function ProductsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ urls: imageUrls }),
       })
+    }
+
+    // Create variations
+    if (created.id && variations?.length) {
+      await Promise.all(
+        variations.map((v) =>
+          fetch(`/api/products/${created.id}/variations`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              sku: v.sku,
+              color: v.color || null,
+              size: v.size || null,
+              price: parseFloat(v.price),
+              stock: parseInt(v.stock) || 0,
+            }),
+          })
+        )
+      )
     }
 
     mutate()
@@ -552,7 +693,7 @@ export default function ProductsPage() {
     },
     {
       accessorKey: "name",
-      header: "Product",
+      header: t("product"),
       cell: ({ row }) => (
         <div className="flex items-center gap-3">
           {row.original.thumbnail_url ? (
@@ -563,7 +704,7 @@ export default function ProductsPage() {
             />
           ) : (
             <div className="flex size-10 items-center justify-center rounded-md bg-muted text-xs text-muted-foreground">
-              No img
+              {t("noImg")}
             </div>
           )}
           <div>
@@ -576,30 +717,30 @@ export default function ProductsPage() {
     },
     {
       accessorKey: "category_name",
-      header: "Category",
+      header: t("category"),
       cell: ({ row }) => (
         <Badge variant="outline" className="text-muted-foreground">
-          {row.original.category_name || "Uncategorized"}
+          {row.original.category_name || t("uncategorized")}
         </Badge>
       ),
     },
     {
       accessorKey: "variations_count",
-      header: "Variations",
+      header: t("variations"),
       cell: ({ row }) => <div className="text-center">{row.original.variations_count}</div>,
     },
     {
       accessorKey: "is_active",
-      header: "Status",
+      header: tc("status"),
       cell: ({ row }) => (
         <Badge variant={row.original.is_active ? "default" : "secondary"}>
-          {row.original.is_active ? "Active" : "Inactive"}
+          {row.original.is_active ? tc("active") : tc("inactive")}
         </Badge>
       ),
     },
     {
       accessorKey: "created_at",
-      header: "Created",
+      header: tc("created"),
       cell: ({ row }) => (
         <div className="text-muted-foreground">
           {new Date(row.original.created_at).toLocaleDateString()}
@@ -617,26 +758,32 @@ export default function ProductsPage() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-32">
-            <DropdownMenuItem onClick={async () => {
-              const res = await fetch(`/api/products/${row.original.id}`)
-              const full = await res.json()
-              setEditingProduct({ ...row.original, product_images: full.product_images || [] })
-            }}>
-              <IconEdit className="mr-2 size-4" />
-              Edit
-            </DropdownMenuItem>
+            {hasPermission("products:write") && (
+              <DropdownMenuItem onClick={async () => {
+                const res = await fetch(`/api/products/${row.original.id}`)
+                const full = await res.json()
+                setEditingProduct({ ...row.original, product_images: full.product_images || [] })
+              }}>
+                <IconEdit className="mr-2 size-4" />
+                {tc("edit")}
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem onClick={() => router.push(`/dashboard/products/${row.original.id}`)}>
               <IconEye className="mr-2 size-4" />
-              View
+              {tc("view")}
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => setDeletingProduct(row.original)}
-              className="text-destructive focus:text-destructive"
-            >
-              <IconTrash className="mr-2 size-4" />
-              Delete
-            </DropdownMenuItem>
+            {hasPermission("products:delete") && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => setDeletingProduct(row.original)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <IconTrash className="mr-2 size-4" />
+                  {tc("delete")}
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       ),
@@ -646,12 +793,20 @@ export default function ProductsPage() {
   const table = useReactTable({
     data: products,
     columns,
-    state: { sorting, columnVisibility, rowSelection, columnFilters, pagination },
+    state: { sorting, columnVisibility, rowSelection, columnFilters, globalFilter, pagination },
     getRowId: (row) => row.id,
     enableRowSelection: true,
+    globalFilterFn: (row, _columnId, filterValue) => {
+      const q = String(filterValue).toLowerCase()
+      const p = row.original
+      return [
+        p.name, p.slug, p.description, p.category_name,
+      ].some((v) => v && String(v).toLowerCase().includes(q))
+    },
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: setGlobalFilter,
     onColumnVisibilityChange: setColumnVisibility,
     onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
@@ -663,14 +818,14 @@ export default function ProductsPage() {
   return (
     <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 px-4 lg:px-6">
       <PageHeader
-          title="Products"
-          description="Manage your product catalog"
+          title={t("title")}
+          description={t("description")}
         >
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">
                     <IconLayoutColumns />
-                    Columns
+                    {tc("columns")}
                     <IconChevronDown />
                   </Button>
                 </DropdownMenuTrigger>
@@ -687,22 +842,35 @@ export default function ProductsPage() {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-          <Button onClick={() => setIsCreateOpen(true)}>
-            <IconPlus />
-            Add Product
-          </Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".xlsx,.xls"
-            onChange={handleFileChange}
-            className="hidden"
-          />
-          <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
-            <IconUpload />
-            Import Excel
-          </Button>
+          {hasPermission("products:write") && (
+            <>
+              <Button onClick={() => setIsCreateOpen(true)}>
+                <IconPlus />
+                {t("addProduct")}
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+              <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+                <IconUpload />
+                {t("importProducts")}
+              </Button>
+            </>
+          )}
         </PageHeader>
+
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder={t("searchProducts")}
+              value={globalFilter}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              className="max-w-sm"
+            />
+          </div>
 
           <div className="overflow-hidden rounded-lg border">
             <Table>
@@ -734,11 +902,13 @@ export default function ProductsPage() {
                   <TableRow>
                     <TableCell colSpan={columns.length} className="h-24 text-center">
                       <div className="flex flex-col items-center gap-2 py-8">
-                        <div className="text-muted-foreground">No products found</div>
-                        <Button size="sm" onClick={() => setIsCreateOpen(true)}>
-                          <IconPlus className="size-4" />
-                          Add Product
-                        </Button>
+                        <div className="text-muted-foreground">{t("noProducts")}</div>
+                        {hasPermission("products:write") && (
+                          <Button size="sm" onClick={() => setIsCreateOpen(true)}>
+                            <IconPlus className="size-4" />
+                            {t("addProduct")}
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -772,7 +942,7 @@ export default function ProductsPage() {
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Create Product</DialogTitle>
+              <DialogTitle>{t("createProduct")}</DialogTitle>
               <DialogDescription>Add a new product to your catalog.</DialogDescription>
             </DialogHeader>
             <ProductForm categories={categories} onSave={handleCreate} onCancel={() => setIsCreateOpen(false)} />
@@ -783,7 +953,7 @@ export default function ProductsPage() {
         <Dialog open={!!editingProduct} onOpenChange={() => setEditingProduct(null)}>
           <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Edit Product</DialogTitle>
+              <DialogTitle>{t("updateProduct")}</DialogTitle>
               <DialogDescription>Update product information.</DialogDescription>
             </DialogHeader>
             <ProductForm product={editingProduct} categories={categories} onSave={handleUpdate} onCancel={() => setEditingProduct(null)} />
@@ -800,8 +970,8 @@ export default function ProductsPage() {
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setDeletingProduct(null)}>Cancel</Button>
-              <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+              <Button variant="outline" onClick={() => setDeletingProduct(null)}>{tc("cancel")}</Button>
+              <Button variant="destructive" onClick={handleDelete}>{tc("delete")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -810,7 +980,7 @@ export default function ProductsPage() {
         <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
           <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
             <DialogHeader>
-              <DialogTitle>Import Products</DialogTitle>
+              <DialogTitle>{t("importProducts")}</DialogTitle>
               <DialogDescription>{importData.length} product(s) found in the file</DialogDescription>
             </DialogHeader>
             <div className="overflow-auto flex-1 rounded-lg border">
@@ -844,7 +1014,7 @@ export default function ProductsPage() {
               </Table>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsImportOpen(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => setIsImportOpen(false)}>{tc("cancel")}</Button>
               <Button onClick={handleImport} disabled={isImporting || importData.length === 0}>
                 {isImporting ? "Importing..." : `Import ${importData.length} Products`}
               </Button>

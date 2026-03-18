@@ -59,6 +59,8 @@ import {
 } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
 import { PageHeader } from "@/components/page-header"
+import { usePermissions } from "@/hooks/use-permissions"
+import { useTranslations } from "next-intl"
 
 interface Role {
   id: string
@@ -80,6 +82,8 @@ function RoleForm({
   onSave: (data: Partial<Role>) => void
   onCancel: () => void
 }) {
+  const t = useTranslations("roles")
+  const tc = useTranslations("common")
   const [name, setName] = React.useState(role?.name || "")
   const [description, setDescription] = React.useState(role?.description || "")
 
@@ -91,35 +95,38 @@ function RoleForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="name">Role Name *</Label>
+        <Label htmlFor="name">{t("roleName")} *</Label>
         <Input
           id="name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Enter role name"
+          placeholder={t("enterRoleName")}
           required
           disabled={role?.is_system}
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
+        <Label htmlFor="description">{t("roleDescription")}</Label>
         <Textarea
           id="description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Describe this role's responsibilities"
+          placeholder={t("describeRole")}
           rows={3}
         />
       </div>
       <DialogFooter>
-        <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-        <Button type="submit" disabled={role?.is_system}>{role ? "Update" : "Create"} Role</Button>
+        <Button type="button" variant="outline" onClick={onCancel}>{tc("cancel")}</Button>
+        <Button type="submit" disabled={role?.is_system}>{role ? t("updateRole") : t("createRole")}</Button>
       </DialogFooter>
     </form>
   )
 }
 
 export default function RolesPage() {
+  const { hasPermission } = usePermissions()
+  const t = useTranslations("roles")
+  const tc = useTranslations("common")
   const { data: roles = [], mutate, isLoading } = useSWR<Role[]>("/api/roles", fetcher)
   
   const [isCreateOpen, setIsCreateOpen] = React.useState(false)
@@ -129,6 +136,7 @@ export default function RolesPage() {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [sorting, setSorting] = React.useState<SortingState>([])
+  const [globalFilter, setGlobalFilter] = React.useState("")
   const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
 
   const handleCreate = async (data: Partial<Role>) => {
@@ -185,7 +193,7 @@ export default function RolesPage() {
     },
     {
       accessorKey: "name",
-      header: "Role",
+      header: t("roleName"),
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
           <IconShield className="size-4 text-muted-foreground" />
@@ -203,23 +211,23 @@ export default function RolesPage() {
     },
     {
       accessorKey: "permissions_count",
-      header: "Permissions",
+      header: t("permissions"),
       cell: ({ row }) => (
-        <Badge variant="secondary">{row.original.permissions_count} permissions</Badge>
+        <Badge variant="secondary">{t("permissionsCount", { count: row.original.permissions_count })}</Badge>
       ),
     },
     {
       accessorKey: "is_system",
-      header: "Type",
+      header: t("type"),
       cell: ({ row }) => (
         <Badge variant={row.original.is_system ? "default" : "outline"}>
-          {row.original.is_system ? "System" : "Custom"}
+          {row.original.is_system ? t("system") : t("custom")}
         </Badge>
       ),
     },
     {
       accessorKey: "created_at",
-      header: "Created",
+      header: tc("created"),
       cell: ({ row }) => (
         <div className="text-muted-foreground">
           {new Date(row.original.created_at).toLocaleDateString()}
@@ -237,22 +245,28 @@ export default function RolesPage() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-32">
-            <DropdownMenuItem 
-              onClick={() => setEditingRole(row.original)}
-              disabled={row.original.is_system}
-            >
-              <IconEdit className="mr-2 size-4" />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => setDeletingRole(row.original)}
-              className="text-destructive focus:text-destructive"
-              disabled={row.original.is_system}
-            >
-              <IconTrash className="mr-2 size-4" />
-              Delete
-            </DropdownMenuItem>
+            {hasPermission("roles:manage") && (
+              <DropdownMenuItem 
+                onClick={() => setEditingRole(row.original)}
+                disabled={row.original.is_system}
+              >
+                <IconEdit className="mr-2 size-4" />
+                {tc("edit")}
+              </DropdownMenuItem>
+            )}
+            {hasPermission("roles:manage") && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => setDeletingRole(row.original)}
+                  className="text-destructive focus:text-destructive"
+                  disabled={row.original.is_system}
+                >
+                  <IconTrash className="mr-2 size-4" />
+                  {tc("delete")}
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       ),
@@ -262,11 +276,19 @@ export default function RolesPage() {
   const table = useReactTable({
     data: roles,
     columns,
-    state: { sorting, columnVisibility, rowSelection, pagination },
+    state: { sorting, columnVisibility, rowSelection, globalFilter, pagination },
     getRowId: (row) => row.id,
     enableRowSelection: true,
+    globalFilterFn: (row, _columnId, filterValue) => {
+      const q = String(filterValue).toLowerCase()
+      const r = row.original
+      return [
+        r.name, r.description,
+      ].some((v) => v && String(v).toLowerCase().includes(q))
+    },
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
     onColumnVisibilityChange: setColumnVisibility,
     onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
@@ -278,14 +300,14 @@ export default function RolesPage() {
   return (
     <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 px-4 lg:px-6">
       <PageHeader
-        title="Roles & Permissions"
-        description="Manage user roles and their permissions"
+        title={t("title")}
+        description={t("description")}
       >
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm">
               <IconLayoutColumns />
-              Columns
+              {tc("columns")}
               <IconChevronDown />
             </Button>
           </DropdownMenuTrigger>
@@ -303,6 +325,15 @@ export default function RolesPage() {
           </DropdownMenuContent>
         </DropdownMenu>
       </PageHeader>
+
+      <div className="flex items-center gap-2">
+        <Input
+          placeholder={t("searchRoles")}
+          value={globalFilter}
+          onChange={(e) => setGlobalFilter(e.target.value)}
+          className="max-w-sm"
+        />
+      </div>
 
       <div className="overflow-hidden rounded-lg border">
         <Table>
@@ -334,10 +365,10 @@ export default function RolesPage() {
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">
                   <div className="flex flex-col items-center gap-2 py-8">
-                    <div className="text-muted-foreground">No roles found</div>
+                    <div className="text-muted-foreground">{t("noRoles")}</div>
                     <Button size="sm" onClick={() => setIsCreateOpen(true)}>
                       <IconPlus className="size-4" />
-                      Add Role
+                      {t("addRole")}
                     </Button>
                   </div>
                 </TableCell>
@@ -371,8 +402,8 @@ export default function RolesPage() {
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Create Role</DialogTitle>
-              <DialogDescription>Add a new role with custom permissions.</DialogDescription>
+              <DialogTitle>{t("createRole")}</DialogTitle>
+              <DialogDescription>{t("createRoleDesc")}</DialogDescription>
             </DialogHeader>
             <RoleForm onSave={handleCreate} onCancel={() => setIsCreateOpen(false)} />
           </DialogContent>
@@ -381,8 +412,8 @@ export default function RolesPage() {
         <Dialog open={!!editingRole} onOpenChange={() => setEditingRole(null)}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Edit Role</DialogTitle>
-              <DialogDescription>Update role information.</DialogDescription>
+              <DialogTitle>{t("editRole")}</DialogTitle>
+              <DialogDescription>{t("editRoleDesc")}</DialogDescription>
             </DialogHeader>
             <RoleForm role={editingRole} onSave={handleUpdate} onCancel={() => setEditingRole(null)} />
           </DialogContent>
@@ -391,14 +422,14 @@ export default function RolesPage() {
         <Dialog open={!!deletingRole} onOpenChange={() => setDeletingRole(null)}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Delete Role</DialogTitle>
+              <DialogTitle>{t("deleteRole")}</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete "{deletingRole?.name}"? Users with this role will lose access.
+                {t("deleteRoleConfirm", { name: deletingRole?.name })}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setDeletingRole(null)}>Cancel</Button>
-              <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+              <Button variant="outline" onClick={() => setDeletingRole(null)}>{tc("cancel")}</Button>
+              <Button variant="destructive" onClick={handleDelete}>{tc("delete")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

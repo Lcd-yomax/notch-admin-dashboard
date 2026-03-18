@@ -1,6 +1,8 @@
 "use client"
 
 import * as React from "react"
+import { useTranslations } from "next-intl"
+import { useRouter } from "next/navigation"
 import {
   IconChevronDown,
   IconChevronLeft,
@@ -45,6 +47,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
   Select,
@@ -62,6 +65,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { PageHeader } from "@/components/page-header"
+import { usePermissions } from "@/hooks/use-permissions"
 
 interface Order {
   id: string
@@ -80,12 +84,12 @@ interface Order {
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
-const statusColors: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  pending: "outline",
-  processing: "secondary",
-  shipped: "default",
-  delivered: "default",
-  cancelled: "destructive",
+const statusClasses: Record<string, string> = {
+  pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800",
+  processing: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800",
+  shipped: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800",
+  delivered: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800",
+  cancelled: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800",
 }
 
 function OrderStatusForm({
@@ -97,6 +101,8 @@ function OrderStatusForm({
   onSave: (status: string) => void
   onCancel: () => void
 }) {
+  const t = useTranslations("orders")
+  const tc = useTranslations("common")
   const [status, setStatus] = React.useState(order.status)
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -107,37 +113,41 @@ function OrderStatusForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="status">Order Status</Label>
+        <Label htmlFor="status">{t("orderStatus")}</Label>
         <Select value={status} onValueChange={(v) => setStatus(v as Order["status"])}>
           <SelectTrigger id="status">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="processing">Processing</SelectItem>
-            <SelectItem value="shipped">Shipped</SelectItem>
-            <SelectItem value="delivered">Delivered</SelectItem>
-            <SelectItem value="cancelled">Cancelled</SelectItem>
+            <SelectItem value="pending">{t("pending")}</SelectItem>
+            <SelectItem value="processing">{t("processing")}</SelectItem>
+            <SelectItem value="shipped">{t("shipped")}</SelectItem>
+            <SelectItem value="delivered">{t("delivered")}</SelectItem>
+            <SelectItem value="cancelled">{t("cancelled")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
       <DialogFooter>
-        <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-        <Button type="submit">Update Status</Button>
+        <Button type="button" variant="outline" onClick={onCancel}>{tc("cancel")}</Button>
+        <Button type="submit">{t("updateStatus")}</Button>
       </DialogFooter>
     </form>
   )
 }
 
 export default function OrdersPage() {
+  const router = useRouter()
+  const { user, hasPermission } = usePermissions()
+  const t = useTranslations("orders")
+  const tc = useTranslations("common")
   const { data: orders = [], mutate, isLoading } = useSWR<Order[]>("/api/orders", fetcher)
   
   const [editingOrder, setEditingOrder] = React.useState<Order | null>(null)
-  const [viewingOrder, setViewingOrder] = React.useState<Order | null>(null)
   
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [sorting, setSorting] = React.useState<SortingState>([])
+  const [globalFilter, setGlobalFilter] = React.useState("")
   const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
 
   const handleUpdateStatus = async (status: string) => {
@@ -145,7 +155,7 @@ export default function OrdersPage() {
     await fetch(`/api/orders/${editingOrder.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, user_id: user?.id }),
     })
     mutate()
     setEditingOrder(null)
@@ -177,7 +187,7 @@ export default function OrdersPage() {
     },
     {
       accessorKey: "order_number",
-      header: "Order",
+      header: t("order"),
       cell: ({ row }) => (
         <span className="font-mono text-sm">{row.original.order_number}</span>
       ),
@@ -185,7 +195,7 @@ export default function OrdersPage() {
     },
     {
       accessorKey: "full_name",
-      header: "Customer",
+      header: t("customer"),
       cell: ({ row }) => (
         <div>
           <div className="font-medium">{row.original.full_name}</div>
@@ -195,28 +205,28 @@ export default function OrdersPage() {
     },
     {
       accessorKey: "items_count",
-      header: "Items",
+      header: t("items"),
       cell: ({ row }) => <span>{row.original.items_count} items</span>,
     },
     {
       accessorKey: "total_amount",
-      header: "Total",
+      header: t("total"),
       cell: ({ row }) => (
         <span className="font-medium">${row.original.total_amount.toFixed(2)}</span>
       ),
     },
     {
       accessorKey: "status",
-      header: "Status",
+      header: tc("status"),
       cell: ({ row }) => (
-        <Badge variant={statusColors[row.original.status]}>
-          {row.original.status.charAt(0).toUpperCase() + row.original.status.slice(1)}
+        <Badge variant="outline" className={statusClasses[row.original.status]}>
+          {t(row.original.status)}
         </Badge>
       ),
     },
     {
       accessorKey: "created_at",
-      header: "Date",
+      header: tc("date"),
       cell: ({ row }) => (
         <div className="text-muted-foreground">
           {new Date(row.original.created_at).toLocaleDateString()}
@@ -234,15 +244,19 @@ export default function OrdersPage() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-40">
-            <DropdownMenuItem onClick={() => setViewingOrder(row.original)}>
+            <DropdownMenuItem onClick={() => router.push(`/dashboard/orders/${row.original.id}`)}>
               <IconEye className="mr-2 size-4" />
-              View Details
+              {t("viewDetails")}
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => setEditingOrder(row.original)}>
-              <IconEdit className="mr-2 size-4" />
-              Update Status
-            </DropdownMenuItem>
+            {hasPermission("orders:update_status") && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setEditingOrder(row.original)}>
+                  <IconEdit className="mr-2 size-4" />
+                  {t("updateStatus")}
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       ),
@@ -252,11 +266,20 @@ export default function OrdersPage() {
   const table = useReactTable({
     data: orders,
     columns,
-    state: { sorting, columnVisibility, rowSelection, pagination },
+    state: { sorting, columnVisibility, rowSelection, globalFilter, pagination },
     getRowId: (row) => row.id,
     enableRowSelection: true,
+    globalFilterFn: (row, _columnId, filterValue) => {
+      const q = String(filterValue).toLowerCase()
+      const o = row.original
+      return [
+        o.order_number, o.full_name, o.email, o.phone,
+        o.city, o.address, o.status, o.notes,
+      ].some((v) => v && String(v).toLowerCase().includes(q))
+    },
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
     onColumnVisibilityChange: setColumnVisibility,
     onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
@@ -268,14 +291,14 @@ export default function OrdersPage() {
   return (
     <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 px-4 lg:px-6">
       <PageHeader
-        title="Orders"
-        description="Manage customer orders and fulfillment"
+        title={t("title")}
+        description={t("description")}
       >
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">
                     <IconLayoutColumns />
-                    Columns
+                    {tc("columns")}
                     <IconChevronDown />
                   </Button>
                 </DropdownMenuTrigger>
@@ -293,6 +316,15 @@ export default function OrdersPage() {
                 </DropdownMenuContent>
               </DropdownMenu>
       </PageHeader>
+
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder={t("searchOrders")}
+              value={globalFilter}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              className="max-w-sm"
+            />
+          </div>
 
           <div className="overflow-hidden rounded-lg border">
             <Table>
@@ -324,9 +356,9 @@ export default function OrdersPage() {
                   <TableRow>
                     <TableCell colSpan={columns.length} className="h-24 text-center">
                       <div className="flex flex-col items-center gap-2 py-8">
-                        <div className="text-muted-foreground">No orders found</div>
+                        <div className="text-muted-foreground">{t("noOrders")}</div>
                         <div className="text-sm text-muted-foreground">
-                          Orders will appear here when customers make purchases
+                          {t("noOrdersDescription")}
                         </div>
                       </div>
                     </TableCell>
@@ -360,64 +392,13 @@ export default function OrdersPage() {
         <Dialog open={!!editingOrder} onOpenChange={() => setEditingOrder(null)}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Update Order Status</DialogTitle>
-              <DialogDescription>Change the status of order {editingOrder?.order_number}</DialogDescription>
+              <DialogTitle>{t("updateOrderStatus")}</DialogTitle>
+              <DialogDescription>{t("changeStatus", { orderNumber: editingOrder?.order_number })}</DialogDescription>
             </DialogHeader>
             {editingOrder && <OrderStatusForm order={editingOrder} onSave={handleUpdateStatus} onCancel={() => setEditingOrder(null)} />}
           </DialogContent>
         </Dialog>
 
-        <Dialog open={!!viewingOrder} onOpenChange={() => setViewingOrder(null)}>
-          <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Order Details</DialogTitle>
-              <DialogDescription>Order {viewingOrder?.order_number}</DialogDescription>
-            </DialogHeader>
-            {viewingOrder && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-muted-foreground">Customer</Label>
-                    <p className="font-medium">{viewingOrder.full_name}</p>
-                    {viewingOrder.email && <p className="text-sm text-muted-foreground">{viewingOrder.email}</p>}
-                    {viewingOrder.phone && <p className="text-sm text-muted-foreground">{viewingOrder.phone}</p>}
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Status</Label>
-                    <div className="mt-1">
-                      <Badge variant={statusColors[viewingOrder.status]}>
-                        {viewingOrder.status.charAt(0).toUpperCase() + viewingOrder.status.slice(1)}
-                      </Badge>
-                    </div>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Shipping</Label>
-                    <p className="font-medium">{viewingOrder.city}</p>
-                    <p className="text-sm text-muted-foreground">{viewingOrder.address}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Total</Label>
-                    <p className="text-lg font-semibold">${viewingOrder.total_amount.toFixed(2)}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Date</Label>
-                    <p>{new Date(viewingOrder.created_at).toLocaleString()}</p>
-                  </div>
-                  {viewingOrder.notes && (
-                    <div className="col-span-2">
-                      <Label className="text-muted-foreground">Notes</Label>
-                      <p className="text-sm">{viewingOrder.notes}</p>
-                    </div>
-                  )}
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setViewingOrder(null)}>Close</Button>
-                  <Button onClick={() => { setViewingOrder(null); setEditingOrder(viewingOrder); }}>Update Status</Button>
-                </DialogFooter>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
     </div>
   )
 }

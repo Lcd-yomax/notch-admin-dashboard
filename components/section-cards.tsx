@@ -1,3 +1,8 @@
+"use client"
+
+import * as React from "react"
+import useSWR from "swr"
+import { useTranslations } from "next-intl"
 import { IconBox, IconShoppingCart, IconStar, IconUsers } from "@tabler/icons-react"
 
 import {
@@ -8,22 +13,37 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 
+const fetcher = (url: string) => fetch(url).then(r => r.json())
+
 export function SectionCards() {
+  const t = useTranslations("cards")
+  const { data: products } = useSWR("/api/products", fetcher)
+  const { data: orders } = useSWR("/api/orders", fetcher)
+  const { data: reviews } = useSWR("/api/reviews", fetcher)
+  const { data: users } = useSWR("/api/users", fetcher)
+  const { data: roles } = useSWR("/api/roles", fetcher)
+
+  const productCount = Array.isArray(products) ? products.length : 0
+  const orderCount = Array.isArray(orders) ? orders.length : 0
+  const reviewCount = Array.isArray(reviews) ? reviews.length : 0
+  const userCount = Array.isArray(users) ? users.length : 0
+  const roleCount = Array.isArray(roles) ? roles.length : 0
+
   return (
     <div className="grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4 dark:*:data-[slot=card]:bg-card">
       <Card className="@container/card">
         <CardHeader>
           <CardDescription className="flex items-center gap-2">
             <IconShoppingCart className="size-4" />
-            Total Orders
+            {t("totalOrders")}
           </CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            0
+            {orderCount}
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="text-muted-foreground">
-            No orders yet
+            {orderCount === 0 ? t("noOrders") : t("totalOrders")}
           </div>
         </CardFooter>
       </Card>
@@ -31,15 +51,15 @@ export function SectionCards() {
         <CardHeader>
           <CardDescription className="flex items-center gap-2">
             <IconBox className="size-4" />
-            Products
+            {t("products")}
           </CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            0
+            {productCount}
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="text-muted-foreground">
-            No products in catalog
+            {productCount === 0 ? t("noProducts") : t("products")}
           </div>
         </CardFooter>
       </Card>
@@ -47,15 +67,15 @@ export function SectionCards() {
         <CardHeader>
           <CardDescription className="flex items-center gap-2">
             <IconStar className="size-4" />
-            Reviews
+            {t("reviews")}
           </CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            0
+            {reviewCount}
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="text-muted-foreground">
-            No customer reviews
+            {reviewCount === 0 ? t("noReviews") : t("reviews")}
           </div>
         </CardFooter>
       </Card>
@@ -63,15 +83,15 @@ export function SectionCards() {
         <CardHeader>
           <CardDescription className="flex items-center gap-2">
             <IconUsers className="size-4" />
-            Admin Users
+            {t("adminUsers")}
           </CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            0
+            {userCount}
           </CardTitle>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
           <div className="text-muted-foreground">
-            3 roles configured
+            {t("rolesConfigured", { count: roleCount })}
           </div>
         </CardFooter>
       </Card>
