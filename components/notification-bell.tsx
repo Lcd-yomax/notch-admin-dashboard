@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation"
 import useSWR from "swr"
 import { useTranslations } from "next-intl"
 import {
@@ -34,6 +35,7 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json())
 
 export function NotificationBell() {
   const t = useTranslations("notifications")
+  const router = useRouter()
 
   function timeAgo(dateStr: string) {
     const now = new Date()
@@ -116,6 +118,12 @@ export function NotificationBell() {
                   key={n.id}
                   onClick={() => {
                     if (!n.is_read) markAsRead(n.id)
+                    setOpen(false)
+                    if (n.type === "new_order" && n.reference_id) {
+                      router.push(`/dashboard/orders/${n.reference_id}`)
+                    } else if (n.type === "new_review") {
+                      router.push("/dashboard/reviews")
+                    }
                   }}
                   className={`flex items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/50 ${
                     !n.is_read ? "bg-muted/30" : ""

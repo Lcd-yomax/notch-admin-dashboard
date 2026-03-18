@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import {
   IconChevronDown,
@@ -218,9 +219,14 @@ export default function CategoriesPage() {
   const tc = useTranslations("common")
   const { data: categories = [], mutate, isLoading } = useSWR<Category[]>("/api/categories", fetcher)
   
+  const searchParams = useSearchParams()
   const [isCreateOpen, setIsCreateOpen] = React.useState(false)
   const [editingCategory, setEditingCategory] = React.useState<Category | null>(null)
   const [deletingCategory, setDeletingCategory] = React.useState<Category | null>(null)
+
+  React.useEffect(() => {
+    if (searchParams.get("create") === "true") setIsCreateOpen(true)
+  }, [searchParams])
   
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})

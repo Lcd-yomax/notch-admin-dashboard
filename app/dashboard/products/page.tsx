@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import {
   IconChevronDown,
@@ -417,6 +417,7 @@ export default function ProductsPage() {
   const { data: products = [], mutate, isLoading } = useSWR<Product[]>("/api/products", fetcher)
   const { data: categories = [] } = useSWR<Category[]>("/api/categories", fetcher)
   
+  const searchParams = useSearchParams()
   const [isCreateOpen, setIsCreateOpen] = React.useState(false)
   const [editingProduct, setEditingProduct] = React.useState<Product | null>(null)
   const [deletingProduct, setDeletingProduct] = React.useState<Product | null>(null)
@@ -425,6 +426,10 @@ export default function ProductsPage() {
   const [isImporting, setIsImporting] = React.useState(false)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
   
+  React.useEffect(() => {
+    if (searchParams.get("create") === "true") setIsCreateOpen(true)
+  }, [searchParams])
+
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])

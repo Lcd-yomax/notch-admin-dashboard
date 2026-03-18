@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useSearchParams } from "next/navigation"
 import {
   IconChevronDown,
   IconChevronLeft,
@@ -194,10 +195,15 @@ export default function AnnouncementsPage() {
   const tc = useTranslations("common")
   const { data: announcements = [], mutate, isLoading } = useSWR<Announcement[]>("/api/announcements", fetcher)
   
+  const searchParams = useSearchParams()
   const [isCreateOpen, setIsCreateOpen] = React.useState(false)
   const [editingAnnouncement, setEditingAnnouncement] = React.useState<Announcement | null>(null)
   const [viewingAnnouncement, setViewingAnnouncement] = React.useState<Announcement | null>(null)
   const [deletingAnnouncement, setDeletingAnnouncement] = React.useState<Announcement | null>(null)
+
+  React.useEffect(() => {
+    if (searchParams.get("create") === "true") setIsCreateOpen(true)
+  }, [searchParams])
   
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})

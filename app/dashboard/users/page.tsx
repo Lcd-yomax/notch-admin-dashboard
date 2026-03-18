@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useSearchParams } from "next/navigation"
 import {
   IconChevronDown,
   IconChevronLeft,
@@ -184,9 +185,14 @@ export default function UsersPage() {
   const { data: users = [], mutate, isLoading } = useSWR<User[]>("/api/users", fetcher)
   const { data: roles = [] } = useSWR<Role[]>("/api/roles", fetcher)
   
+  const searchParams = useSearchParams()
   const [isCreateOpen, setIsCreateOpen] = React.useState(false)
   const [editingUser, setEditingUser] = React.useState<User | null>(null)
   const [deletingUser, setDeletingUser] = React.useState<User | null>(null)
+
+  React.useEffect(() => {
+    if (searchParams.get("create") === "true") setIsCreateOpen(true)
+  }, [searchParams])
   
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
