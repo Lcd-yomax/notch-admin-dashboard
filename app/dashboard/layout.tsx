@@ -2,6 +2,7 @@ import { AppSidebar } from '@/components/app-sidebar'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SiteHeader } from '@/components/site-header'
 import { PermissionsProvider } from '@/hooks/use-permissions'
+import { Toaster } from 'sonner'
 
 export default function DashboardLayout({
   children,
@@ -28,6 +29,7 @@ export default function DashboardLayout({
           </div>
         </SidebarInset>
       </SidebarProvider>
+      <Toaster position="top-right" richColors />
     </PermissionsProvider>
   )
 }

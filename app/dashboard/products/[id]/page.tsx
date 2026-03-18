@@ -4,6 +4,7 @@ import * as React from "react"
 import { useRouter } from "next/navigation"
 import { use } from "react"
 import useSWR from "swr"
+import { toast } from "sonner"
 import {
   IconArrowLeft,
   IconEdit,
@@ -383,6 +384,7 @@ export default function ProductDetailPage({
 
   const handleVariationSaved = () => {
     mutate()
+    toast.success(t("variationSaveSuccess"))
     setVariationDialogOpen(false)
     setEditingVariation(null)
   }
@@ -393,6 +395,7 @@ export default function ProductDetailPage({
       method: "DELETE",
     })
     mutate()
+    toast.success(t("variationDeleteSuccess"))
     setDeletingVariation(null)
   }
 

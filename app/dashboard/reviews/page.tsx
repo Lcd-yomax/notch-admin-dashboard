@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { toast } from "sonner"
 import {
   IconCheck,
   IconChevronDown,
@@ -109,6 +110,7 @@ export default function ReviewsPage() {
       body: JSON.stringify({ is_approved: approve }),
     })
     mutate()
+    toast.success(approve ? t("approveSuccess") : t("rejectSuccess"))
     // Update the viewing dialog if open
     if (viewingReview?.id === review.id) {
       setViewingReview({ ...review, is_approved: approve })
@@ -125,6 +127,7 @@ export default function ReviewsPage() {
     if (!deletingReview) return
     await fetch(`/api/reviews/${deletingReview.id}`, { method: "DELETE" })
     mutate()
+    toast.success(t("deleteSuccess"))
     setDeletingReview(null)
   }
 

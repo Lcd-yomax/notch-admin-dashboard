@@ -103,7 +103,11 @@
     "enterProductName": "أدخل اسم المنتج",
     "productSlug": "رابط-المنتج",
     "enterProductDescription": "أدخل وصف المنتج",
-    "variationsHint": "يمكنك إضافة المتغيرات (الألوان، الأحجام، الأسعار) الآن أو لاحقاً من صفحة تفاصيل المنتج."
+    "variationsHint": "يمكنك إضافة المتغيرات (الألوان، الأحجام، الأسعار) الآن أو لاحقاً من صفحة تفاصيل المنتج.",
+    "createSuccess": "تم إنشاء المنتج بنجاح",
+    "updateSuccess": "تم تحديث المنتج بنجاح",
+    "deleteSuccess": "تم حذف المنتج بنجاح",
+    "importSuccess": "تم استيراد المنتجات بنجاح"
   },
   "productDetail": {
     "overview": "نظرة عامة",
@@ -164,7 +168,9 @@
     "saving": "جارٍ الحفظ...",
     "updateVariation": "تحديث المتغيرة",
     "images": "الصور",
-    "discount": "الخصم"
+    "discount": "الخصم",
+    "variationSaveSuccess": "تم حفظ المتغيرة بنجاح",
+    "variationDeleteSuccess": "تم حذف المتغيرة بنجاح"
   },
   "categories": {
     "title": "الفئات",
@@ -181,7 +187,10 @@
     "imageUrlPlaceholder": "https://example.com/image.jpg",
     "uploadImage": "انقر لرفع صورة",
     "uploadImageHint": "PNG، JPG أو WEBP",
-    "productsCount": "المنتجات"
+    "productsCount": "المنتجات",
+    "createSuccess": "تم إنشاء الفئة بنجاح",
+    "updateSuccess": "تم تحديث الفئة بنجاح",
+    "deleteSuccess": "تم حذف الفئة بنجاح"
   },
   "orders": {
     "title": "الطلبات",
@@ -216,7 +225,8 @@
     "statusChanged": "تم تغيير الحالة من {from} إلى {to}",
     "orderCreated": "تم إنشاء الطلب",
     "activityNote": "ملاحظة (اختياري)",
-    "activityNotePlaceholder": "أضف ملاحظة حول هذا التغيير..."
+    "activityNotePlaceholder": "أضف ملاحظة حول هذا التغيير...",
+    "statusUpdateSuccess": "تم تحديث حالة الطلب بنجاح"
   },
   "reviews": {
     "title": "التقييمات",
@@ -238,7 +248,10 @@
     "reviewsWillAppear": "ستظهر تقييمات العملاء هنا",
     "approve": "موافقة",
     "reject": "رفض",
-    "reviewImage": "صورة التقييم"
+    "reviewImage": "صورة التقييم",
+    "approveSuccess": "تمت الموافقة على التقييم بنجاح",
+    "rejectSuccess": "تم رفض التقييم بنجاح",
+    "deleteSuccess": "تم حذف التقييم بنجاح"
   },
   "announcements": {
     "title": "الإعلانات",
@@ -265,7 +278,10 @@
     "editAnnouncement": "تعديل الإعلان",
     "editAnnouncementDesc": "تحديث تفاصيل الإعلان.",
     "deleteAnnouncement": "حذف الإعلان",
-    "deleteAnnouncementConfirm": "هل أنت متأكد من حذف \"{title}\"؟"
+    "deleteAnnouncementConfirm": "هل أنت متأكد من حذف \"{title}\"؟",
+    "createSuccess": "تم إنشاء الإعلان بنجاح",
+    "updateSuccess": "تم تحديث الإعلان بنجاح",
+    "deleteSuccess": "تم حذف الإعلان بنجاح"
   },
   "users": {
     "title": "المستخدمون",
@@ -290,7 +306,10 @@
     "editUser": "تعديل المستخدم",
     "editUserDesc": "تحديث معلومات المستخدم.",
     "deleteUser": "حذف المستخدم",
-    "deleteUserConfirm": "هل أنت متأكد من حذف \"{email}\"؟"
+    "deleteUserConfirm": "هل أنت متأكد من حذف \"{email}\"؟",
+    "createSuccess": "تم إنشاء المستخدم بنجاح",
+    "updateSuccess": "تم تحديث المستخدم بنجاح",
+    "deleteSuccess": "تم حذف المستخدم بنجاح"
   },
   "roles": {
     "title": "الأدوار والصلاحيات",
@@ -313,7 +332,10 @@
     "editRole": "تعديل الدور",
     "editRoleDesc": "تحديث معلومات الدور.",
     "deleteRole": "حذف الدور",
-    "deleteRoleConfirm": "هل أنت متأكد من حذف \"{name}\"؟ سيفقد المستخدمون الذين لديهم هذا الدور صلاحيات الوصول."
+    "deleteRoleConfirm": "هل أنت متأكد من حذف \"{name}\"؟ سيفقد المستخدمون الذين لديهم هذا الدور صلاحيات الوصول.",
+    "createSuccess": "تم إنشاء الدور بنجاح",
+    "updateSuccess": "تم تحديث الدور بنجاح",
+    "deleteSuccess": "تم حذف الدور بنجاح"
   },
   "auth": {
     "brandName": "لوحة إدارة المتجر",

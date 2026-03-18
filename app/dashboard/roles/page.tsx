@@ -26,6 +26,7 @@ import {
   type VisibilityState,
 } from "@tanstack/react-table"
 import useSWR from "swr"
+import { toast } from "sonner"
 import { TableSpinner } from "@/components/ui/spinner"
 
 import { Badge } from "@/components/ui/badge"
@@ -146,6 +147,7 @@ export default function RolesPage() {
       body: JSON.stringify(data),
     })
     mutate()
+    toast.success(t("createSuccess"))
     setIsCreateOpen(false)
   }
 
@@ -157,6 +159,7 @@ export default function RolesPage() {
       body: JSON.stringify(data),
     })
     mutate()
+    toast.success(t("updateSuccess"))
     setEditingRole(null)
   }
 
@@ -164,6 +167,7 @@ export default function RolesPage() {
     if (!deletingRole) return
     await fetch(`/api/roles/${deletingRole.id}`, { method: "DELETE" })
     mutate()
+    toast.success(t("deleteSuccess"))
     setDeletingRole(null)
   }
 

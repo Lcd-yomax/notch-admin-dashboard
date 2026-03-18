@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
+import { toast } from "sonner"
 import {
   IconChevronDown,
   IconChevronLeft,
@@ -241,6 +242,7 @@ export default function CategoriesPage() {
       body: JSON.stringify(data),
     })
     mutate()
+    toast.success(t("createSuccess"))
     setIsCreateOpen(false)
   }
 
@@ -252,6 +254,7 @@ export default function CategoriesPage() {
       body: JSON.stringify(data),
     })
     mutate()
+    toast.success(t("updateSuccess"))
     setEditingCategory(null)
   }
 
@@ -259,6 +262,7 @@ export default function CategoriesPage() {
     if (!deletingCategory) return
     await fetch(`/api/categories/${deletingCategory.id}`, { method: "DELETE" })
     mutate()
+    toast.success(t("deleteSuccess"))
     setDeletingCategory(null)
   }
 

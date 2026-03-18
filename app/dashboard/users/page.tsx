@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useSearchParams } from "next/navigation"
+import { toast } from "sonner"
 import {
   IconChevronDown,
   IconChevronLeft,
@@ -207,6 +208,7 @@ export default function UsersPage() {
       body: JSON.stringify(data),
     })
     mutate()
+    toast.success(t("createSuccess"))
     setIsCreateOpen(false)
   }
 
@@ -218,6 +220,7 @@ export default function UsersPage() {
       body: JSON.stringify(data),
     })
     mutate()
+    toast.success(t("updateSuccess"))
     setEditingUser(null)
   }
 
@@ -225,6 +228,7 @@ export default function UsersPage() {
     if (!deletingUser) return
     await fetch(`/api/users/${deletingUser.id}`, { method: "DELETE" })
     mutate()
+    toast.success(t("deleteSuccess"))
     setDeletingUser(null)
   }
 

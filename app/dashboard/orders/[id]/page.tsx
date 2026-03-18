@@ -16,6 +16,7 @@ import {
   IconNote,
 } from "@tabler/icons-react"
 import useSWR from "swr"
+import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -144,6 +145,7 @@ export default function OrderDetailPage() {
     setStatusNote("")
     mutate()
     mutateActivity()
+    toast.success(t("statusUpdateSuccess"))
   }
 
   if (isLoading) {

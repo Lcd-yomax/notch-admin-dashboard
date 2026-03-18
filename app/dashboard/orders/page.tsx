@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useTranslations } from "next-intl"
+import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import {
   IconChevronDown,
@@ -158,6 +159,7 @@ export default function OrdersPage() {
       body: JSON.stringify({ status, user_id: user?.id }),
     })
     mutate()
+    toast.success(t("statusUpdateSuccess"))
     setEditingOrder(null)
   }
 
