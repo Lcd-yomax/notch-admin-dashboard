@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
+import { toast } from "sonner"
 import {
   IconChevronDown,
   IconChevronLeft,
@@ -498,6 +499,7 @@ export default function ProductsPage() {
     }
 
     mutate()
+    toast.success(t("createSuccess"))
     setIsCreateOpen(false)
   }
 
@@ -529,6 +531,7 @@ export default function ProductsPage() {
     })
 
     mutate()
+    toast.success(t("updateSuccess"))
     setEditingProduct(null)
   }
 
@@ -536,6 +539,7 @@ export default function ProductsPage() {
     if (!deletingProduct) return
     await fetch(`/api/products/${deletingProduct.id}`, { method: "DELETE" })
     mutate()
+    toast.success(t("deleteSuccess"))
     setDeletingProduct(null)
   }
 
@@ -658,6 +662,7 @@ export default function ProductsPage() {
       body: JSON.stringify({ products: productsWithUrls }),
     })
     mutate()
+    toast.success(t("importSuccess"))
     // Clean up blob URLs
     importData.forEach((item) => {
       if (item.imagePreview) URL.revokeObjectURL(item.imagePreview)

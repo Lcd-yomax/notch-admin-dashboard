@@ -103,7 +103,11 @@
     "enterProductName": "Enter product name",
     "productSlug": "product-slug",
     "enterProductDescription": "Enter product description",
-    "variationsHint": "You can add variations (colors, sizes, prices) now or later from the product detail page."
+    "variationsHint": "You can add variations (colors, sizes, prices) now or later from the product detail page.",
+    "createSuccess": "Product created successfully",
+    "updateSuccess": "Product updated successfully",
+    "deleteSuccess": "Product deleted successfully",
+    "importSuccess": "Products imported successfully"
   },
   "productDetail": {
     "overview": "Overview",
@@ -164,7 +168,9 @@
     "saving": "Saving...",
     "updateVariation": "Update Variation",
     "images": "Images",
-    "discount": "Discount"
+    "discount": "Discount",
+    "variationSaveSuccess": "Variation saved successfully",
+    "variationDeleteSuccess": "Variation deleted successfully"
   },
   "categories": {
     "title": "Categories",
@@ -181,7 +187,10 @@
     "imageUrlPlaceholder": "https://example.com/image.jpg",
     "uploadImage": "Click to upload image",
     "uploadImageHint": "PNG, JPG or WEBP",
-    "productsCount": "Products"
+    "productsCount": "Products",
+    "createSuccess": "Category created successfully",
+    "updateSuccess": "Category updated successfully",
+    "deleteSuccess": "Category deleted successfully"
   },
   "orders": {
     "title": "Orders",
@@ -200,10 +209,19 @@
     "orderStatus": "Order Status",
     "viewDetails": "View Details",
     "pending": "Pending",
-    "processing": "Processing",
-    "shipped": "Shipped",
-    "delivered": "Delivered",
+    "confirmed": "Confirmed",
+    "call_1": "Call 1",
+    "call_2": "Call 2",
+    "call_3": "Call 3",
+    "call_whatsapp": "Call + WhatsApp Message",
+    "call_sms": "Call + SMS Message",
+    "no_response": "No Response",
+    "postponed": "Postponed",
+    "unreachable": "Unreachable",
+    "voicemail": "Voicemail",
     "cancelled": "Cancelled",
+    "not_serious": "Not Serious",
+    "fake_order": "Fake Order",
     "shipping": "Shipping",
     "notes": "Notes",
     "product": "Product",
@@ -216,7 +234,8 @@
     "statusChanged": "Status changed from {from} to {to}",
     "orderCreated": "Order created",
     "activityNote": "Note (optional)",
-    "activityNotePlaceholder": "Add a note about this change..."
+    "activityNotePlaceholder": "Add a note about this change...",
+    "statusUpdateSuccess": "Order status updated successfully"
   },
   "reviews": {
     "title": "Reviews",
@@ -238,7 +257,10 @@
     "reviewsWillAppear": "Customer reviews will appear here",
     "approve": "Approve",
     "reject": "Reject",
-    "reviewImage": "Review Image"
+    "reviewImage": "Review Image",
+    "approveSuccess": "Review approved successfully",
+    "rejectSuccess": "Review rejected successfully",
+    "deleteSuccess": "Review deleted successfully"
   },
   "announcements": {
     "title": "Announcements",
@@ -265,7 +287,10 @@
     "editAnnouncement": "Edit Announcement",
     "editAnnouncementDesc": "Update announcement details.",
     "deleteAnnouncement": "Delete Announcement",
-    "deleteAnnouncementConfirm": "Are you sure you want to delete \"{title}\"?"
+    "deleteAnnouncementConfirm": "Are you sure you want to delete \"{title}\"?",
+    "createSuccess": "Announcement created successfully",
+    "updateSuccess": "Announcement updated successfully",
+    "deleteSuccess": "Announcement deleted successfully"
   },
   "users": {
     "title": "Users",
@@ -290,7 +315,10 @@
     "editUser": "Edit User",
     "editUserDesc": "Update user information.",
     "deleteUser": "Delete User",
-    "deleteUserConfirm": "Are you sure you want to delete \"{email}\"?"
+    "deleteUserConfirm": "Are you sure you want to delete \"{email}\"?",
+    "createSuccess": "User created successfully",
+    "updateSuccess": "User updated successfully",
+    "deleteSuccess": "User deleted successfully"
   },
   "roles": {
     "title": "Roles & Permissions",
@@ -313,7 +341,10 @@
     "editRole": "Edit Role",
     "editRoleDesc": "Update role information.",
     "deleteRole": "Delete Role",
-    "deleteRoleConfirm": "Are you sure you want to delete \"{name}\"? Users with this role will lose access."
+    "deleteRoleConfirm": "Are you sure you want to delete \"{name}\"? Users with this role will lose access.",
+    "createSuccess": "Role created successfully",
+    "updateSuccess": "Role updated successfully",
+    "deleteSuccess": "Role deleted successfully"
   },
   "auth": {
     "brandName": "Notch",

@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useSearchParams } from "next/navigation"
+import { toast } from "sonner"
 import {
   IconChevronDown,
   IconChevronLeft,
@@ -218,6 +219,7 @@ export default function AnnouncementsPage() {
       body: JSON.stringify(data),
     })
     mutate()
+    toast.success(t("createSuccess"))
     setIsCreateOpen(false)
   }
 
@@ -229,6 +231,7 @@ export default function AnnouncementsPage() {
       body: JSON.stringify(data),
     })
     mutate()
+    toast.success(t("updateSuccess"))
     setEditingAnnouncement(null)
   }
 
@@ -236,6 +239,7 @@ export default function AnnouncementsPage() {
     if (!deletingAnnouncement) return
     await fetch(`/api/announcements/${deletingAnnouncement.id}`, { method: "DELETE" })
     mutate()
+    toast.success(t("deleteSuccess"))
     setDeletingAnnouncement(null)
   }
 

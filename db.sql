@@ -89,7 +89,7 @@ create unique index one_primary_per_variation
   on product_images (variation_id)
   where is_primary = true and variation_id is not null;
 
-create type order_status as enum ('pending', 'processing', 'shipped', 'delivered', 'cancelled');
+create type order_status as enum ('pending', 'confirmed', 'call_1', 'call_2', 'call_3', 'call_whatsapp', 'call_sms', 'no_response', 'postponed', 'unreachable', 'voicemail', 'cancelled', 'not_serious', 'fake_order');
 create table orders (
   id           uuid primary key default gen_random_uuid(),
   order_number text unique not null

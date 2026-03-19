@@ -103,7 +103,11 @@
     "enterProductName": "Entrer le nom du produit",
     "productSlug": "slug-du-produit",
     "enterProductDescription": "Entrer la description du produit",
-    "variationsHint": "Vous pouvez ajouter des variantes (couleurs, tailles, prix) maintenant ou plus tard depuis la page détail du produit."
+    "variationsHint": "Vous pouvez ajouter des variantes (couleurs, tailles, prix) maintenant ou plus tard depuis la page détail du produit.",
+    "createSuccess": "Produit créé avec succès",
+    "updateSuccess": "Produit mis à jour avec succès",
+    "deleteSuccess": "Produit supprimé avec succès",
+    "importSuccess": "Produits importés avec succès"
   },
   "productDetail": {
     "overview": "Aperçu",
@@ -164,7 +168,9 @@
     "saving": "Enregistrement...",
     "updateVariation": "Modifier la variante",
     "images": "Images",
-    "discount": "Remise"
+    "discount": "Remise",
+    "variationSaveSuccess": "Variante enregistrée avec succès",
+    "variationDeleteSuccess": "Variante supprimée avec succès"
   },
   "categories": {
     "title": "Catégories",
@@ -179,7 +185,10 @@
     "categorySlug": "slug-de-categorie",
     "imageUrl": "URL de l'image",
     "imageUrlPlaceholder": "https://exemple.com/image.jpg",    "uploadImage": "Cliquez pour télécharger une image",
-    "uploadImageHint": "PNG, JPG ou WEBP",    "productsCount": "Produits"
+    "uploadImageHint": "PNG, JPG ou WEBP",    "productsCount": "Produits",
+    "createSuccess": "Catégorie créée avec succès",
+    "updateSuccess": "Catégorie mise à jour avec succès",
+    "deleteSuccess": "Catégorie supprimée avec succès"
   },
   "orders": {
     "title": "Commandes",
@@ -198,10 +207,19 @@
     "orderStatus": "Statut de la commande",
     "viewDetails": "Voir les détails",
     "pending": "En attente",
-    "processing": "En traitement",
-    "shipped": "Expédié",
-    "delivered": "Livré",
+    "confirmed": "Confirmé",
+    "call_1": "Appel 1",
+    "call_2": "Appel 2",
+    "call_3": "Appel 3",
+    "call_whatsapp": "Appel + Message Whatsapp",
+    "call_sms": "Appel + Message SMS",
+    "no_response": "Pas de réponse",
+    "postponed": "Reporté",
+    "unreachable": "Injoignable",
+    "voicemail": "Boite Vocal",
     "cancelled": "Annulé",
+    "not_serious": "Pas sérieux",
+    "fake_order": "Fake order",
     "shipping": "Livraison",
     "notes": "Notes",
     "product": "Produit",
@@ -214,7 +232,8 @@
     "statusChanged": "Statut changé de {from} à {to}",
     "orderCreated": "Commande créée",
     "activityNote": "Note (optionnel)",
-    "activityNotePlaceholder": "Ajouter une note à propos de ce changement..."
+    "activityNotePlaceholder": "Ajouter une note à propos de ce changement...",
+    "statusUpdateSuccess": "Statut de la commande mis à jour avec succès"
   },
   "reviews": {
     "title": "Avis",
@@ -236,7 +255,10 @@
     "reviewsWillAppear": "Les avis des clients appara\u00eetront ici",
     "approve": "Approuver",
     "reject": "Rejeter",
-    "reviewImage": "Image de l'avis"
+    "reviewImage": "Image de l'avis",
+    "approveSuccess": "Avis approuvé avec succès",
+    "rejectSuccess": "Avis rejeté avec succès",
+    "deleteSuccess": "Avis supprimé avec succès"
   },
   "announcements": {
     "title": "Annonces",
@@ -263,7 +285,10 @@
     "editAnnouncement": "Modifier l'annonce",
     "editAnnouncementDesc": "Mettre à jour les détails de l'annonce.",
     "deleteAnnouncement": "Supprimer l'annonce",
-    "deleteAnnouncementConfirm": "Êtes-vous sûr de vouloir supprimer \"{title}\" ?"
+    "deleteAnnouncementConfirm": "Êtes-vous sûr de vouloir supprimer \"{title}\" ?",
+    "createSuccess": "Annonce créée avec succès",
+    "updateSuccess": "Annonce mise à jour avec succès",
+    "deleteSuccess": "Annonce supprimée avec succès"
   },
   "users": {
     "title": "Utilisateurs",
@@ -288,7 +313,10 @@
     "editUser": "Modifier l'utilisateur",
     "editUserDesc": "Mettre à jour les informations de l'utilisateur.",
     "deleteUser": "Supprimer l'utilisateur",
-    "deleteUserConfirm": "Êtes-vous sûr de vouloir supprimer \"{email}\" ?"
+    "deleteUserConfirm": "Êtes-vous sûr de vouloir supprimer \"{email}\" ?",
+    "createSuccess": "Utilisateur créé avec succès",
+    "updateSuccess": "Utilisateur mis à jour avec succès",
+    "deleteSuccess": "Utilisateur supprimé avec succès"
   },
   "roles": {
     "title": "Rôles et Permissions",
@@ -311,7 +339,10 @@
     "editRole": "Modifier le rôle",
     "editRoleDesc": "Mettre à jour les informations du rôle.",
     "deleteRole": "Supprimer le rôle",
-    "deleteRoleConfirm": "Êtes-vous sûr de vouloir supprimer \"{name}\" ? Les utilisateurs avec ce rôle perdront l'accès."
+    "deleteRoleConfirm": "Êtes-vous sûr de vouloir supprimer \"{name}\" ? Les utilisateurs avec ce rôle perdront l'accès.",
+    "createSuccess": "Rôle créé avec succès",
+    "updateSuccess": "Rôle mis à jour avec succès",
+    "deleteSuccess": "Rôle supprimé avec succès"
   },
   "auth": {
     "brandName": "Notch",

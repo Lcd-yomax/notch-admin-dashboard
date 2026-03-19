@@ -47,6 +47,7 @@ const entityConfig = [
     labelKey: "products" as const,
     icon: IconBox,
     path: "/dashboard/products",
+    searchFields: ["name", "slug", "sku"],
     mapItem: (item: Record<string, unknown>) => ({
       id: String(item.id),
       label: String(item.name || ""),
@@ -58,6 +59,7 @@ const entityConfig = [
     labelKey: "categories" as const,
     icon: IconCategory,
     path: "/dashboard/categories",
+    searchFields: ["name", "slug"],
     mapItem: (item: Record<string, unknown>) => ({
       id: String(item.id),
       label: String(item.name || ""),
@@ -68,10 +70,11 @@ const entityConfig = [
     labelKey: "orders" as const,
     icon: IconShoppingCart,
     path: "/dashboard/orders",
+    searchFields: ["order_number", "full_name", "email", "phone", "city", "address", "status"],
     mapItem: (item: Record<string, unknown>) => ({
       id: String(item.id),
-      label: `Order #${item.id}`,
-      description: item.status ? String(item.status) : undefined,
+      label: `#${item.order_number} — ${item.full_name}`,
+      description: [item.phone, item.city, item.status].filter(Boolean).join(" · "),
     }),
   },
   {
@@ -79,6 +82,7 @@ const entityConfig = [
     labelKey: "reviews" as const,
     icon: IconStar,
     path: "/dashboard/reviews",
+    searchFields: ["reviewer_name", "user_name", "comment"],
     mapItem: (item: Record<string, unknown>) => ({
       id: String(item.id),
       label: String(item.reviewer_name || item.user_name || `Review #${item.id}`),
@@ -90,6 +94,7 @@ const entityConfig = [
     labelKey: "users" as const,
     icon: IconUsers,
     path: "/dashboard/users",
+    searchFields: ["full_name", "email"],
     mapItem: (item: Record<string, unknown>) => ({
       id: String(item.id),
       label: String(item.full_name || item.email || ""),
@@ -101,6 +106,7 @@ const entityConfig = [
     labelKey: "rolesPermissions" as const,
     icon: IconUserShield,
     path: "/dashboard/roles",
+    searchFields: ["name", "description"],
     mapItem: (item: Record<string, unknown>) => ({
       id: String(item.id),
       label: String(item.name || ""),
@@ -111,6 +117,7 @@ const entityConfig = [
     labelKey: "announcements" as const,
     icon: IconBellRinging,
     path: "/dashboard/announcements",
+    searchFields: ["title", "body"],
     mapItem: (item: Record<string, unknown>) => ({
       id: String(item.id),
       label: String(item.title || ""),
@@ -165,13 +172,13 @@ export function GlobalSearch() {
             const items = Array.isArray(data) ? data : data.data ?? []
             const q = query.toLowerCase()
             const filtered = items
-              .map(entity.mapItem)
-              .filter(
-                (item: SearchResult) =>
-                  item.label.toLowerCase().includes(q) ||
-                  (item.description?.toLowerCase().includes(q) ?? false)
+              .filter((raw: Record<string, unknown>) =>
+                entity.searchFields.some((field) =>
+                  String(raw[field] ?? "").toLowerCase().includes(q)
+                )
               )
               .slice(0, 5)
+              .map(entity.mapItem)
             return { key: entity.key, items: filtered }
           } catch {
             return { key: entity.key, items: [] }
@@ -244,7 +251,11 @@ export function GlobalSearch() {
                   {items.map((item) => (
                     <CommandItem
                       key={item.id}
-                      onSelect={() => handleSelect(entity.path)}
+                      onSelect={() => handleSelect(
+                        entity.key === "orders"
+                          ? `${entity.path}/${item.id}`
+                          : entity.path
+                      )}
                       value={`${entity.key}-${item.label}`}
                     >
                       <Icon className="mr-2 size-4" />
