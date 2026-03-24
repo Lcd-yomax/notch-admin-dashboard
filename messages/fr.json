@@ -70,6 +70,10 @@
   "cards": {
     "totalOrders": "Total des commandes",
     "noOrders": "Aucune commande",
+    "completedOrders": "Commandes terminées",
+    "noCompletedOrders": "Aucune commande terminée",
+    "revenue": "Revenus",
+    "noRevenue": "Aucun revenu généré",
     "products": "Produits",
     "noProducts": "Aucun produit au catalogue",
     "reviews": "Avis",
@@ -233,6 +237,8 @@
     "orderCreated": "Commande créée",
     "activityNote": "Note (optionnel)",
     "activityNotePlaceholder": "Ajouter une note à propos de ce changement...",
+    "delivered": "Livré",
+    "shipped": "Expédié",
     "statusUpdateSuccess": "Statut de la commande mis à jour avec succès"
   },
   "reviews": {

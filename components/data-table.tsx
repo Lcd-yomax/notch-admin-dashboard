@@ -390,7 +390,7 @@ export function DataTable() {
     {
       accessorKey: "total_amount",
       header: t("total"),
-      cell: ({ row }) => <div className="font-medium">{row.original.total_amount?.toLocaleString()} DA</div>,
+      cell: ({ row }) => <div className="font-medium">{row.original.total_amount?.toLocaleString()} DH</div>,
     },
     {
       accessorKey: "status",
