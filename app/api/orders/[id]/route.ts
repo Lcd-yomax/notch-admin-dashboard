@@ -1,4 +1,4 @@
-import { createAdminClient, requirePermission } from "@/lib/supabase/server"
+import { createAdminClient, createClient, requirePermission } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 
 export async function GET(
@@ -6,12 +6,26 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
+  
+  const supabaseAuth = await createClient()
+  const { data: { user } } = await supabaseAuth.auth.getUser()
+  if (!user) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
+  }
+
   const supabase = createAdminClient()
+  
+  const { data: dashUser } = await supabase
+    .from("dashboard_users")
+    .select("roles!inner(name)")
+    .eq("id", user.id)
+    .single()
   
   const { data, error } = await supabase
     .from("orders")
     .select(`
       *,
+      dashboard_users(full_name),
       order_items(
         *,
         product_variations(
@@ -27,7 +41,14 @@ export async function GET(
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json(data)
+  if ((dashUser?.roles as any)?.name !== "super_admin" && data.assigned_to !== user.id) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  }
+
+  return NextResponse.json({
+    ...data,
+    assignee_name: data.dashboard_users?.full_name || null
+  })
 }
 
 export async function PUT(
@@ -52,7 +73,10 @@ export async function PUT(
 
   const { data, error } = await supabase
     .from("orders")
-    .update({ status: body.status })
+    .update({ 
+      status: body.status,
+      ...(body.assigned_to !== undefined ? { assigned_to: body.assigned_to } : {}),
+    })
     .eq("id", id)
     .select()
     .single()

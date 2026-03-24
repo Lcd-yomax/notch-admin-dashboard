@@ -79,6 +79,8 @@ interface OrderDetail {
   total_amount: number
   notes: string | null
   created_at: string
+  assigned_to: string | null
+  assignee_name: string | null
   order_items: OrderItem[]
 }
 
@@ -140,9 +142,11 @@ export default function OrderDetailPage() {
     `/api/orders/${id}/activity`,
     fetcher
   )
+  const { data: usersData = [] } = useSWR<any[]>("/api/users", fetcher)
 
   const [statusDialogOpen, setStatusDialogOpen] = React.useState(false)
   const [newStatus, setNewStatus] = React.useState("")
+  const [newAssignee, setNewAssignee] = React.useState("none")
   const [statusNote, setStatusNote] = React.useState("")
   const [updating, setUpdating] = React.useState(false)
 
@@ -154,6 +158,7 @@ export default function OrderDetailPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         status: newStatus,
+        assigned_to: newAssignee === "none" ? null : newAssignee,
         user_id: user?.id,
         note: statusNote || null,
       }),
@@ -204,6 +209,11 @@ export default function OrderDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {order.assignee_name && (
+            <Badge variant="secondary" className="text-sm px-3 py-1">
+              {order.assignee_name}
+            </Badge>
+          )}
           <Badge variant="outline" className={`text-sm px-3 py-1 ${statusClasses[order.status]}`}>
             {t(order.status)}
           </Badge>
@@ -213,6 +223,7 @@ export default function OrderDetailPage() {
               className={statusButtonClasses[order.status]}
               onClick={() => {
                 setNewStatus(order.status)
+                setNewAssignee(order.assigned_to || "none")
                 setStatusDialogOpen(true)
               }}
             >
@@ -348,10 +359,10 @@ export default function OrderDetailPage() {
                       </TableCell>
                       <TableCell className="text-center">{item.quantity}</TableCell>
                       <TableCell className="text-end">
-                        ${item.unit_price.toFixed(2)}
+                        {item.unit_price.toFixed(2)} DH
                       </TableCell>
                       <TableCell className="text-end pe-4 font-medium">
-                        ${(item.quantity * item.unit_price).toFixed(2)}
+                        {(item.quantity * item.unit_price).toFixed(2)} DH
                       </TableCell>
                     </TableRow>
                   ))}
@@ -361,7 +372,7 @@ export default function OrderDetailPage() {
               <div className="flex items-center justify-between px-4 py-3">
                 <span className="font-medium">{t("total")}</span>
                 <span className="text-lg font-semibold">
-                  ${order.total_amount.toFixed(2)}
+                  {order.total_amount.toFixed(2)} DH
                 </span>
               </div>
             </CardContent>
@@ -462,6 +473,22 @@ export default function OrderDetailPage() {
                 </SelectContent>
               </Select>
             </div>
+            {user?.role === "super_admin" && (
+              <div className="space-y-2">
+                <Label>Assign To</Label>
+                <Select value={newAssignee} onValueChange={setNewAssignee}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Unassigned" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Unassigned</SelectItem>
+                    {usersData.map((u) => (
+                      <SelectItem key={u.id} value={u.id}>{u.full_name || u.email}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div className="space-y-2">
               <Label>{t("activityNote")}</Label>
               <Textarea

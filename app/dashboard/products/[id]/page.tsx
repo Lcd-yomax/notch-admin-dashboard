@@ -517,9 +517,9 @@ export default function ProductDetailPage({
                     <>
                       <span className="text-muted-foreground">{t("priceRange")}</span>
                       <span>
-                        ${Math.min(...variations.map((v) => v.price)).toFixed(2)}
+                        {Math.min(...variations.map((v) => v.price)).toFixed(2)} DH
                         {Math.min(...variations.map((v) => v.price)) !== Math.max(...variations.map((v) => v.price)) &&
-                          ` – $${Math.max(...variations.map((v) => v.price)).toFixed(2)}`}
+                          ` – ${Math.max(...variations.map((v) => v.price)).toFixed(2)} DH`}
                       </span>
                     </>
                   )}
@@ -601,11 +601,11 @@ export default function ProductDetailPage({
                           <span className="text-muted-foreground">—</span>
                         )}
                       </TableCell>
-                      <TableCell className="font-medium">${v.price.toFixed(2)}</TableCell>
+                      <TableCell className="font-medium">{v.price.toFixed(2)} DH</TableCell>
                       <TableCell>
                         {v.price_display ? (
                           <span className="line-through text-muted-foreground">
-                            ${v.price_display.toFixed(2)}
+                            {v.price_display.toFixed(2)} DH
                           </span>
                         ) : (
                           <span className="text-muted-foreground">—</span>

@@ -70,6 +70,10 @@
   "cards": {
     "totalOrders": "إجمالي الطلبات",
     "noOrders": "لا توجد طلبات بعد",
+    "completedOrders": "الطلبات المكتملة",
+    "noCompletedOrders": "لا توجد طلبات مكتملة",
+    "revenue": "الإيرادات",
+    "noRevenue": "لم يتم تحقيق إيرادات بعد",
     "products": "المنتجات",
     "noProducts": "لا توجد منتجات في الكتالوج",
     "reviews": "التقييمات",
@@ -235,6 +239,8 @@
     "orderCreated": "تم إنشاء الطلب",
     "activityNote": "ملاحظة (اختياري)",
     "activityNotePlaceholder": "أضف ملاحظة حول هذا التغيير...",
+    "delivered": "تم التوصيل",
+    "shipped": "تم الشحن",
     "statusUpdateSuccess": "تم تحديث حالة الطلب بنجاح"
   },
   "reviews": {

@@ -81,6 +81,8 @@ interface Order {
   notes: string | null
   created_at: string
   items_count: number
+  assigned_to: string | null
+  assignee_name: string | null
 }
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
@@ -104,20 +106,25 @@ const statusClasses: Record<string, string> = {
 
 function OrderStatusForm({
   order,
+  users,
+  isSuperAdmin,
   onSave,
   onCancel,
 }: {
   order: Order
-  onSave: (status: string) => void
+  users: any[]
+  isSuperAdmin: boolean
+  onSave: (status: string, assignee: string | null) => void
   onCancel: () => void
 }) {
   const t = useTranslations("orders")
   const tc = useTranslations("common")
   const [status, setStatus] = React.useState(order.status)
+  const [assignee, setAssignee] = React.useState(order.assigned_to || "none")
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onSave(status)
+    onSave(status, assignee === "none" ? null : assignee)
   }
 
   return (
@@ -146,6 +153,24 @@ function OrderStatusForm({
           </SelectContent>
         </Select>
       </div>
+
+      {isSuperAdmin && (
+        <div className="space-y-2">
+          <Label htmlFor="assignee">Assign To</Label>
+          <Select value={assignee} onValueChange={setAssignee}>
+            <SelectTrigger id="assignee">
+              <SelectValue placeholder="Unassigned" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Unassigned</SelectItem>
+              {users.map(u => (
+                <SelectItem key={u.id} value={u.id}>{u.full_name || u.email}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onCancel}>{tc("cancel")}</Button>
         <Button type="submit">{t("updateStatus")}</Button>
@@ -160,6 +185,7 @@ export default function OrdersPage() {
   const t = useTranslations("orders")
   const tc = useTranslations("common")
   const { data: orders = [], mutate, isLoading } = useSWR<Order[]>("/api/orders", fetcher)
+  const { data: usersData = [] } = useSWR<any[]>("/api/users", fetcher)
   
   const [editingOrder, setEditingOrder] = React.useState<Order | null>(null)
   
@@ -169,12 +195,12 @@ export default function OrdersPage() {
   const [globalFilter, setGlobalFilter] = React.useState("")
   const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
 
-  const handleUpdateStatus = async (status: string) => {
+  const handleUpdateStatus = async (status: string, assignee: string | null) => {
     if (!editingOrder) return
     await fetch(`/api/orders/${editingOrder.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status, user_id: user?.id }),
+      body: JSON.stringify({ status, user_id: user?.id, assigned_to: assignee }),
     })
     mutate()
     toast.success(t("statusUpdateSuccess"))
@@ -229,10 +255,17 @@ export default function OrdersPage() {
       cell: ({ row }) => <span>{row.original.items_count} items</span>,
     },
     {
+      accessorKey: "assignee_name",
+      header: "Assignee",
+      cell: ({ row }) => (
+        <span className="text-sm font-medium">{row.original.assignee_name || "—"}</span>
+      ),
+    },
+    {
       accessorKey: "total_amount",
       header: t("total"),
       cell: ({ row }) => (
-        <span className="font-medium">${row.original.total_amount.toFixed(2)}</span>
+        <span className="font-medium">{row.original.total_amount.toFixed(2)} DH</span>
       ),
     },
     {
@@ -415,7 +448,7 @@ export default function OrdersPage() {
               <DialogTitle>{t("updateOrderStatus")}</DialogTitle>
               <DialogDescription>{t("changeStatus", { orderNumber: editingOrder?.order_number ?? "" })}</DialogDescription>
             </DialogHeader>
-            {editingOrder && <OrderStatusForm order={editingOrder} onSave={handleUpdateStatus} onCancel={() => setEditingOrder(null)} />}
+            {editingOrder && <OrderStatusForm order={editingOrder} users={usersData} isSuperAdmin={user?.role === "super_admin"} onSave={handleUpdateStatus} onCancel={() => setEditingOrder(null)} />}
           </DialogContent>
         </Dialog>
 
