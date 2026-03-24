@@ -1,5 +1,7 @@
 {
   "common": {
+    "refresh": "تحديث",
+    "export": "تصدير",
     "save": "حفظ",
     "cancel": "إلغاء",
     "delete": "حذف",
@@ -226,6 +228,7 @@
     "cancelled": "ملغي",
     "not_serious": "غير جدي",
     "fake_order": "طلب وهمي",
+    "exported": "مُصدَّر",
     "shipping": "الشحن",
     "notes": "ملاحظات",
     "product": "المنتج",

@@ -13,7 +13,7 @@ import {
   IconPhone,
   IconMail,
   IconUser,
-  IconNote,
+  IconTrash,
 } from "@tabler/icons-react"
 import useSWR from "swr"
 import { toast } from "sonner"
@@ -145,6 +145,7 @@ export default function OrderDetailPage() {
   const { data: usersData = [] } = useSWR<any[]>("/api/users", fetcher)
 
   const [statusDialogOpen, setStatusDialogOpen] = React.useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
   const [newStatus, setNewStatus] = React.useState("")
   const [newAssignee, setNewAssignee] = React.useState("none")
   const [statusNote, setStatusNote] = React.useState("")
@@ -231,6 +232,16 @@ export default function OrderDetailPage() {
               {t("updateStatus")}
             </Button>
           )}
+          {user?.role === "super_admin" && (
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={() => setDeleteDialogOpen(true)}
+            >
+              <IconTrash className="mr-2 size-4" />
+              {tc("delete")}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -277,21 +288,6 @@ export default function OrderDetailPage() {
               </CardContent>
             </Card>
           </div>
-
-          {/* Notes */}
-          {order.notes && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <IconNote className="size-4" />
-                  {t("notes")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{order.notes}</p>
-              </CardContent>
-            </Card>
-          )}
 
           {/* Order Items */}
           <Card>
@@ -506,6 +502,39 @@ export default function OrderDetailPage() {
             <Button onClick={handleUpdateStatus} disabled={updating}>
               {updating && <Spinner className="mr-2 size-4" />}
               {t("updateStatus")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Delete Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Order</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete order "#{order.order_number}"? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              {tc("cancel")}
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={updating}
+              onClick={async () => {
+                setUpdating(true)
+                const res = await fetch(`/api/orders/${id}`, { method: "DELETE" })
+                setUpdating(false)
+                if (res.ok) {
+                  toast.success(tc("deleteSuccess") || tc("delete") + " OK")
+                  setDeleteDialogOpen(false)
+                  router.push("/dashboard/orders")
+                }
+              }}
+            >
+              {updating && <Spinner className="mr-2 size-4" />}
+              {tc("delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

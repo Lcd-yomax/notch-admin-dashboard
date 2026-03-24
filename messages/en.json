@@ -1,5 +1,7 @@
 {
   "common": {
+    "refresh": "Refresh",
+    "export": "Export",
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
@@ -226,6 +228,7 @@
     "cancelled": "Cancelled",
     "not_serious": "Not Serious",
     "fake_order": "Fake Order",
+    "exported": "Exported",
     "shipping": "Shipping",
     "notes": "Notes",
     "product": "Product",
