@@ -1,5 +1,7 @@
 {
   "common": {
+    "refresh": "Actualiser",
+    "export": "Exporter",
     "save": "Enregistrer",
     "cancel": "Annuler",
     "delete": "Supprimer",
@@ -224,6 +226,7 @@
     "cancelled": "Annulé",
     "not_serious": "Pas sérieux",
     "fake_order": "Fake order",
+    "exported": "Exporté",
     "shipping": "Livraison",
     "notes": "Notes",
     "product": "Produit",

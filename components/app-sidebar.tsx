@@ -19,6 +19,7 @@ import {
   IconStar,
   IconUsers,
   IconUserShield,
+  IconChartBar,
 } from "@tabler/icons-react"
 
 import { NavDocuments } from '@/components/nav-documents'
@@ -47,6 +48,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: t("dashboard"),
       url: "/dashboard",
       icon: IconDashboard,
+      permission: null,
+    },
+    {
+      title: "Reports",
+      url: "/dashboard/reports",
+      icon: IconChartBar,
       permission: null,
     },
     {

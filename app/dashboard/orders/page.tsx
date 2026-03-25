@@ -14,6 +14,8 @@ import {
   IconEdit,
   IconEye,
   IconLayoutColumns,
+  IconTrash,
+  IconDownload,
 } from "@tabler/icons-react"
 import {
   flexRender,
@@ -100,8 +102,8 @@ const statusClasses: Record<string, string> = {
   unreachable: "bg-sky-100 text-sky-800 dark:bg-sky-900/30 dark:text-sky-400 border-sky-200 dark:border-sky-800",
   voicemail: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800",
   cancelled: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800",
-  not_serious: "bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900/30 dark:text-fuchsia-400 border-fuchsia-200 dark:border-fuchsia-800",
   fake_order: "bg-zinc-200 text-zinc-900 dark:bg-zinc-800/50 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700",
+  exported: "bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400 border-teal-200 dark:border-teal-800",
 }
 
 function OrderStatusForm({
@@ -150,6 +152,7 @@ function OrderStatusForm({
             <SelectItem value="cancelled">{t("cancelled")}</SelectItem>
             <SelectItem value="not_serious">{t("not_serious")}</SelectItem>
             <SelectItem value="fake_order">{t("fake_order")}</SelectItem>
+            <SelectItem value="exported">{t("exported") || "Exported"}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -188,12 +191,14 @@ export default function OrdersPage() {
   const { data: usersData = [] } = useSWR<any[]>("/api/users", fetcher)
   
   const [editingOrder, setEditingOrder] = React.useState<Order | null>(null)
+  const [deletingOrder, setDeletingOrder] = React.useState<Order | null>(null)
   
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [globalFilter, setGlobalFilter] = React.useState("")
   const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
+  const [isExporting, setIsExporting] = React.useState(false)
 
   const handleUpdateStatus = async (status: string, assignee: string | null) => {
     if (!editingOrder) return
@@ -205,6 +210,16 @@ export default function OrdersPage() {
     mutate()
     toast.success(t("statusUpdateSuccess"))
     setEditingOrder(null)
+  }
+
+  const handleDeleteOrder = async () => {
+    if (!deletingOrder) return
+    const res = await fetch(`/api/orders/${deletingOrder.id}`, { method: "DELETE" })
+    if (res.ok) {
+      toast.success(tc("deleteSuccess") || tc("delete") + " OK")
+      mutate()
+    }
+    setDeletingOrder(null)
   }
 
   const columns: ColumnDef<Order>[] = [
@@ -310,6 +325,15 @@ export default function OrdersPage() {
                 </DropdownMenuItem>
               </>
             )}
+            {user?.role === "super_admin" && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setDeletingOrder(row.original)} className="text-destructive focus:text-destructive">
+                  <IconTrash className="mr-2 size-4" />
+                  {tc("delete")}
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       ),
@@ -340,6 +364,65 @@ export default function OrdersPage() {
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
   })
+
+  const handleExportSelected = async () => {
+    setIsExporting(true)
+    const hasSelection = Object.keys(rowSelection).length > 0
+    let selectedOrders: Order[] = []
+
+    if (hasSelection) {
+      selectedOrders = orders.filter(o => (rowSelection as Record<string, boolean>)[o.id])
+    } else {
+      selectedOrders = table.getFilteredRowModel().rows.map(row => row.original)
+    }
+
+    if (!selectedOrders.length) {
+      toast.error("No orders to export")
+      setIsExporting(false)
+      return
+    }
+
+    const headers = ["Order Number", "Date", "Customer", "Phone", "City", "Total Amount", "Items Count", "Status"]
+    const csvContent = [
+      headers.join(","),
+      ...selectedOrders.map(o => [
+        o.order_number,
+        new Date(o.created_at).toLocaleDateString(),
+        `"${o.full_name}"`,
+        `"${o.phone || ''}"`,
+        `"${o.city}"`,
+        o.total_amount,
+        o.items_count,
+        o.status
+      ].join(","))
+    ].join("\n")
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `orders-${new Date().toISOString().split("T")[0]}.csv`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+
+    try {
+      await Promise.all(selectedOrders.map(o => 
+        fetch(`/api/orders/${o.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "exported", user_id: user?.id })
+        })
+      ))
+      toast.success(`${selectedOrders.length} orders exported.`)
+      setRowSelection({})
+      mutate()
+    } catch (err) {
+      toast.error("Failed to update status")
+    } finally {
+      setIsExporting(false)
+    }
+  }
 
   return (
     <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6 px-4 lg:px-6">
@@ -377,6 +460,15 @@ export default function OrdersPage() {
               onChange={(e) => setGlobalFilter(e.target.value)}
               className="max-w-sm"
             />
+            <Button 
+              onClick={handleExportSelected} 
+              size="sm" 
+              variant="outline" 
+              disabled={isExporting || table.getFilteredRowModel().rows.length === 0}
+            >
+              <IconDownload className="mr-2 size-4" />
+              {tc("export")} {Object.keys(rowSelection).length > 0 ? `(${Object.keys(rowSelection).length})` : ""}
+            </Button>
           </div>
 
           <div className="overflow-hidden rounded-lg border">
@@ -449,6 +541,22 @@ export default function OrdersPage() {
               <DialogDescription>{t("changeStatus", { orderNumber: editingOrder?.order_number ?? "" })}</DialogDescription>
             </DialogHeader>
             {editingOrder && <OrderStatusForm order={editingOrder} users={usersData} isSuperAdmin={user?.role === "super_admin"} onSave={handleUpdateStatus} onCancel={() => setEditingOrder(null)} />}
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Dialog */}
+        <Dialog open={!!deletingOrder} onOpenChange={() => setDeletingOrder(null)}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Delete Order</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete order "#{deletingOrder?.order_number}"? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDeletingOrder(null)}>{tc("cancel")}</Button>
+              <Button variant="destructive" onClick={handleDeleteOrder}>{tc("delete")}</Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
 
