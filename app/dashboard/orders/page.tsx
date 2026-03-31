@@ -212,6 +212,27 @@ export default function OrdersPage() {
     setEditingOrder(null)
   }
 
+  const handleAssigneeChange = async (orderId: string, assignee: string, currentStatus: string) => {
+    const assigned_to = assignee === "none" ? null : assignee
+    await fetch(`/api/orders/${orderId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: currentStatus, assigned_to, user_id: user?.id }),
+    })
+    mutate()
+    toast.success("Assignee updated")
+  }
+
+  const handleStatusChangeInline = async (orderId: string, newStatus: string, currentAssignee: string | null) => {
+    await fetch(`/api/orders/${orderId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: newStatus, assigned_to: currentAssignee, user_id: user?.id }),
+    })
+    mutate()
+    toast.success(t("statusUpdateSuccess"))
+  }
+
   const handleDeleteOrder = async () => {
     if (!deletingOrder) return
     const res = await fetch(`/api/orders/${deletingOrder.id}`, { method: "DELETE" })
@@ -273,7 +294,24 @@ export default function OrdersPage() {
       accessorKey: "assignee_name",
       header: "Assignee",
       cell: ({ row }) => (
-        <span className="text-sm font-medium">{row.original.assignee_name || "—"}</span>
+        user?.role === "super_admin" ? (
+          <Select 
+            value={row.original.assigned_to || "none"}
+            onValueChange={(val) => handleAssigneeChange(row.original.id, val, row.original.status)}
+          >
+            <SelectTrigger className="h-8 text-xs bg-transparent border-dashed w-[130px]">
+              <SelectValue placeholder="Unassigned" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Unassigned</SelectItem>
+              {usersData.map((u: any) => (
+                <SelectItem key={u.id} value={u.id}>{u.full_name || u.email}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : (
+          <span className="text-sm font-medium">{row.original.assignee_name || "—"}</span>
+        )
       ),
     },
     {
@@ -287,9 +325,37 @@ export default function OrdersPage() {
       accessorKey: "status",
       header: tc("status"),
       cell: ({ row }) => (
-        <Badge variant="outline" className={statusClasses[row.original.status]}>
-          {t(row.original.status)}
-        </Badge>
+        hasPermission("orders:update_status") ? (
+          <Select 
+            value={row.original.status}
+            onValueChange={(val) => handleStatusChangeInline(row.original.id, val, row.original.assigned_to)}
+          >
+            <SelectTrigger className={`h-8 font-medium text-xs w-[140px] focus:ring-0 ${statusClasses[row.original.status]} border-none shadow-none`}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="pending">{t("pending")}</SelectItem>
+              <SelectItem value="confirmed">{t("confirmed")}</SelectItem>
+              <SelectItem value="call_1">{t("call_1")}</SelectItem>
+              <SelectItem value="call_2">{t("call_2")}</SelectItem>
+              <SelectItem value="call_3">{t("call_3")}</SelectItem>
+              <SelectItem value="call_whatsapp">{t("call_whatsapp")}</SelectItem>
+              <SelectItem value="call_sms">{t("call_sms")}</SelectItem>
+              <SelectItem value="no_response">{t("no_response")}</SelectItem>
+              <SelectItem value="postponed">{t("postponed")}</SelectItem>
+              <SelectItem value="unreachable">{t("unreachable")}</SelectItem>
+              <SelectItem value="voicemail">{t("voicemail")}</SelectItem>
+              <SelectItem value="cancelled">{t("cancelled")}</SelectItem>
+              <SelectItem value="not_serious">{t("not_serious")}</SelectItem>
+              <SelectItem value="fake_order">{t("fake_order")}</SelectItem>
+              <SelectItem value="exported">{t("exported") || "Exported"}</SelectItem>
+            </SelectContent>
+          </Select>
+        ) : (
+          <Badge variant="outline" className={statusClasses[row.original.status]}>
+            {t(row.original.status)}
+          </Badge>
+        )
       ),
     },
     {
