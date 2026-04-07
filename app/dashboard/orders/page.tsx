@@ -85,6 +85,7 @@ interface Order {
   items_count: number
   assigned_to: string | null
   assignee_name: string | null
+  delivery_status: string | null
 }
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
@@ -104,6 +105,20 @@ const statusClasses: Record<string, string> = {
   cancelled: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800",
   fake_order: "bg-zinc-200 text-zinc-900 dark:bg-zinc-800/50 dark:text-zinc-300 border-zinc-300 dark:border-zinc-700",
   exported: "bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400 border-teal-200 dark:border-teal-800",
+}
+
+const deliveryStatusClasses: Record<string, string> = {
+  pending: "bg-gray-100 text-gray-800 dark:bg-gray-800/30 dark:text-gray-400 border-gray-200 dark:border-gray-700",
+  livre: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800",
+  envois_recu: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800",
+  refuse: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800",
+  annule: "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400 border-rose-200 dark:border-rose-800",
+  retourne: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800",
+  stope: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200 dark:border-purple-800",
+  suivi: "bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900/30 dark:text-fuchsia-400 border-fuchsia-200 dark:border-fuchsia-800",
+  retour_stock: "bg-amber-700 text-white border-amber-800",
+  pr: "bg-orange-500 text-white border-orange-600",
+  an_1: "bg-indigo-900 text-white border-indigo-950",
 }
 
 function OrderStatusForm({
@@ -233,6 +248,15 @@ export default function OrdersPage() {
     toast.success(t("statusUpdateSuccess"))
   }
 
+  const handleDeliveryStatusChangeInline = async (orderId: string, newDeliveryStatus: string) => {
+    await fetch(`/api/orders/${orderId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ delivery_status: newDeliveryStatus, user_id: user?.id }),
+    })
+    mutate()
+  }
+
   const handleDeleteOrder = async () => {
     if (!deletingOrder) return
     const res = await fetch(`/api/orders/${deletingOrder.id}`, { method: "DELETE" })
@@ -323,7 +347,7 @@ export default function OrdersPage() {
     },
     {
       accessorKey: "status",
-      header: tc("status"),
+      header: t("confirmation_status"),
       cell: ({ row }) => (
         hasPermission("orders:update_status") ? (
           <Select 
@@ -354,6 +378,39 @@ export default function OrdersPage() {
         ) : (
           <Badge variant="outline" className={statusClasses[row.original.status]}>
             {t(row.original.status)}
+          </Badge>
+        )
+      ),
+    },
+    {
+      accessorKey: "delivery_status",
+      header: t("delivery_status"),
+      cell: ({ row }) => (
+        hasPermission("orders:update_status") ? (
+          <Select 
+            value={row.original.delivery_status || "pending"}
+            onValueChange={(val) => handleDeliveryStatusChangeInline(row.original.id, val)}
+          >
+            <SelectTrigger className={`h-8 font-medium text-xs w-[140px] focus:ring-0 ${deliveryStatusClasses[row.original.delivery_status || "pending"] || ""} border-none shadow-none`}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="pending">En attente / Pending</SelectItem>
+              <SelectItem value="livre">{t("livre")}</SelectItem>
+              <SelectItem value="envois_recu">{t("envois_recu")}</SelectItem>
+              <SelectItem value="refuse">{t("refuse")}</SelectItem>
+              <SelectItem value="annule">{t("annule")}</SelectItem>
+              <SelectItem value="retourne">{t("retourne")}</SelectItem>
+              <SelectItem value="stope">{t("stope")}</SelectItem>
+              <SelectItem value="suivi">{t("suivi")}</SelectItem>
+              <SelectItem value="retour_stock">{t("retour_stock")}</SelectItem>
+              <SelectItem value="pr">{t("pr")}</SelectItem>
+              <SelectItem value="an_1">{t("an_1")}</SelectItem>
+            </SelectContent>
+          </Select>
+        ) : (
+          <Badge variant="outline" className={deliveryStatusClasses[row.original.delivery_status || "pending"]}>
+            {row.original.delivery_status && row.original.delivery_status !== "pending" ? t(row.original.delivery_status) : "Pending"}
           </Badge>
         )
       ),

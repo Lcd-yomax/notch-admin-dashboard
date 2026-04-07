@@ -27,6 +27,7 @@ export async function GET() {
       city,
       address,
       status,
+      delivery_status,
       total_amount,
       notes,
       assigned_to,

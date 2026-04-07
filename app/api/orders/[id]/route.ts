@@ -71,12 +71,14 @@ export async function PUT(
 
   const oldStatus = current?.status
 
+  const updateData: any = {}
+  if (body.status !== undefined) updateData.status = body.status
+  if (body.assigned_to !== undefined) updateData.assigned_to = body.assigned_to
+  if (body.delivery_status !== undefined) updateData.delivery_status = body.delivery_status
+
   const { data, error } = await supabase
     .from("orders")
-    .update({ 
-      status: body.status,
-      ...(body.assigned_to !== undefined ? { assigned_to: body.assigned_to } : {}),
-    })
+    .update(updateData)
     .eq("id", id)
     .select()
     .single()
