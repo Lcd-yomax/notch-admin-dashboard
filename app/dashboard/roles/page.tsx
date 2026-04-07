@@ -12,6 +12,7 @@ import {
   IconLayoutColumns,
   IconPlus,
   IconShield,
+  IconShieldLock,
   IconTrash,
 } from "@tabler/icons-react"
 import {
@@ -124,6 +125,89 @@ function RoleForm({
   )
 }
 
+function PermissionsForm({
+  role,
+  onSave,
+  onCancel,
+}: {
+  role: Role
+  onSave: (permIds: string[]) => void
+  onCancel: () => void
+}) {
+  const tc = useTranslations("common")
+  const [permissions, setPermissions] = React.useState<any[]>([])
+  const [selectedIds, setSelectedIds] = React.useState<string[]>([])
+  const [loading, setLoading] = React.useState(true)
+
+  React.useEffect(() => {
+    Promise.all([
+      fetch("/api/permissions").then(r => r.json()),
+      fetch(`/api/roles/${role.id}/permissions`).then(r => r.json())
+    ]).then(([perms, selected]) => {
+      setPermissions(perms || [])
+      setSelectedIds(selected || [])
+      setLoading(false)
+    }).catch(() => {
+      toast.error("Failed to load permissions")
+      setLoading(false)
+    })
+  }, [role.id])
+
+  const togglePermission = (id: string) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
+    )
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    onSave(selectedIds)
+  }
+
+  const modules = React.useMemo(() => {
+    const mods = new Map<string, any[]>()
+    permissions.forEach(p => {
+      const mod = p.module || 'general'
+      if (!mods.has(mod)) mods.set(mod, [])
+      mods.get(mod)!.push(p)
+    })
+    return Array.from(mods.entries())
+  }, [permissions])
+
+  if (loading) return <div className="py-8 text-center text-sm text-muted-foreground">{tc("loading")}</div>
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="max-h-[60vh] overflow-y-auto space-y-6 pr-2">
+        {modules.map(([moduleName, perms]) => (
+          <div key={moduleName} className="space-y-2 border rounded-md p-4 bg-muted/10">
+            <h4 className="font-semibold capitalize text-sm">{moduleName}</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {perms.map(p => (
+                 <div key={p.id} className="flex items-center space-x-2">
+                   <Checkbox 
+                     id={`perm-${p.id}`} 
+                     checked={selectedIds.includes(p.id)}
+                     onCheckedChange={() => togglePermission(p.id)}
+                   />
+                   <Label htmlFor={`perm-${p.id}`} className="text-xs leading-tight cursor-pointer">
+                     {p.key.replace(/:/g, ' ')} 
+                     {p.description && <span className="text-muted-foreground block font-normal text-[10px] truncate max-w-[150px]" title={p.description}>{p.description}</span>}
+                   </Label>
+                 </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+      <DialogFooter>
+        <Button type="button" variant="outline" onClick={onCancel}>{tc("cancel")}</Button>
+        <Button type="submit">{tc("save")}</Button>
+      </DialogFooter>
+    </form>
+  )
+}
+
 export default function RolesPage() {
   const { hasPermission } = usePermissions()
   const t = useTranslations("roles")
@@ -132,6 +216,7 @@ export default function RolesPage() {
   
   const [isCreateOpen, setIsCreateOpen] = React.useState(false)
   const [editingRole, setEditingRole] = React.useState<Role | null>(null)
+  const [managingPermissionsRole, setManagingPermissionsRole] = React.useState<Role | null>(null)
   const [deletingRole, setDeletingRole] = React.useState<Role | null>(null)
   
   const [rowSelection, setRowSelection] = React.useState({})
@@ -161,6 +246,23 @@ export default function RolesPage() {
     mutate()
     toast.success(t("updateSuccess"))
     setEditingRole(null)
+  }
+
+  const handleSavePermissions = async (permIds: string[]) => {
+    if (!managingPermissionsRole) return
+    const res = await fetch(`/api/roles/${managingPermissionsRole.id}/permissions`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ permissionIds: permIds }),
+    })
+    
+    if (res.ok) {
+      toast.success("Permissions updated successfully")
+      mutate()
+      setManagingPermissionsRole(null)
+    } else {
+      toast.error("Failed to update permissions")
+    }
   }
 
   const handleDelete = async () => {
@@ -250,13 +352,22 @@ export default function RolesPage() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-32">
             {hasPermission("roles:manage") && (
-              <DropdownMenuItem 
-                onClick={() => setEditingRole(row.original)}
-                disabled={row.original.is_system}
-              >
-                <IconEdit className="mr-2 size-4" />
-                {tc("edit")}
-              </DropdownMenuItem>
+              <>
+                <DropdownMenuItem 
+                  onClick={() => setEditingRole(row.original)}
+                  disabled={row.original.is_system}
+                >
+                  <IconEdit className="mr-2 size-4" />
+                  {tc("edit")}
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => setManagingPermissionsRole(row.original)}
+                  disabled={row.original.is_system}
+                >
+                  <IconShieldLock className="mr-2 size-4" />
+                  {t("permissions")}
+                </DropdownMenuItem>
+              </>
             )}
             {hasPermission("roles:manage") && (
               <>
@@ -307,12 +418,17 @@ export default function RolesPage() {
         title={t("title")}
         description={t("description")}
       >
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm">
-              <IconLayoutColumns />
+        <div className="flex items-center gap-2">
+          <Button size="sm" onClick={() => setIsCreateOpen(true)}>
+            <IconPlus className="mr-2 size-4" />
+            {t("addRole")}
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+              <IconLayoutColumns className="mr-2 size-4" />
               {tc("columns")}
-              <IconChevronDown />
+              <IconChevronDown className="ml-2 size-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
@@ -328,6 +444,7 @@ export default function RolesPage() {
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
+        </div>
       </PageHeader>
 
       <div className="flex items-center gap-2">
@@ -420,6 +537,24 @@ export default function RolesPage() {
               <DialogDescription>{t("editRoleDesc")}</DialogDescription>
             </DialogHeader>
             <RoleForm role={editingRole} onSave={handleUpdate} onCancel={() => setEditingRole(null)} />
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={!!managingPermissionsRole} onOpenChange={() => setManagingPermissionsRole(null)}>
+          <DialogContent className="sm:max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>{t("managePermissions") || "Manage Permissions"}</DialogTitle>
+              <DialogDescription>
+                {t("managePermissionsDesc", { name: managingPermissionsRole?.name ?? "" }) || `Select the permissions to grant to the ${managingPermissionsRole?.name} role.`}
+              </DialogDescription>
+            </DialogHeader>
+            {managingPermissionsRole && (
+              <PermissionsForm 
+                role={managingPermissionsRole} 
+                onSave={handleSavePermissions} 
+                onCancel={() => setManagingPermissionsRole(null)} 
+              />
+            )}
           </DialogContent>
         </Dialog>
 

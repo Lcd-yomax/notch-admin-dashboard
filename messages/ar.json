@@ -369,7 +369,9 @@
     "deleteRoleConfirm": "هل أنت متأكد من حذف \"{name}\"؟ سيفقد المستخدمون الذين لديهم هذا الدور صلاحيات الوصول.",
     "createSuccess": "تم إنشاء الدور بنجاح",
     "updateSuccess": "تم تحديث الدور بنجاح",
-    "deleteSuccess": "تم حذف الدور بنجاح"
+    "deleteSuccess": "تم حذف الدور بنجاح",
+    "managePermissions": "إدارة الصلاحيات",
+    "managePermissionsDesc": "حدد الصلاحيات التي سيتم منحها لدور {name}."
   },
   "auth": {
     "brandName": "لوحة إدارة المتجر",
