@@ -86,6 +86,7 @@ interface Order {
   assigned_to: string | null
   assignee_name: string | null
   delivery_status: string | null
+  confirmation_status: string | null
 }
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
@@ -119,6 +120,12 @@ const deliveryStatusClasses: Record<string, string> = {
   retour_stock: "bg-amber-700 text-white border-amber-800",
   pr: "bg-orange-500 text-white border-orange-600",
   an_1: "bg-indigo-900 text-white border-indigo-950",
+}
+
+const confirmationStatusClasses: Record<string, string> = {
+  pending: "bg-gray-100 text-gray-800 dark:bg-gray-800/30 dark:text-gray-400 border-gray-200 dark:border-gray-700",
+  paid: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800",
+  return: "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400 border-rose-200 dark:border-rose-800",
 }
 
 function OrderStatusForm({
@@ -248,6 +255,16 @@ export default function OrdersPage() {
     toast.success(t("statusUpdateSuccess"))
   }
 
+  const handleConfirmationStatusChangeInline = async (orderId: string, newStatus: string) => {
+    await fetch(`/api/orders/${orderId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ confirmation_status: newStatus, user_id: user?.id }),
+    })
+    mutate()
+    toast.success(t("statusUpdateSuccess"))
+  }
+
   const handleDeliveryStatusChangeInline = async (orderId: string, newDeliveryStatus: string) => {
     await fetch(`/api/orders/${orderId}`, {
       method: "PUT",
@@ -307,6 +324,13 @@ export default function OrdersPage() {
           <div className="font-medium">{row.original.full_name}</div>
           {row.original.email && <div className="text-xs text-muted-foreground">{row.original.email}</div>}
         </div>
+      ),
+    },
+    {
+      accessorKey: "phone",
+      header: tc("phone") || "Phone",
+      cell: ({ row }) => (
+        <span className="text-sm">{row.original.phone || "-"}</span>
       ),
     },
     {
@@ -411,6 +435,31 @@ export default function OrdersPage() {
         ) : (
           <Badge variant="outline" className={deliveryStatusClasses[row.original.delivery_status || "pending"]}>
             {row.original.delivery_status && row.original.delivery_status !== "pending" ? t(row.original.delivery_status) : "Pending"}
+          </Badge>
+        )
+      ),
+    },
+    {
+      accessorKey: "confirmation_status",
+      header: t("payment_status"),
+      cell: ({ row }) => (
+        hasPermission("orders:update_status") ? (
+          <Select 
+            value={row.original.confirmation_status || "pending"}
+            onValueChange={(val) => handleConfirmationStatusChangeInline(row.original.id, val)}
+          >
+            <SelectTrigger className={`h-8 font-medium text-xs w-[140px] focus:ring-0 ${confirmationStatusClasses[row.original.confirmation_status || "pending"] || ""} border-none shadow-none`}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="paid">{t("paid")}</SelectItem>
+              <SelectItem value="return">{t("return")}</SelectItem>
+            </SelectContent>
+          </Select>
+        ) : (
+          <Badge variant="outline" className={confirmationStatusClasses[row.original.confirmation_status || "pending"]}>
+            {row.original.confirmation_status && row.original.confirmation_status !== "pending" ? t(row.original.confirmation_status) : "Pending"}
           </Badge>
         )
       ),

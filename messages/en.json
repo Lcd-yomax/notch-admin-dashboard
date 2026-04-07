@@ -25,7 +25,8 @@
     "more": "More",
     "confirm": "Confirm",
     "back": "Back",
-    "upload": "Upload"
+    "upload": "Upload",
+    "phone": "Phone"
   },
   "brand": {
     "name": "Notch",
@@ -241,6 +242,9 @@
     "an_1": "AN 1",
     "delivery_status": "Delivery Status",
     "confirmation_status": "Confirmation Status",
+    "payment_status": "Payment/Return Status",
+    "paid": "Paid",
+    "return": "Returned",
     "shipping": "Shipping",
     "notes": "Notes",
     "product": "Product",

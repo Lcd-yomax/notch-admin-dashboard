@@ -82,6 +82,7 @@ interface OrderDetail {
   assigned_to: string | null
   assignee_name: string | null
   delivery_status: string | null
+  confirmation_status: string | null
   order_items: OrderItem[]
 }
 
@@ -145,6 +146,12 @@ const deliveryStatusClasses: Record<string, string> = {
   an_1: "bg-indigo-900 text-white border-indigo-950",
 }
 
+const confirmationStatusClasses: Record<string, string> = {
+  pending: "bg-gray-100 text-gray-800 dark:bg-gray-800/30 dark:text-gray-400 border-gray-200 dark:border-gray-700",
+  paid: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800",
+  return: "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400 border-rose-200 dark:border-rose-800",
+}
+
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
@@ -163,6 +170,7 @@ export default function OrderDetailPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
   const [newStatus, setNewStatus] = React.useState("")
   const [newDeliveryStatus, setNewDeliveryStatus] = React.useState("pending")
+  const [newConfirmationStatus, setNewConfirmationStatus] = React.useState("pending")
   const [newAssignee, setNewAssignee] = React.useState("none")
   const [statusNote, setStatusNote] = React.useState("")
   const [updating, setUpdating] = React.useState(false)
@@ -176,6 +184,7 @@ export default function OrderDetailPage() {
       body: JSON.stringify({
         status: newStatus,
         delivery_status: newDeliveryStatus,
+        confirmation_status: newConfirmationStatus,
         assigned_to: newAssignee === "none" ? null : newAssignee,
         user_id: user?.id,
         note: statusNote || null,
@@ -238,6 +247,9 @@ export default function OrderDetailPage() {
           <Badge variant="outline" className={`text-sm px-3 py-1 ${deliveryStatusClasses[order.delivery_status || "pending"]}`}>
             {order.delivery_status && order.delivery_status !== "pending" ? t(order.delivery_status) : "Pending Delivery"}
           </Badge>
+          <Badge variant="outline" className={`text-sm px-3 py-1 ${confirmationStatusClasses[order.confirmation_status || "pending"]}`}>
+            {order.confirmation_status && order.confirmation_status !== "pending" ? t(order.confirmation_status) : "Pending Payment"}
+          </Badge>
           {hasPermission("orders:update_status") && (
             <Button
               size="sm"
@@ -245,6 +257,7 @@ export default function OrderDetailPage() {
               onClick={() => {
                 setNewStatus(order.status)
                 setNewDeliveryStatus(order.delivery_status || "pending")
+                setNewConfirmationStatus(order.confirmation_status || "pending")
                 setNewAssignee(order.assigned_to || "none")
                 setStatusDialogOpen(true)
               }}
@@ -508,6 +521,19 @@ export default function OrderDetailPage() {
                   <SelectItem value="retour_stock">{t("retour_stock")}</SelectItem>
                   <SelectItem value="pr">{t("pr")}</SelectItem>
                   <SelectItem value="an_1">{t("an_1")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>{t("payment_status")}</Label>
+              <Select value={newConfirmationStatus} onValueChange={setNewConfirmationStatus}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="paid">{t("paid")}</SelectItem>
+                  <SelectItem value="return">{t("return")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
