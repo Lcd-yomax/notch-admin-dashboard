@@ -75,6 +75,7 @@ export async function PUT(
   if (body.status !== undefined) updateData.status = body.status
   if (body.assigned_to !== undefined) updateData.assigned_to = body.assigned_to
   if (body.delivery_status !== undefined) updateData.delivery_status = body.delivery_status
+  if (body.confirmation_status !== undefined) updateData.confirmation_status = body.confirmation_status
 
   const { data, error } = await supabase
     .from("orders")

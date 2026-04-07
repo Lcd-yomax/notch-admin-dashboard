@@ -25,7 +25,8 @@
     "more": "المزيد",
     "confirm": "تأكيد",
     "back": "رجوع",
-    "upload": "رفع"
+    "upload": "رفع",
+    "phone": "رقم الهاتف"
   },
   "brand": {
     "name": "لوحة إدارة المتجر",
@@ -241,6 +242,9 @@
     "an_1": "AN 1",
     "delivery_status": "حالة التوصيل (Delivery Status)",
     "confirmation_status": "حالة التأكيد",
+    "payment_status": "حالة الدفع/الاسترجاع",
+    "paid": "تم الدفع",
+    "return": "مرتجع",
     "shipping": "الشحن",
     "notes": "ملاحظات",
     "product": "المنتج",

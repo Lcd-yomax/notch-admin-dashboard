@@ -28,6 +28,7 @@ export async function GET() {
       address,
       status,
       delivery_status,
+      confirmation_status,
       total_amount,
       notes,
       assigned_to,
