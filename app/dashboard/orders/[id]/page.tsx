@@ -81,6 +81,7 @@ interface OrderDetail {
   created_at: string
   assigned_to: string | null
   assignee_name: string | null
+  delivery_status: string | null
   order_items: OrderItem[]
 }
 
@@ -130,6 +131,20 @@ const statusButtonClasses: Record<string, string> = {
   fake_order: "bg-zinc-700 hover:bg-zinc-800 text-white",
 }
 
+const deliveryStatusClasses: Record<string, string> = {
+  pending: "bg-gray-100 text-gray-800 dark:bg-gray-800/30 dark:text-gray-400 border-gray-200 dark:border-gray-700",
+  livre: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800",
+  envois_recu: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800",
+  refuse: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800",
+  annule: "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400 border-rose-200 dark:border-rose-800",
+  retourne: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800",
+  stope: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200 dark:border-purple-800",
+  suivi: "bg-fuchsia-100 text-fuchsia-800 dark:bg-fuchsia-900/30 dark:text-fuchsia-400 border-fuchsia-200 dark:border-fuchsia-800",
+  retour_stock: "bg-amber-700 text-white border-amber-800",
+  pr: "bg-orange-500 text-white border-orange-600",
+  an_1: "bg-indigo-900 text-white border-indigo-950",
+}
+
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
@@ -147,6 +162,7 @@ export default function OrderDetailPage() {
   const [statusDialogOpen, setStatusDialogOpen] = React.useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
   const [newStatus, setNewStatus] = React.useState("")
+  const [newDeliveryStatus, setNewDeliveryStatus] = React.useState("pending")
   const [newAssignee, setNewAssignee] = React.useState("none")
   const [statusNote, setStatusNote] = React.useState("")
   const [updating, setUpdating] = React.useState(false)
@@ -159,6 +175,7 @@ export default function OrderDetailPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         status: newStatus,
+        delivery_status: newDeliveryStatus,
         assigned_to: newAssignee === "none" ? null : newAssignee,
         user_id: user?.id,
         note: statusNote || null,
@@ -218,12 +235,16 @@ export default function OrderDetailPage() {
           <Badge variant="outline" className={`text-sm px-3 py-1 ${statusClasses[order.status]}`}>
             {t(order.status)}
           </Badge>
+          <Badge variant="outline" className={`text-sm px-3 py-1 ${deliveryStatusClasses[order.delivery_status || "pending"]}`}>
+            {order.delivery_status && order.delivery_status !== "pending" ? t(order.delivery_status) : "Pending Delivery"}
+          </Badge>
           {hasPermission("orders:update_status") && (
             <Button
               size="sm"
               className={statusButtonClasses[order.status]}
               onClick={() => {
                 setNewStatus(order.status)
+                setNewDeliveryStatus(order.delivery_status || "pending")
                 setNewAssignee(order.assigned_to || "none")
                 setStatusDialogOpen(true)
               }}
@@ -469,6 +490,27 @@ export default function OrderDetailPage() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-2">
+              <Label>{t("delivery_status")}</Label>
+              <Select value={newDeliveryStatus} onValueChange={setNewDeliveryStatus}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="livre">{t("livre")}</SelectItem>
+                  <SelectItem value="envois_recu">{t("envois_recu")}</SelectItem>
+                  <SelectItem value="refuse">{t("refuse")}</SelectItem>
+                  <SelectItem value="annule">{t("annule")}</SelectItem>
+                  <SelectItem value="retourne">{t("retourne")}</SelectItem>
+                  <SelectItem value="stope">{t("stope")}</SelectItem>
+                  <SelectItem value="suivi">{t("suivi")}</SelectItem>
+                  <SelectItem value="retour_stock">{t("retour_stock")}</SelectItem>
+                  <SelectItem value="pr">{t("pr")}</SelectItem>
+                  <SelectItem value="an_1">{t("an_1")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             {user?.role === "super_admin" && (
               <div className="space-y-2">
                 <Label>Assign To</Label>
@@ -512,7 +554,7 @@ export default function OrderDetailPage() {
           <DialogHeader>
             <DialogTitle>Delete Order</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete order "#{order.order_number}"? This action cannot be undone.
+              Are you sure you want to delete order "#{order?.order_number}"? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
