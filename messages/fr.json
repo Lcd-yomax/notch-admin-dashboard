@@ -367,7 +367,9 @@
     "deleteRoleConfirm": "Êtes-vous sûr de vouloir supprimer \"{name}\" ? Les utilisateurs avec ce rôle perdront l'accès.",
     "createSuccess": "Rôle créé avec succès",
     "updateSuccess": "Rôle mis à jour avec succès",
-    "deleteSuccess": "Rôle supprimé avec succès"
+    "deleteSuccess": "Rôle supprimé avec succès",
+    "managePermissions": "Gérer les permissions",
+    "managePermissionsDesc": "Sélectionnez les permissions à accorder au rôle {name}."
   },
   "auth": {
     "brandName": "Notch",

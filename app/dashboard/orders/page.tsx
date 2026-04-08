@@ -16,6 +16,9 @@ import {
   IconLayoutColumns,
   IconTrash,
   IconDownload,
+  IconCalendar,
+  IconFilter,
+  IconX,
 } from "@tabler/icons-react"
 import {
   flexRender,
@@ -59,6 +62,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
+import { format } from "date-fns"
 import {
   Table,
   TableBody,
@@ -219,6 +229,16 @@ export default function OrdersPage() {
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [globalFilter, setGlobalFilter] = React.useState("")
+  
+  // Custom Filters State
+  const [statusFilter, setStatusFilter] = React.useState<string>("all")
+  const [deliveryStatusFilter, setDeliveryStatusFilter] = React.useState<string>("all")
+  const [confirmationStatusFilter, setConfirmationStatusFilter] = React.useState<string>("all")
+  const [dateRange, setDateRange] = React.useState<{ from: Date | undefined; to: Date | undefined }>({
+    from: undefined,
+    to: undefined,
+  })
+
   const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
   const [isExporting, setIsExporting] = React.useState(false)
 
@@ -512,8 +532,33 @@ export default function OrdersPage() {
     },
   ]
 
+  // Apply custom filters outside of react-table to simplify combining global + specific filters
+  const filteredOrders = React.useMemo(() => {
+    let filtered = [...orders]
+    
+    if (statusFilter !== "all") {
+      filtered = filtered.filter(o => o.status === statusFilter)
+    }
+    if (deliveryStatusFilter !== "all") {
+      filtered = filtered.filter(o => o.delivery_status === deliveryStatusFilter)
+    }
+    if (confirmationStatusFilter !== "all") {
+      filtered = filtered.filter(o => o.confirmation_status === confirmationStatusFilter)
+    }
+    if (dateRange.from) {
+      filtered = filtered.filter(o => new Date(o.created_at) >= dateRange.from!)
+    }
+    if (dateRange.to) {
+      const endOfDay = new Date(dateRange.to)
+      endOfDay.setHours(23, 59, 59, 999)
+      filtered = filtered.filter(o => new Date(o.created_at) <= endOfDay)
+    }
+    
+    return filtered
+  }, [orders, statusFilter, deliveryStatusFilter, confirmationStatusFilter, dateRange])
+
   const table = useReactTable({
-    data: orders,
+    data: filteredOrders,
     columns,
     state: { sorting, columnVisibility, rowSelection, globalFilter, pagination },
     getRowId: (row) => row.id,
@@ -625,17 +670,141 @@ export default function OrdersPage() {
               </DropdownMenu>
       </PageHeader>
 
-          <div className="flex items-center gap-2">
-            <Input
-              placeholder={t("searchOrders")}
-              value={globalFilter}
-              onChange={(e) => setGlobalFilter(e.target.value)}
-              className="max-w-sm"
-            />
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-card p-4 rounded-lg border">
+            <div className="flex flex-1 flex-wrap items-center gap-3">
+              <Input
+                placeholder={t("searchOrders")}
+                value={globalFilter}
+                onChange={(e) => setGlobalFilter(e.target.value)}
+                className="max-w-xs"
+              />
+              
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-10 border-dashed">
+                    <IconFilter className="mr-2 size-4" />
+                    Filters
+                    {(statusFilter !== "all" || deliveryStatusFilter !== "all" || confirmationStatusFilter !== "all" || dateRange.from) && (
+                      <Badge variant="secondary" className="ml-2 px-1 rounded-sm">On</Badge>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[300px] p-4" align="start">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium text-sm">Custom Filters</h4>
+                      <Button variant="ghost" size="sm" className="h-auto p-0 text-xs" onClick={() => {
+                        setStatusFilter("all")
+                        setDeliveryStatusFilter("all")
+                        setConfirmationStatusFilter("all")
+                        setDateRange({ from: undefined, to: undefined })
+                      }}>
+                        Reset <IconX className="ml-1 size-3" />
+                      </Button>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs">{t("orderStatus")}</Label>
+                      <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue placeholder="All Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All</SelectItem>
+                          <SelectItem value="pending">{t("pending")}</SelectItem>
+                          <SelectItem value="confirmed">{t("confirmed")}</SelectItem>
+                          <SelectItem value="call_1">{t("call_1")}</SelectItem>
+                          <SelectItem value="call_2">{t("call_2")}</SelectItem>
+                          <SelectItem value="call_3">{t("call_3")}</SelectItem>
+                          <SelectItem value="call_whatsapp">{t("call_whatsapp")}</SelectItem>
+                          <SelectItem value="call_sms">{t("call_sms")}</SelectItem>
+                          <SelectItem value="no_response">{t("no_response")}</SelectItem>
+                          <SelectItem value="postponed">{t("postponed")}</SelectItem>
+                          <SelectItem value="unreachable">{t("unreachable")}</SelectItem>
+                          <SelectItem value="voicemail">{t("voicemail")}</SelectItem>
+                          <SelectItem value="cancelled">{t("cancelled")}</SelectItem>
+                          <SelectItem value="fake_order">{t("fake_order")}</SelectItem>
+                          <SelectItem value="exported">{t("exported")}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs">{t("delivery_status")}</Label>
+                      <Select value={deliveryStatusFilter} onValueChange={setDeliveryStatusFilter}>
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue placeholder="All Delivery" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All</SelectItem>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="livre">{t("livre")}</SelectItem>
+                          <SelectItem value="envois_recu">{t("envois_recu")}</SelectItem>
+                          <SelectItem value="refuse">{t("refuse")}</SelectItem>
+                          <SelectItem value="annule">{t("annule")}</SelectItem>
+                          <SelectItem value="retourne">{t("retourne")}</SelectItem>
+                          <SelectItem value="stope">{t("stope")}</SelectItem>
+                          <SelectItem value="suivi">{t("suivi")}</SelectItem>
+                          <SelectItem value="retour_stock">{t("retour_stock")}</SelectItem>
+                          <SelectItem value="pr">{t("pr")}</SelectItem>
+                          <SelectItem value="an_1">{t("an_1")}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs">{t("payment_status")}</Label>
+                      <Select value={confirmationStatusFilter} onValueChange={setConfirmationStatusFilter}>
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue placeholder="All Confirmation" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All</SelectItem>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="paid">{t("paid")}</SelectItem>
+                          <SelectItem value="return">{t("return")}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className={`h-10 justify-start text-left font-normal border-dashed ${!dateRange.from && "text-muted-foreground"}`}>
+                    <IconCalendar className="mr-2 size-4" />
+                    {dateRange.from ? (
+                      dateRange.to ? (
+                        <>
+                          {format(dateRange.from, "LLL dd, y")} - {format(dateRange.to, "LLL dd, y")}
+                        </>
+                      ) : (
+                        format(dateRange.from, "LLL dd, y")
+                      )
+                    ) : (
+                      <span>Date Range</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    initialFocus
+                    mode="range"
+                    defaultMonth={dateRange.from}
+                    selected={dateRange}
+                    onSelect={(range: any) => setDateRange(range || { from: undefined, to: undefined })}
+                    numberOfMonths={2}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
             <Button 
               onClick={handleExportSelected} 
               size="sm" 
               variant="outline" 
+              className="h-10 whitespace-nowrap"
               disabled={isExporting || table.getFilteredRowModel().rows.length === 0}
             >
               <IconDownload className="mr-2 size-4" />

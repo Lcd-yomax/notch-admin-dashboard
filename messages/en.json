@@ -369,7 +369,9 @@
     "deleteRoleConfirm": "Are you sure you want to delete \"{name}\"? Users with this role will lose access.",
     "createSuccess": "Role created successfully",
     "updateSuccess": "Role updated successfully",
-    "deleteSuccess": "Role deleted successfully"
+    "deleteSuccess": "Role deleted successfully",
+    "managePermissions": "Manage Permissions",
+    "managePermissionsDesc": "Select the permissions to grant to the {name} role."
   },
   "auth": {
     "brandName": "Notch",
