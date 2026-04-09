@@ -260,7 +260,8 @@
     "activityNotePlaceholder": "Add a note about this change...",
     "delivered": "Delivered",
     "shipped": "Shipped",
-    "statusUpdateSuccess": "Order status updated successfully"
+    "statusUpdateSuccess": "Order status updated successfully",
+    "code_suivi": "Tracking Code"
   },
   "reviews": {
     "title": "Reviews",

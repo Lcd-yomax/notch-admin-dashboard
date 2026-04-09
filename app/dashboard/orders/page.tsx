@@ -97,6 +97,7 @@ interface Order {
   assignee_name: string | null
   delivery_status: string | null
   confirmation_status: string | null
+  code_suivi: string | null
 }
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
@@ -352,6 +353,38 @@ export default function OrdersPage() {
       cell: ({ row }) => (
         <span className="text-sm">{row.original.phone || "-"}</span>
       ),
+    },
+    {
+      accessorKey: "code_suivi",
+      header: t("code_suivi"),
+      cell: ({ row }) => {
+        const code = row.original.code_suivi
+        if (!code) return <span className="text-muted-foreground">—</span>
+        return (
+          <div className="flex items-center gap-1.5 max-w-[180px] group">
+            <span
+              className="font-mono text-xs font-semibold tracking-wide truncate"
+              title={code}
+            >
+              {code}
+            </span>
+            <button
+              className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+              onClick={(e) => {
+                e.stopPropagation()
+                navigator.clipboard.writeText(code)
+                toast.success("Copied!")
+              }}
+              title="Copy tracking code"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+              </svg>
+            </button>
+          </div>
+        )
+      },
     },
     {
       accessorKey: "items_count",
