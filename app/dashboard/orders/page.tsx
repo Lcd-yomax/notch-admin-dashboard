@@ -139,6 +139,98 @@ const confirmationStatusClasses: Record<string, string> = {
   return: "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400 border-rose-200 dark:border-rose-800",
 }
 
+function CodeSuiviCell({
+  orderId,
+  code,
+  canEdit,
+  onSave,
+}: {
+  orderId: string
+  code: string | null
+  canEdit: boolean
+  onSave: (orderId: string, newCode: string) => Promise<void>
+}) {
+  const [editing, setEditing] = React.useState(false)
+  const [draft, setDraft] = React.useState(code || "")
+  const [saving, setSaving] = React.useState(false)
+  const inputRef = React.useRef<HTMLInputElement>(null)
+
+  React.useEffect(() => { setDraft(code || "") }, [code])
+  React.useEffect(() => { if (editing) inputRef.current?.focus() }, [editing])
+
+  const save = async () => {
+    if (draft === (code || "")) { setEditing(false); return }
+    setSaving(true)
+    await onSave(orderId, draft)
+    setSaving(false)
+    setEditing(false)
+  }
+
+  if (editing && canEdit) {
+    return (
+      <div className="flex items-center gap-1">
+        <input
+          ref={inputRef}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={save}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") save()
+            if (e.key === "Escape") { setDraft(code || ""); setEditing(false) }
+          }}
+          placeholder="Code suivi..."
+          className="h-7 w-[164px] rounded border border-input bg-background px-2 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-ring uppercase"
+        />
+        {saving && (
+          <svg className="animate-spin size-3 text-muted-foreground shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+          </svg>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className="flex items-center gap-1.5 max-w-[180px] group"
+      onClick={() => canEdit && setEditing(true)}
+    >
+      {code ? (
+        <>
+          <span
+            className={`font-mono text-xs font-semibold tracking-wide truncate ${
+              canEdit ? "cursor-pointer hover:text-primary" : ""
+            }`}
+            title={`${code}${canEdit ? " — click to edit" : ""}`}
+          >
+            {code}
+          </span>
+          <button
+            className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+            onClick={(e) => {
+              e.stopPropagation()
+              navigator.clipboard.writeText(code)
+            }}
+            title="Copy"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+              <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+            </svg>
+          </button>
+        </>
+      ) : canEdit ? (
+        <span className="text-xs text-muted-foreground/50 italic cursor-pointer hover:text-muted-foreground transition-colors">
+          + Add code
+        </span>
+      ) : (
+        <span className="text-muted-foreground">—</span>
+      )}
+    </div>
+  )
+}
+
 function OrderStatusForm({
   order,
   users,
@@ -295,6 +387,16 @@ export default function OrdersPage() {
     mutate()
   }
 
+  const handleCodeSuiviUpdate = async (orderId: string, newCode: string) => {
+    await fetch(`/api/orders/${orderId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code_suivi: newCode || null, user_id: user?.id }),
+    })
+    mutate()
+    toast.success("Code suivi updated")
+  }
+
   const handleDeleteOrder = async () => {
     if (!deletingOrder) return
     const res = await fetch(`/api/orders/${deletingOrder.id}`, { method: "DELETE" })
@@ -357,34 +459,14 @@ export default function OrdersPage() {
     {
       accessorKey: "code_suivi",
       header: t("code_suivi"),
-      cell: ({ row }) => {
-        const code = row.original.code_suivi
-        if (!code) return <span className="text-muted-foreground">—</span>
-        return (
-          <div className="flex items-center gap-1.5 max-w-[180px] group">
-            <span
-              className="font-mono text-xs font-semibold tracking-wide truncate"
-              title={code}
-            >
-              {code}
-            </span>
-            <button
-              className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
-              onClick={(e) => {
-                e.stopPropagation()
-                navigator.clipboard.writeText(code)
-                toast.success("Copied!")
-              }}
-              title="Copy tracking code"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
-                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
-              </svg>
-            </button>
-          </div>
-        )
-      },
+      cell: ({ row }) => (
+        <CodeSuiviCell
+          orderId={row.original.id}
+          code={row.original.code_suivi}
+          canEdit={hasPermission("orders:update_status")}
+          onSave={handleCodeSuiviUpdate}
+        />
+      ),
     },
     {
       accessorKey: "items_count",
