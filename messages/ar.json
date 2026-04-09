@@ -260,7 +260,8 @@
     "activityNotePlaceholder": "أضف ملاحظة حول هذا التغيير...",
     "delivered": "تم التوصيل",
     "shipped": "تم الشحن",
-    "statusUpdateSuccess": "تم تحديث حالة الطلب بنجاح"
+    "statusUpdateSuccess": "تم تحديث حالة الطلب بنجاح",
+    "code_suivi": "كود التتبع"
   },
   "reviews": {
     "title": "التقييمات",

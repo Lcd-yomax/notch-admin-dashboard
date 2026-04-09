@@ -258,7 +258,8 @@
     "activityNotePlaceholder": "Ajouter une note à propos de ce changement...",
     "delivered": "Livré",
     "shipped": "Expédié",
-    "statusUpdateSuccess": "Statut de la commande mis à jour avec succès"
+    "statusUpdateSuccess": "Statut de la commande mis à jour avec succès",
+    "code_suivi": "Code Suivi"
   },
   "reviews": {
     "title": "Avis",
