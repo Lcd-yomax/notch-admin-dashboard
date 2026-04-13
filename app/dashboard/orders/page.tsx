@@ -683,7 +683,7 @@ export default function OrdersPage() {
       const o = row.original
       return [
         o.order_number, o.full_name, o.email, o.phone,
-        o.city, o.address, o.status, o.notes,
+        o.city, o.address, o.status, o.notes, o.code_suivi,
       ].some((v) => v && String(v).toLowerCase().includes(q))
     },
     onRowSelectionChange: setRowSelection,
