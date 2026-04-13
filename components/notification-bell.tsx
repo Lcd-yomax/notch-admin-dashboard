@@ -89,7 +89,7 @@ export function NotificationBell() {
           <span className="sr-only">{t("title")}</span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 p-0">
+      <PopoverContent align="end" className="w-80 p-0 overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3">
           <h4 className="text-sm font-semibold">{t("title")}</h4>
           {unreadCount > 0 && (
@@ -105,7 +105,7 @@ export function NotificationBell() {
           )}
         </div>
         <Separator />
-        <ScrollArea className="max-h-80">
+        <ScrollArea className="h-[360px]">
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center gap-1 py-8 text-center">
               <IconBell className="size-8 text-muted-foreground/40" />
