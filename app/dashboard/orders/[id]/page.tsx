@@ -87,6 +87,11 @@ interface OrderDetail {
   delivery_status: string | null
   confirmation_status: string | null
   code_suivi: string | null
+  utm_source: string | null
+  utm_medium: string | null
+  utm_campaign: string | null
+  click_id: string | null
+  referrer: string | null
   order_items: OrderItem[]
 }
 
@@ -273,7 +278,7 @@ export default function OrderDetailPage() {
               {t("updateStatus")}
             </Button>
           )}
-          {hasPermission("orders:write") && (
+          {hasPermission("orders:update_status") && (
             <Button asChild size="sm" variant="outline">
               <Link href={`/dashboard/orders/${order.id}/edit`}>
                 <IconEdit className="mr-2 size-4" />

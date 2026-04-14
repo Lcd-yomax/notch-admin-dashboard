@@ -634,7 +634,7 @@ export default function OrdersPage() {
                 </DropdownMenuItem>
               </>
             )}
-            {hasPermission("orders:write") && (
+            {hasPermission("orders:update_status") && (
               <>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => router.push(`/dashboard/orders/${row.original.id}/edit`)}>
