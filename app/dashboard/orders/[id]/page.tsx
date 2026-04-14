@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import {
@@ -14,6 +15,7 @@ import {
   IconMail,
   IconUser,
   IconTrash,
+  IconDeviceDesktopAnalytics,
 } from "@tabler/icons-react"
 import useSWR from "swr"
 import { toast } from "sonner"
@@ -271,6 +273,15 @@ export default function OrderDetailPage() {
               {t("updateStatus")}
             </Button>
           )}
+          {hasPermission("orders:write") && (
+            <Button asChild size="sm" variant="outline">
+              <Link href={`/dashboard/orders/${order.id}/edit`}>
+                <IconEdit className="mr-2 size-4" />
+                {/* Could localize but using plain text for now */}
+                Edit Order
+              </Link>
+            </Button>
+          )}
           {user?.role === "super_admin" && (
             <Button
               size="sm"
@@ -455,8 +466,58 @@ export default function OrderDetailPage() {
           </Card>
         </div>
 
-        {/* Right side: Activity timeline */}
-        <div className="lg:col-span-1">
+        {/* Right side: Activity timeline & Tracking */}
+        <div className="lg:col-span-1 flex flex-col gap-6">
+          {/* Tracking / Ads Data */}
+          {(order.utm_source || order.utm_medium || order.utm_campaign || order.click_id || order.referrer) && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <IconDeviceDesktopAnalytics className="size-4" />
+                  Ads & Tracability
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  {order.utm_source && (
+                     <div>
+                       <div className="text-muted-foreground text-xs uppercase tracking-wide">Source</div>
+                       <div className="font-medium">{order.utm_source}</div>
+                     </div>
+                  )}
+                  {order.utm_medium && (
+                     <div>
+                       <div className="text-muted-foreground text-xs uppercase tracking-wide">Medium</div>
+                       <div className="font-medium">{order.utm_medium}</div>
+                     </div>
+                  )}
+                  {order.utm_campaign && (
+                     <div className="col-span-2">
+                       <div className="text-muted-foreground text-xs uppercase tracking-wide">Campaign</div>
+                       <div className="font-medium">{order.utm_campaign}</div>
+                     </div>
+                  )}
+                  {order.click_id && (
+                     <div className="col-span-2">
+                       <div className="text-muted-foreground text-xs uppercase tracking-wide">Click ID</div>
+                       <div className="font-medium font-mono text-xs break-all">{order.click_id}</div>
+                     </div>
+                  )}
+                  {order.referrer && (
+                     <div className="col-span-2">
+                       <div className="text-muted-foreground text-xs uppercase tracking-wide">Referrer</div>
+                       <div className="font-medium overflow-hidden text-ellipsis whitespace-nowrap" title={order.referrer}>
+                         <a href={order.referrer} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                            {order.referrer}
+                         </a>
+                       </div>
+                     </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <Card className="sticky top-20">
             <CardHeader className="pb-3">
               <CardTitle className="text-base flex items-center gap-2">

@@ -19,7 +19,9 @@ import {
   IconCalendar,
   IconFilter,
   IconX,
+  IconPlus,
 } from "@tabler/icons-react"
+import Link from "next/link"
 import {
   flexRender,
   getCoreRowModel,
@@ -632,6 +634,15 @@ export default function OrdersPage() {
                 </DropdownMenuItem>
               </>
             )}
+            {hasPermission("orders:write") && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => router.push(`/dashboard/orders/${row.original.id}/edit`)}>
+                  <IconEdit className="mr-2 size-4" />
+                  Edit Order
+                </DropdownMenuItem>
+              </>
+            )}
             {user?.role === "super_admin" && (
               <>
                 <DropdownMenuSeparator />
@@ -762,6 +773,13 @@ export default function OrdersPage() {
         title={t("title")}
         description={t("description")}
       >
+              <Button asChild className="mr-2">
+                <Link href="/dashboard/orders/new">
+                  <IconPlus className="size-4 mr-2" />
+                  {/* Reuse some translation or hardcode "Create Order" for now */}
+                  Create Order
+                </Link>
+              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">

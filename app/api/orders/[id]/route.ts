@@ -78,11 +78,68 @@ export async function PUT(
   if (body.confirmation_status !== undefined) updateData.confirmation_status = body.confirmation_status
   if (body.code_suivi !== undefined) updateData.code_suivi = body.code_suivi
 
+  // Support for full order editing
+  if (body.full_name !== undefined) updateData.full_name = body.full_name
+  if (body.phone !== undefined) updateData.phone = body.phone
+  if (body.email !== undefined) updateData.email = body.email
+  if (body.city !== undefined) updateData.city = body.city
+  if (body.address !== undefined) updateData.address = body.address
+  if (body.total_amount !== undefined) updateData.total_amount = body.total_amount
+  if (body.notes !== undefined) updateData.notes = body.notes
+
+  if (body.utm_source !== undefined) updateData.utm_source = body.utm_source
+  if (body.utm_medium !== undefined) updateData.utm_medium = body.utm_medium
+  if (body.utm_campaign !== undefined) updateData.utm_campaign = body.utm_campaign
+  if (body.click_id !== undefined) updateData.click_id = body.click_id
+  if (body.referrer !== undefined) updateData.referrer = body.referrer
+
+  if (Object.keys(updateData).length > 0) {
+    const { error } = await supabase
+      .from("orders")
+      .update(updateData)
+      .eq("id", id)
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+  }
+
+  // Handle order items replacement if items are provided
+  if (body.items) {
+    // 1. Delete existing items
+    const { error: deleteError } = await supabase
+      .from("order_items")
+      .delete()
+      .eq("order_id", id)
+      
+    if (deleteError) {
+      return NextResponse.json({ error: deleteError.message }, { status: 500 })
+    }
+
+    // 2. Insert new items
+    if (body.items.length > 0) {
+      const orderItemsToInsert = body.items.map((item: any) => ({
+        order_id: id,
+        variation_id: item.variation_id,
+        quantity: item.quantity,
+        unit_price: item.unit_price
+      }))
+
+      const { error: insertError } = await supabase
+        .from("order_items")
+        .insert(orderItemsToInsert)
+
+      if (insertError) {
+        return NextResponse.json({ error: insertError.message }, { status: 500 })
+      }
+    }
+  }
+
+  // Retrieve the updated order to return
   const { data, error } = await supabase
     .from("orders")
-    .update(updateData)
-    .eq("id", id)
     .select()
+    .eq("id", id)
     .single()
 
   if (error) {

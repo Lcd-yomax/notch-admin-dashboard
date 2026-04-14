@@ -17,7 +17,10 @@ import {
   IconTrash,
   IconUser,
   IconX,
+  IconPlus,
+  IconEdit,
 } from "@tabler/icons-react"
+import Link from "next/link"
 import {
   flexRender,
   getCoreRowModel,
@@ -229,6 +232,17 @@ export default function ReviewsPage() {
             {hasPermission("reviews:approve") && (
               <>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href={`/dashboard/reviews/${row.original.id}/edit`} className="cursor-pointer">
+                    <IconEdit className="mr-2 size-4" />
+                    Edit Review
+                  </Link>
+                </DropdownMenuItem>
+              </>
+            )}
+            {hasPermission("reviews:approve") && (
+              <>
+                <DropdownMenuSeparator />
                 {row.original.is_approved ? (
                   <DropdownMenuItem onClick={() => handleApprove(row.original, false)}>
                     <IconX className="mr-2 size-4" />
@@ -290,6 +304,12 @@ export default function ReviewsPage() {
         title={t("title")}
         description={t("description")}
       >
+              <Button asChild className="mr-2">
+                <Link href="/dashboard/reviews/new">
+                  <IconPlus className="size-4 mr-2" />
+                  Create Review
+                </Link>
+              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">
