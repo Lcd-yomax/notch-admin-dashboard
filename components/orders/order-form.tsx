@@ -7,7 +7,7 @@ import * as z from "zod"
 import { useRouter } from "next/navigation"
 import useSWR from "swr"
 import { toast } from "sonner"
-import { IconPlus, IconTrash, IconArrowLeft, IconCheck, IconSelector } from "@tabler/icons-react"
+import { IconPlus, IconTrash, IconArrowLeft, IconCheck, IconSelector, IconClock } from "@tabler/icons-react"
 import { cn } from "@/lib/utils"
 
 import { Button } from "@/components/ui/button"
@@ -70,6 +70,10 @@ export function OrderForm({ initialData }: { initialData?: any }) {
   const [isSubmitting, setIsSubmitting] = React.useState(false)
 
   const { data: productsData, isLoading: isLoadingProducts } = useSWR("/api/products/search", fetcher)
+  const { data: activity = [] } = useSWR(
+    initialData?.id ? `/api/orders/${initialData.id}/activity` : null,
+    fetcher
+  )
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -414,6 +418,56 @@ export function OrderForm({ initialData }: { initialData?: any }) {
               </div>
             </CardContent>
           </Card>
+
+          {initialData && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <IconClock className="size-4" />
+                  Audit Tracking / History
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="h-[300px] overflow-y-auto px-4 pb-4">
+                  {activity.length === 0 ? (
+                    <p className="py-8 text-center text-sm text-muted-foreground">
+                      No activity recorded yet
+                    </p>
+                  ) : (
+                    activity.map((entry: any, idx: number) => (
+                      <div key={entry.id} className="relative flex gap-3 pb-6 last:pb-0">
+                        {idx < activity.length - 1 && (
+                          <div className="absolute start-[7px] top-5 bottom-0 w-px bg-border" />
+                        )}
+                        <div className="mt-1.5 size-[15px] shrink-0 rounded-full border-2 border-primary bg-background" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium">
+                            {entry.action === "status_changed"
+                              ? `Status changed from ${entry.old_value ?? "pending"} to ${entry.new_value ?? "pending"}`
+                              : entry.action === "created"
+                                ? "Order Created"
+                                : entry.action}
+                          </p>
+                          {entry.note && (
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                              {entry.note}
+                            </p>
+                          )}
+                          <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                            {entry.user_name && <span>{entry.user_name}</span>}
+                            {entry.user_name && <span>·</span>}
+                            <span>
+                              {new Date(entry.created_at).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
 
