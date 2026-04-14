@@ -92,13 +92,13 @@ export function OrderForm({ initialData }: { initialData?: any }) {
       click_id: initialData?.click_id || "",
       referrer: initialData?.referrer || "",
       items: initialData?.order_items?.map((item: any) => ({
-        product_id: item.product_variations?.product_id || item.product_id || "", 
+        product_id: item.product_variations?.product_id || item.product_id || "",
         variation_id: item.variation_id || "",
         quantity: item.quantity || 1,
         unit_price: item.price || item.unit_price || 0,
       })) || [
-        { product_id: "", variation_id: "", quantity: 1, unit_price: 0 }
-      ],
+          { product_id: "", variation_id: "", quantity: 1, unit_price: 0 }
+        ],
     },
   })
 
@@ -186,7 +186,7 @@ export function OrderForm({ initialData }: { initialData?: any }) {
                     <p className="text-sm text-destructive">{form.formState.errors.full_name.message}</p>
                   )}
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label>Phone *</Label>
                   <Input {...form.register("phone")} placeholder="+212 6..." />
@@ -213,7 +213,7 @@ export function OrderForm({ initialData }: { initialData?: any }) {
                     <p className="text-sm text-destructive">{form.formState.errors.city.message}</p>
                   )}
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label>Address *</Label>
                   <Textarea {...form.register("address")} placeholder="123 Main St..." className="min-h-[60px]" />
@@ -250,7 +250,7 @@ export function OrderForm({ initialData }: { initialData?: any }) {
                       <div className="space-y-2">
                         <Label>Product *</Label>
                         {isLoadingProducts ? (
-                          <div className="h-10 border rounded px-3 flex items-center"><Spinner className="size-4 mr-2"/> Loading...</div>
+                          <div className="h-10 border rounded px-3 flex items-center"><Spinner className="size-4 mr-2" /> Loading...</div>
                         ) : (
                           <Popover>
                             <PopoverTrigger asChild>
@@ -306,15 +306,15 @@ export function OrderForm({ initialData }: { initialData?: any }) {
                       <div className="space-y-2">
                         <Label>Variation *</Label>
                         <Select
-                           disabled={!selectedProductId || variations.length === 0}
-                           value={form.watch(`items.${index}.variation_id`)}
-                           onValueChange={(val) => {
-                             form.setValue(`items.${index}.variation_id`, val)
-                             const variation = variations.find((v: any) => v.id === val)
-                             if (variation) {
-                               form.setValue(`items.${index}.unit_price`, variation.price)
-                             }
-                           }}
+                          disabled={!selectedProductId || variations.length === 0}
+                          value={form.watch(`items.${index}.variation_id`)}
+                          onValueChange={(val) => {
+                            form.setValue(`items.${index}.variation_id`, val)
+                            const variation = variations.find((v: any) => v.id === val)
+                            if (variation) {
+                              form.setValue(`items.${index}.unit_price`, variation.price)
+                            }
+                          }}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Select variation" />
@@ -389,35 +389,6 @@ export function OrderForm({ initialData }: { initialData?: any }) {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle>Ads & Tracking (Tracability)</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>UTM Source</Label>
-                <Input {...form.register("utm_source")} placeholder="e.g. facebook" />
-              </div>
-              <div className="space-y-2">
-                <Label>UTM Campaign</Label>
-                <Input {...form.register("utm_campaign")} placeholder="e.g. summer_sale" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Click ID</Label>
-                  <Input {...form.register("click_id")} placeholder="fbclid..." />
-                </div>
-                <div className="space-y-2">
-                  <Label>UTM Medium</Label>
-                  <Input {...form.register("utm_medium")} placeholder="e.g. cpc" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Referrer</Label>
-                <Input {...form.register("referrer")} placeholder="https://..." />
-              </div>
-            </CardContent>
-          </Card>
 
           {initialData && (
             <Card>
