@@ -11,8 +11,8 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Notche',
-  description: 'Notche Admin Dashboard',
+  title: 'Notch',
+  description: 'Notch Admin Dashboard',
 }
 
 export default async function RootLayout({
