@@ -362,7 +362,6 @@ export default function RolesPage() {
                 </DropdownMenuItem>
                 <DropdownMenuItem 
                   onClick={() => setManagingPermissionsRole(row.original)}
-                  disabled={row.original.is_system}
                 >
                   <IconShieldLock className="mr-2 size-4" />
                   {t("permissions")}

@@ -7,7 +7,7 @@ import * as z from "zod"
 import { useRouter } from "next/navigation"
 import useSWR from "swr"
 import { toast } from "sonner"
-import { IconPlus, IconTrash, IconArrowLeft, IconCheck, IconSelector } from "@tabler/icons-react"
+import { IconPlus, IconTrash, IconArrowLeft, IconCheck, IconSelector, IconClock } from "@tabler/icons-react"
 import { cn } from "@/lib/utils"
 
 import { Button } from "@/components/ui/button"
@@ -70,6 +70,10 @@ export function OrderForm({ initialData }: { initialData?: any }) {
   const [isSubmitting, setIsSubmitting] = React.useState(false)
 
   const { data: productsData, isLoading: isLoadingProducts } = useSWR("/api/products/search", fetcher)
+  const { data: activity = [] } = useSWR(
+    initialData?.id ? `/api/orders/${initialData.id}/activity` : null,
+    fetcher
+  )
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -88,13 +92,13 @@ export function OrderForm({ initialData }: { initialData?: any }) {
       click_id: initialData?.click_id || "",
       referrer: initialData?.referrer || "",
       items: initialData?.order_items?.map((item: any) => ({
-        product_id: item.product_variations?.product_id || item.product_id || "", 
+        product_id: item.product_variations?.product_id || item.product_id || "",
         variation_id: item.variation_id || "",
         quantity: item.quantity || 1,
         unit_price: item.price || item.unit_price || 0,
       })) || [
-        { product_id: "", variation_id: "", quantity: 1, unit_price: 0 }
-      ],
+          { product_id: "", variation_id: "", quantity: 1, unit_price: 0 }
+        ],
     },
   })
 
@@ -182,7 +186,7 @@ export function OrderForm({ initialData }: { initialData?: any }) {
                     <p className="text-sm text-destructive">{form.formState.errors.full_name.message}</p>
                   )}
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label>Phone *</Label>
                   <Input {...form.register("phone")} placeholder="+212 6..." />
@@ -209,7 +213,7 @@ export function OrderForm({ initialData }: { initialData?: any }) {
                     <p className="text-sm text-destructive">{form.formState.errors.city.message}</p>
                   )}
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label>Address *</Label>
                   <Textarea {...form.register("address")} placeholder="123 Main St..." className="min-h-[60px]" />
@@ -246,7 +250,7 @@ export function OrderForm({ initialData }: { initialData?: any }) {
                       <div className="space-y-2">
                         <Label>Product *</Label>
                         {isLoadingProducts ? (
-                          <div className="h-10 border rounded px-3 flex items-center"><Spinner className="size-4 mr-2"/> Loading...</div>
+                          <div className="h-10 border rounded px-3 flex items-center"><Spinner className="size-4 mr-2" /> Loading...</div>
                         ) : (
                           <Popover>
                             <PopoverTrigger asChild>
@@ -302,15 +306,15 @@ export function OrderForm({ initialData }: { initialData?: any }) {
                       <div className="space-y-2">
                         <Label>Variation *</Label>
                         <Select
-                           disabled={!selectedProductId || variations.length === 0}
-                           value={form.watch(`items.${index}.variation_id`)}
-                           onValueChange={(val) => {
-                             form.setValue(`items.${index}.variation_id`, val)
-                             const variation = variations.find((v: any) => v.id === val)
-                             if (variation) {
-                               form.setValue(`items.${index}.unit_price`, variation.price)
-                             }
-                           }}
+                          disabled={!selectedProductId || variations.length === 0}
+                          value={form.watch(`items.${index}.variation_id`)}
+                          onValueChange={(val) => {
+                            form.setValue(`items.${index}.variation_id`, val)
+                            const variation = variations.find((v: any) => v.id === val)
+                            if (variation) {
+                              form.setValue(`items.${index}.unit_price`, variation.price)
+                            }
+                          }}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Select variation" />
@@ -385,35 +389,56 @@ export function OrderForm({ initialData }: { initialData?: any }) {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle>Ads & Tracking (Tracability)</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>UTM Source</Label>
-                <Input {...form.register("utm_source")} placeholder="e.g. facebook" />
-              </div>
-              <div className="space-y-2">
-                <Label>UTM Campaign</Label>
-                <Input {...form.register("utm_campaign")} placeholder="e.g. summer_sale" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Click ID</Label>
-                  <Input {...form.register("click_id")} placeholder="fbclid..." />
+
+          {initialData && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <IconClock className="size-4" />
+                  Audit Tracking / History
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="h-[300px] overflow-y-auto px-4 pb-4">
+                  {activity.length === 0 ? (
+                    <p className="py-8 text-center text-sm text-muted-foreground">
+                      No activity recorded yet
+                    </p>
+                  ) : (
+                    activity.map((entry: any, idx: number) => (
+                      <div key={entry.id} className="relative flex gap-3 pb-6 last:pb-0">
+                        {idx < activity.length - 1 && (
+                          <div className="absolute start-[7px] top-5 bottom-0 w-px bg-border" />
+                        )}
+                        <div className="mt-1.5 size-[15px] shrink-0 rounded-full border-2 border-primary bg-background" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium">
+                            {entry.action === "status_changed"
+                              ? `Status changed from ${entry.old_value ?? "pending"} to ${entry.new_value ?? "pending"}`
+                              : entry.action === "created"
+                                ? "Order Created"
+                                : entry.action}
+                          </p>
+                          {entry.note && (
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                              {entry.note}
+                            </p>
+                          )}
+                          <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                            {entry.user_name && <span>{entry.user_name}</span>}
+                            {entry.user_name && <span>·</span>}
+                            <span>
+                              {new Date(entry.created_at).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
-                <div className="space-y-2">
-                  <Label>UTM Medium</Label>
-                  <Input {...form.register("utm_medium")} placeholder="e.g. cpc" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Referrer</Label>
-                <Input {...form.register("referrer")} placeholder="https://..." />
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
 
