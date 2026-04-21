@@ -236,13 +236,13 @@ function CodeSuiviCell({
 function OrderStatusForm({
   order,
   users,
-  isSuperAdmin,
+  canAssign,
   onSave,
   onCancel,
 }: {
   order: Order
   users: any[]
-  isSuperAdmin: boolean
+  canAssign: boolean
   onSave: (status: string, assignee: string | null) => void
   onCancel: () => void
 }) {
@@ -284,7 +284,7 @@ function OrderStatusForm({
         </Select>
       </div>
 
-      {isSuperAdmin && (
+      {canAssign && (
         <div className="space-y-2">
           <Label htmlFor="assignee">Assign To</Label>
           <Select value={assignee} onValueChange={setAssignee}>
@@ -336,6 +336,11 @@ export default function OrdersPage() {
 
   const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
   const [isExporting, setIsExporting] = React.useState(false)
+
+  const canUpdateOrder = React.useCallback((order: Order) => {
+    return hasPermission("orders:update_status") || 
+           (hasPermission("orders:update_own") && order.assigned_to === user?.id)
+  }, [hasPermission, user?.id])
 
   const handleUpdateStatus = async (status: string, assignee: string | null) => {
     if (!editingOrder) return
@@ -465,7 +470,7 @@ export default function OrdersPage() {
         <CodeSuiviCell
           orderId={row.original.id}
           code={row.original.code_suivi}
-          canEdit={hasPermission("orders:update_status")}
+          canEdit={canUpdateOrder(row.original)}
           onSave={handleCodeSuiviUpdate}
         />
       ),
@@ -479,7 +484,7 @@ export default function OrdersPage() {
       accessorKey: "assignee_name",
       header: "Assignee",
       cell: ({ row }) => (
-        user?.role === "super_admin" ? (
+        canUpdateOrder(row.original) ? (
           <Select 
             value={row.original.assigned_to || "none"}
             onValueChange={(val) => handleAssigneeChange(row.original.id, val, row.original.status)}
@@ -510,7 +515,7 @@ export default function OrdersPage() {
       accessorKey: "status",
       header: t("confirmation_status"),
       cell: ({ row }) => (
-        hasPermission("orders:update_status") ? (
+        canUpdateOrder(row.original) ? (
           <Select 
             value={row.original.status}
             onValueChange={(val) => handleStatusChangeInline(row.original.id, val, row.original.assigned_to)}
@@ -547,7 +552,7 @@ export default function OrdersPage() {
       accessorKey: "delivery_status",
       header: t("delivery_status"),
       cell: ({ row }) => (
-        hasPermission("orders:update_status") ? (
+        canUpdateOrder(row.original) ? (
           <Select 
             value={row.original.delivery_status || "pending"}
             onValueChange={(val) => handleDeliveryStatusChangeInline(row.original.id, val)}
@@ -580,7 +585,7 @@ export default function OrdersPage() {
       accessorKey: "confirmation_status",
       header: t("payment_status"),
       cell: ({ row }) => (
-        hasPermission("orders:update_status") ? (
+        canUpdateOrder(row.original) ? (
           <Select 
             value={row.original.confirmation_status || "pending"}
             onValueChange={(val) => handleConfirmationStatusChangeInline(row.original.id, val)}
@@ -625,7 +630,7 @@ export default function OrdersPage() {
               <IconEye className="mr-2 size-4" />
               {t("viewDetails")}
             </DropdownMenuItem>
-            {hasPermission("orders:update_status") && (
+            {canUpdateOrder(row.original) && (
               <>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setEditingOrder(row.original)}>
@@ -634,7 +639,7 @@ export default function OrdersPage() {
                 </DropdownMenuItem>
               </>
             )}
-            {hasPermission("orders:update_status") && (
+            {canUpdateOrder(row.original) && (
               <>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => router.push(`/dashboard/orders/${row.original.id}/edit`)}>
@@ -643,7 +648,7 @@ export default function OrdersPage() {
                 </DropdownMenuItem>
               </>
             )}
-            {user?.role === "super_admin" && (
+            {hasPermission("orders:delete") && (
               <>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setDeletingOrder(row.original)} className="text-destructive focus:text-destructive">
@@ -1014,7 +1019,7 @@ export default function OrdersPage() {
               <DialogTitle>{t("updateOrderStatus")}</DialogTitle>
               <DialogDescription>{t("changeStatus", { orderNumber: editingOrder?.order_number ?? "" })}</DialogDescription>
             </DialogHeader>
-            {editingOrder && <OrderStatusForm order={editingOrder} users={usersData} isSuperAdmin={user?.role === "super_admin"} onSave={handleUpdateStatus} onCancel={() => setEditingOrder(null)} />}
+            {editingOrder && <OrderStatusForm order={editingOrder} users={usersData} canAssign={hasPermission("orders:update_status")} onSave={handleUpdateStatus} onCancel={() => setEditingOrder(null)} />}
           </DialogContent>
         </Dialog>
 

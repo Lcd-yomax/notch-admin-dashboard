@@ -17,9 +17,23 @@ export async function GET(
   
   const { data: dashUser } = await supabase
     .from("dashboard_users")
-    .select("roles!inner(name)")
+    .select("role_id")
     .eq("id", user.id)
     .single()
+
+  // Check for read permissions
+  const { data: perms } = await supabase
+    .from("role_permissions")
+    .select("permissions!inner(key)")
+    .eq("role_id", dashUser?.role_id)
+    .in("permissions.key", ["orders:read", "orders:read_own"])
+
+  const hasReadPerm = perms?.some((p: any) => p.permissions.key === "orders:read")
+  const hasReadOwnPerm = perms?.some((p: any) => p.permissions.key === "orders:read_own")
+
+  if (!hasReadPerm && !hasReadOwnPerm) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  }
   
   const { data, error } = await supabase
     .from("orders")
@@ -41,7 +55,8 @@ export async function GET(
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  if ((dashUser?.roles as any)?.name !== "super_admin" && data.assigned_to !== user.id) {
+  // Users without global read can only view their assigned orders
+  if (!hasReadPerm && hasReadOwnPerm && data.assigned_to !== user.id) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 })
   }
 
@@ -55,19 +70,47 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const denied = await requirePermission("orders:update_status")
-  if (denied) return denied
+  const supabaseAuth = await createClient()
+  const { data: { user } } = await supabaseAuth.auth.getUser()
+  if (!user) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
+  }
 
   const { id } = await params
   const supabase = createAdminClient()
   const body = await request.json()
 
-  // Get current order to capture old value
+  // Get current order to capture old value and check assignment
   const { data: current } = await supabase
     .from("orders")
-    .select("status")
+    .select("status, assigned_to")
     .eq("id", id)
     .single()
+
+  const { data: dashUser } = await supabase
+    .from("dashboard_users")
+    .select("role_id")
+    .eq("id", user.id)
+    .single()
+
+  // Check update permissions
+  const { data: perms } = await supabase
+    .from("role_permissions")
+    .select("permissions!inner(key)")
+    .eq("role_id", dashUser?.role_id)
+    .in("permissions.key", ["orders:update_status", "orders:update_own"])
+
+  const hasUpdatePerm = perms?.some((p: any) => p.permissions.key === "orders:update_status")
+  const hasUpdateOwnPerm = perms?.some((p: any) => p.permissions.key === "orders:update_own")
+
+  if (!hasUpdatePerm && !hasUpdateOwnPerm) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  }
+
+  // Users without global update can only edit their assigned orders
+  if (!hasUpdatePerm && hasUpdateOwnPerm && current?.assigned_to !== user.id) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  }
 
   const oldStatus = current?.status
 
