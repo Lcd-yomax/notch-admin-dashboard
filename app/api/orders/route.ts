@@ -16,6 +16,20 @@ export async function GET() {
     .eq("id", user.id)
     .single()
 
+  // Check for read permissions
+  const { data: perms } = await supabase
+    .from("role_permissions")
+    .select("permissions!inner(key)")
+    .eq("role_id", dashUser?.role_id)
+    .in("permissions.key", ["orders:read", "orders:read_own"])
+
+  const hasReadPerm = perms?.some((p: any) => p.permissions.key === "orders:read")
+  const hasReadOwnPerm = perms?.some((p: any) => p.permissions.key === "orders:read_own")
+
+  if (!hasReadPerm && !hasReadOwnPerm) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  }
+
   let query = supabase
     .from("orders")
     .select(`
@@ -39,7 +53,8 @@ export async function GET() {
     `)
     .order("created_at", { ascending: false })
 
-  if ((dashUser?.roles as any)?.name !== "super_admin") {
+  // Users with only orders:read_own see their assigned orders
+  if (!hasReadPerm && hasReadOwnPerm) {
     query = query.eq("assigned_to", user.id)
   }
 

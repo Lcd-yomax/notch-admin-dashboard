@@ -10,7 +10,7 @@ export async function GET() {
   const { data, error } = await supabase
     .from("permissions")
     .select("*")
-    .order("module", { ascending: true })
+    .order("group", { ascending: true })
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })

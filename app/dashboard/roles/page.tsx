@@ -119,7 +119,7 @@ function RoleForm({
       </div>
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onCancel}>{tc("cancel")}</Button>
-        <Button type="submit" disabled={role?.is_system}>{role ? t("updateRole") : t("createRole")}</Button>
+        <Button type="submit">{role ? t("updateRole") : t("createRole")}</Button>
       </DialogFooter>
     </form>
   )
@@ -144,8 +144,8 @@ function PermissionsForm({
       fetch("/api/permissions").then(r => r.json()),
       fetch(`/api/roles/${role.id}/permissions`).then(r => r.json())
     ]).then(([perms, selected]) => {
-      setPermissions(perms || [])
-      setSelectedIds(selected || [])
+      setPermissions(Array.isArray(perms) ? perms : [])
+      setSelectedIds(Array.isArray(selected) ? selected : [])
       setLoading(false)
     }).catch(() => {
       toast.error("Failed to load permissions")
@@ -167,7 +167,7 @@ function PermissionsForm({
   const modules = React.useMemo(() => {
     const mods = new Map<string, any[]>()
     permissions.forEach(p => {
-      const mod = p.module || 'general'
+      const mod = p.group || 'general'
       if (!mods.has(mod)) mods.set(mod, [])
       mods.get(mod)!.push(p)
     })
@@ -355,7 +355,6 @@ export default function RolesPage() {
               <>
                 <DropdownMenuItem 
                   onClick={() => setEditingRole(row.original)}
-                  disabled={row.original.is_system}
                 >
                   <IconEdit className="mr-2 size-4" />
                   {tc("edit")}
@@ -374,7 +373,7 @@ export default function RolesPage() {
                 <DropdownMenuItem
                   onClick={() => setDeletingRole(row.original)}
                   className="text-destructive focus:text-destructive"
-                  disabled={row.original.is_system}
+                  disabled={row.original.name === "super_admin"}
                 >
                   <IconTrash className="mr-2 size-4" />
                   {tc("delete")}

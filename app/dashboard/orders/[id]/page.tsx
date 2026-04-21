@@ -175,6 +175,12 @@ export default function OrderDetailPage() {
   )
   const { data: usersData = [] } = useSWR<any[]>("/api/users", fetcher)
 
+  const canUpdateOrder = React.useMemo(() => {
+    if (!order) return false
+    return hasPermission("orders:update_status") || 
+           (hasPermission("orders:update_own") && order.assigned_to === user?.id)
+  }, [order, hasPermission, user?.id])
+
   const [statusDialogOpen, setStatusDialogOpen] = React.useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
   const [newStatus, setNewStatus] = React.useState("")
@@ -261,7 +267,7 @@ export default function OrderDetailPage() {
           <Badge variant="outline" className={`text-sm px-3 py-1 ${confirmationStatusClasses[order.confirmation_status || "pending"]}`}>
             {order.confirmation_status && order.confirmation_status !== "pending" ? t(order.confirmation_status) : "Pending Payment"}
           </Badge>
-          {hasPermission("orders:update_status") && (
+          {canUpdateOrder && (
             <Button
               size="sm"
               className={statusButtonClasses[order.status]}
@@ -278,7 +284,7 @@ export default function OrderDetailPage() {
               {t("updateStatus")}
             </Button>
           )}
-          {hasPermission("orders:update_status") && (
+          {canUpdateOrder && (
             <Button asChild size="sm" variant="outline">
               <Link href={`/dashboard/orders/${order.id}/edit`}>
                 <IconEdit className="mr-2 size-4" />
@@ -287,7 +293,7 @@ export default function OrderDetailPage() {
               </Link>
             </Button>
           )}
-          {user?.role === "super_admin" && (
+          {hasPermission("orders:delete") && (
             <Button
               size="sm"
               variant="destructive"
@@ -649,7 +655,7 @@ export default function OrderDetailPage() {
                 </SelectContent>
               </Select>
             </div>
-            {user?.role === "super_admin" && (
+            {canUpdateOrder && (
               <div className="space-y-2">
                 <Label>Assign To</Label>
                 <Select value={newAssignee} onValueChange={setNewAssignee}>
