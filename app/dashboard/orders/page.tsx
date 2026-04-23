@@ -81,6 +81,7 @@ import {
 } from "@/components/ui/table"
 import { PageHeader } from "@/components/page-header"
 import { usePermissions } from "@/hooks/use-permissions"
+import { PermissionButton } from "@/components/access"
 
 interface Order {
   id: string
@@ -788,13 +789,12 @@ export default function OrdersPage() {
         title={t("title")}
         description={t("description")}
       >
-              <Button asChild className="mr-2">
+              <PermissionButton permission="orders:update_status" asChild className="mr-2">
                 <Link href="/dashboard/orders/new">
                   <IconPlus className="size-4 mr-2" />
-                  {/* Reuse some translation or hardcode "Create Order" for now */}
                   Create Order
                 </Link>
-              </Button>
+              </PermissionButton>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">

@@ -61,6 +61,7 @@ import {
 } from "@/components/ui/table"
 import { PageHeader } from "@/components/page-header"
 import { usePermissions } from "@/hooks/use-permissions"
+import { PermissionButton } from "@/components/access"
 
 interface Category {
   id: string
@@ -236,6 +237,7 @@ export default function CategoriesPage() {
   const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
 
   const handleCreate = async (data: Partial<Category>) => {
+    if (!hasPermission("products:write")) return
     await fetch("/api/categories", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -247,7 +249,7 @@ export default function CategoriesPage() {
   }
 
   const handleUpdate = async (data: Partial<Category>) => {
-    if (!editingCategory) return
+    if (!editingCategory || !hasPermission("products:write")) return
     await fetch(`/api/categories/${editingCategory.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -259,7 +261,7 @@ export default function CategoriesPage() {
   }
 
   const handleDelete = async () => {
-    if (!deletingCategory) return
+    if (!deletingCategory || !hasPermission("products:delete")) return
     await fetch(`/api/categories/${deletingCategory.id}`, { method: "DELETE" })
     mutate()
     toast.success(t("deleteSuccess"))
@@ -403,12 +405,10 @@ export default function CategoriesPage() {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-        {hasPermission("products:write") && (
-          <Button onClick={() => setIsCreateOpen(true)}>
-            <IconPlus />
-            {t("addCategory")}
-          </Button>
-        )}
+        <PermissionButton permission="products:write" onClick={() => setIsCreateOpen(true)}>
+          <IconPlus />
+          {t("addCategory")}
+        </PermissionButton>
       </PageHeader>
 
           <div className="flex items-center gap-2">

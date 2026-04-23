@@ -68,6 +68,7 @@ import {
 } from "@/components/ui/table"
 import { PageHeader } from "@/components/page-header"
 import { usePermissions } from "@/hooks/use-permissions"
+import { PermissionButton } from "@/components/access"
 import { useTranslations } from "next-intl"
 
 interface User {
@@ -202,6 +203,7 @@ export default function UsersPage() {
   const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
 
   const handleCreate = async (data: Partial<User>) => {
+    if (!hasPermission("users:write")) return
     await fetch("/api/users", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -213,7 +215,7 @@ export default function UsersPage() {
   }
 
   const handleUpdate = async (data: Partial<User>) => {
-    if (!editingUser) return
+    if (!editingUser || !hasPermission("users:write")) return
     await fetch(`/api/users/${editingUser.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -225,7 +227,7 @@ export default function UsersPage() {
   }
 
   const handleDelete = async () => {
-    if (!deletingUser) return
+    if (!deletingUser || !hasPermission("users:delete")) return
     await fetch(`/api/users/${deletingUser.id}`, { method: "DELETE" })
     mutate()
     toast.success(t("deleteSuccess"))
@@ -378,12 +380,10 @@ export default function UsersPage() {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-          {hasPermission("users:write") && (
-            <Button onClick={() => setIsCreateOpen(true)}>
-              <IconPlus />
-              {t("addUser")}
-            </Button>
-          )}
+          <PermissionButton permission="users:write" onClick={() => setIsCreateOpen(true)}>
+            <IconPlus />
+            {t("addUser")}
+          </PermissionButton>
         </PageHeader>
 
           <div className="flex items-center gap-2">
