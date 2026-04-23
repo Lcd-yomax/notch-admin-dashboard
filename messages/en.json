@@ -245,6 +245,7 @@
     "payment_status": "Payment/Return Status",
     "paid": "Paid",
     "return": "Returned",
+    "refund": "Refunded",
     "shipping": "Shipping",
     "notes": "Notes",
     "product": "Product",
