@@ -62,6 +62,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { PageHeader } from "@/components/page-header"
 import { usePermissions } from "@/hooks/use-permissions"
+import { PermissionButton } from "@/components/access"
 import { useTranslations } from "next-intl"
 
 interface Role {
@@ -226,6 +227,7 @@ export default function RolesPage() {
   const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
 
   const handleCreate = async (data: Partial<Role>) => {
+    if (!hasPermission("roles:manage")) return
     await fetch("/api/roles", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -237,7 +239,7 @@ export default function RolesPage() {
   }
 
   const handleUpdate = async (data: Partial<Role>) => {
-    if (!editingRole) return
+    if (!editingRole || !hasPermission("roles:manage")) return
     await fetch(`/api/roles/${editingRole.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -249,7 +251,7 @@ export default function RolesPage() {
   }
 
   const handleSavePermissions = async (permIds: string[]) => {
-    if (!managingPermissionsRole) return
+    if (!managingPermissionsRole || !hasPermission("roles:manage")) return
     const res = await fetch(`/api/roles/${managingPermissionsRole.id}/permissions`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -266,7 +268,7 @@ export default function RolesPage() {
   }
 
   const handleDelete = async () => {
-    if (!deletingRole) return
+    if (!deletingRole || !hasPermission("roles:manage")) return
     await fetch(`/api/roles/${deletingRole.id}`, { method: "DELETE" })
     mutate()
     toast.success(t("deleteSuccess"))
@@ -417,10 +419,10 @@ export default function RolesPage() {
         description={t("description")}
       >
         <div className="flex items-center gap-2">
-          <Button size="sm" onClick={() => setIsCreateOpen(true)}>
+          <PermissionButton permission="roles:manage" size="sm" onClick={() => setIsCreateOpen(true)}>
             <IconPlus className="mr-2 size-4" />
             {t("addRole")}
-          </Button>
+          </PermissionButton>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">

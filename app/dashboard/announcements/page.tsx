@@ -63,6 +63,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { PageHeader } from "@/components/page-header"
 import { usePermissions } from "@/hooks/use-permissions"
+import { PermissionButton } from "@/components/access"
 import { useTranslations } from "next-intl"
 
 interface Announcement {
@@ -213,6 +214,7 @@ export default function AnnouncementsPage() {
   const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
 
   const handleCreate = async (data: Partial<Announcement>) => {
+    if (!hasPermission("announcements:write")) return
     await fetch("/api/announcements", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -224,7 +226,7 @@ export default function AnnouncementsPage() {
   }
 
   const handleUpdate = async (data: Partial<Announcement>) => {
-    if (!editingAnnouncement) return
+    if (!editingAnnouncement || !hasPermission("announcements:write")) return
     await fetch(`/api/announcements/${editingAnnouncement.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -236,7 +238,7 @@ export default function AnnouncementsPage() {
   }
 
   const handleDelete = async () => {
-    if (!deletingAnnouncement) return
+    if (!deletingAnnouncement || !hasPermission("announcements:delete")) return
     await fetch(`/api/announcements/${deletingAnnouncement.id}`, { method: "DELETE" })
     mutate()
     toast.success(t("deleteSuccess"))
@@ -393,12 +395,10 @@ export default function AnnouncementsPage() {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-          {hasPermission("announcements:write") && (
-            <Button onClick={() => setIsCreateOpen(true)}>
-              <IconPlus />
-              {t("addAnnouncement")}
-            </Button>
-          )}
+          <PermissionButton permission="announcements:write" onClick={() => setIsCreateOpen(true)}>
+            <IconPlus />
+            {t("addAnnouncement")}
+          </PermissionButton>
         </PageHeader>
 
           <div className="flex items-center gap-2">

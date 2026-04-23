@@ -159,6 +159,7 @@ const confirmationStatusClasses: Record<string, string> = {
   pending: "bg-gray-100 text-gray-800 dark:bg-gray-800/30 dark:text-gray-400 border-gray-200 dark:border-gray-700",
   paid: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800",
   return: "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400 border-rose-200 dark:border-rose-800",
+  refund: "bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-400 border-violet-200 dark:border-violet-800",
 }
 
 export default function OrderDetailPage() {
@@ -652,6 +653,7 @@ export default function OrderDetailPage() {
                   <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="paid">{t("paid")}</SelectItem>
                   <SelectItem value="return">{t("return")}</SelectItem>
+                  <SelectItem value="refund">{t("refund")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>

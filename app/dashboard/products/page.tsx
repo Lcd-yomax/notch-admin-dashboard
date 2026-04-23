@@ -75,6 +75,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { PageHeader } from "@/components/page-header"
 import { usePermissions } from "@/hooks/use-permissions"
+import { PermissionButton } from "@/components/access"
 import { RichTextEditor } from "@/components/rich-text-editor"
 
 interface Product {
@@ -847,25 +848,21 @@ export default function ProductsPage() {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-          {hasPermission("products:write") && (
-            <>
-              <Button onClick={() => setIsCreateOpen(true)}>
-                <IconPlus />
-                {t("addProduct")}
-              </Button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".xlsx,.xls"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-              <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
-                <IconUpload />
-                {t("importProducts")}
-              </Button>
-            </>
-          )}
+          <PermissionButton permission="products:write" onClick={() => setIsCreateOpen(true)}>
+            <IconPlus />
+            {t("addProduct")}
+          </PermissionButton>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+          <PermissionButton permission="products:write" variant="outline" onClick={() => fileInputRef.current?.click()}>
+            <IconUpload />
+            {t("importProducts")}
+          </PermissionButton>
         </PageHeader>
 
           <div className="flex items-center gap-2">

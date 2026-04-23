@@ -81,6 +81,7 @@ import {
 } from "@/components/ui/table"
 import { PageHeader } from "@/components/page-header"
 import { usePermissions } from "@/hooks/use-permissions"
+import { PermissionButton } from "@/components/access"
 
 interface Order {
   id: string
@@ -139,6 +140,7 @@ const confirmationStatusClasses: Record<string, string> = {
   pending: "bg-gray-100 text-gray-800 dark:bg-gray-800/30 dark:text-gray-400 border-gray-200 dark:border-gray-700",
   paid: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800",
   return: "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400 border-rose-200 dark:border-rose-800",
+  refund: "bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-400 border-violet-200 dark:border-violet-800",
 }
 
 function CodeSuiviCell({
@@ -329,6 +331,7 @@ export default function OrdersPage() {
   const [statusFilter, setStatusFilter] = React.useState<string>("all")
   const [deliveryStatusFilter, setDeliveryStatusFilter] = React.useState<string>("all")
   const [confirmationStatusFilter, setConfirmationStatusFilter] = React.useState<string>("all")
+  const [assignedToFilter, setAssignedToFilter] = React.useState<string>("all")
   const [dateRange, setDateRange] = React.useState<{ from: Date | undefined; to: Date | undefined }>({
     from: undefined,
     to: undefined,
@@ -597,6 +600,7 @@ export default function OrdersPage() {
               <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="paid">{t("paid")}</SelectItem>
               <SelectItem value="return">{t("return")}</SelectItem>
+              <SelectItem value="refund">{t("refund")}</SelectItem>
             </SelectContent>
           </Select>
         ) : (
@@ -676,6 +680,13 @@ export default function OrdersPage() {
     if (confirmationStatusFilter !== "all") {
       filtered = filtered.filter(o => o.confirmation_status === confirmationStatusFilter)
     }
+    if (assignedToFilter !== "all") {
+      if (assignedToFilter === "unassigned") {
+        filtered = filtered.filter(o => !o.assigned_to)
+      } else {
+        filtered = filtered.filter(o => o.assigned_to === assignedToFilter)
+      }
+    }
     if (dateRange.from) {
       filtered = filtered.filter(o => new Date(o.created_at) >= dateRange.from!)
     }
@@ -684,9 +695,9 @@ export default function OrdersPage() {
       endOfDay.setHours(23, 59, 59, 999)
       filtered = filtered.filter(o => new Date(o.created_at) <= endOfDay)
     }
-    
+
     return filtered
-  }, [orders, statusFilter, deliveryStatusFilter, confirmationStatusFilter, dateRange])
+  }, [orders, statusFilter, deliveryStatusFilter, confirmationStatusFilter, assignedToFilter, dateRange])
 
   const table = useReactTable({
     data: filteredOrders,
@@ -778,13 +789,12 @@ export default function OrdersPage() {
         title={t("title")}
         description={t("description")}
       >
-              <Button asChild className="mr-2">
+              <PermissionButton permission="orders:update_status" asChild className="mr-2">
                 <Link href="/dashboard/orders/new">
                   <IconPlus className="size-4 mr-2" />
-                  {/* Reuse some translation or hardcode "Create Order" for now */}
                   Create Order
                 </Link>
-              </Button>
+              </PermissionButton>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">
@@ -822,7 +832,7 @@ export default function OrdersPage() {
                   <Button variant="outline" size="sm" className="h-10 border-dashed">
                     <IconFilter className="mr-2 size-4" />
                     Filters
-                    {(statusFilter !== "all" || deliveryStatusFilter !== "all" || confirmationStatusFilter !== "all" || dateRange.from) && (
+                    {(statusFilter !== "all" || deliveryStatusFilter !== "all" || confirmationStatusFilter !== "all" || assignedToFilter !== "all" || dateRange.from) && (
                       <Badge variant="secondary" className="ml-2 px-1 rounded-sm">On</Badge>
                     )}
                   </Button>
@@ -835,6 +845,7 @@ export default function OrdersPage() {
                         setStatusFilter("all")
                         setDeliveryStatusFilter("all")
                         setConfirmationStatusFilter("all")
+                        setAssignedToFilter("all")
                         setDateRange({ from: undefined, to: undefined })
                       }}>
                         Reset <IconX className="ml-1 size-3" />
@@ -901,6 +912,25 @@ export default function OrdersPage() {
                           <SelectItem value="pending">Pending</SelectItem>
                           <SelectItem value="paid">{t("paid")}</SelectItem>
                           <SelectItem value="return">{t("return")}</SelectItem>
+                          <SelectItem value="refund">{t("refund")}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs">Assigned To</Label>
+                      <Select value={assignedToFilter} onValueChange={setAssignedToFilter}>
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue placeholder="All Agents" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All</SelectItem>
+                          <SelectItem value="unassigned">Unassigned</SelectItem>
+                          {usersData.map((u: any) => (
+                            <SelectItem key={u.id} value={u.id}>
+                              {u.full_name || u.email}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>

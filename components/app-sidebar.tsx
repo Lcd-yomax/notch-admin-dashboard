@@ -54,7 +54,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: "Reports",
       url: "/dashboard/reports",
       icon: IconChartBar,
-      permission: null,
+      permission: "reports:read",
     },
     {
       title: t("products"),

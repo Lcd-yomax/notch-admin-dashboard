@@ -55,7 +55,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   Table,
   TableBody,
@@ -66,6 +65,7 @@ import {
 } from "@/components/ui/table"
 import { PageHeader } from "@/components/page-header"
 import { usePermissions } from "@/hooks/use-permissions"
+import { PermissionButton } from "@/components/access"
 import { useTranslations } from "next-intl"
 
 interface Review {
@@ -107,6 +107,7 @@ export default function ReviewsPage() {
   const [deletingReview, setDeletingReview] = React.useState<Review | null>(null)
 
   const handleApprove = async (review: Review, approve: boolean) => {
+    if (!hasPermission("reviews:approve")) return
     await fetch(`/api/reviews/${review.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -127,7 +128,7 @@ export default function ReviewsPage() {
   const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
 
   const handleDelete = async () => {
-    if (!deletingReview) return
+    if (!deletingReview || !hasPermission("reviews:delete")) return
     await fetch(`/api/reviews/${deletingReview.id}`, { method: "DELETE" })
     mutate()
     toast.success(t("deleteSuccess"))
@@ -304,12 +305,12 @@ export default function ReviewsPage() {
         title={t("title")}
         description={t("description")}
       >
-              <Button asChild className="mr-2">
+              <PermissionButton permission="reviews:approve" asChild className="mr-2">
                 <Link href="/dashboard/reviews/new">
                   <IconPlus className="size-4 mr-2" />
                   Create Review
                 </Link>
-              </Button>
+              </PermissionButton>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">
