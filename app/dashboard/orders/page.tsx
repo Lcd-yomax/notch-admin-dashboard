@@ -357,54 +357,94 @@ export default function OrdersPage() {
     setEditingOrder(null)
   }
 
+  // Optimistic patch helper — updates local SWR cache instantly, no refetch
+  const patchOrderLocally = React.useCallback(
+    (orderId: string, patch: Partial<Order>) => {
+      mutate(
+        (current) =>
+          current?.map((o) => (o.id === orderId ? { ...o, ...patch } : o)),
+        { revalidate: false }
+      )
+    },
+    [mutate]
+  )
+
   const handleAssigneeChange = async (orderId: string, assignee: string, currentStatus: string) => {
     const assigned_to = assignee === "none" ? null : assignee
-    await fetch(`/api/orders/${orderId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: currentStatus, assigned_to, user_id: user?.id }),
-    })
-    mutate()
-    toast.success("Assignee updated")
+    const assignee_name = assigned_to
+      ? usersData.find((u: any) => u.id === assigned_to)?.full_name || null
+      : null
+    patchOrderLocally(orderId, { assigned_to, assignee_name })
+    try {
+      await fetch(`/api/orders/${orderId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: currentStatus, assigned_to, user_id: user?.id }),
+      })
+      toast.success("Assignee updated")
+    } catch {
+      mutate()
+      toast.error("Failed to update assignee")
+    }
   }
 
   const handleStatusChangeInline = async (orderId: string, newStatus: string, currentAssignee: string | null) => {
-    await fetch(`/api/orders/${orderId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: newStatus, assigned_to: currentAssignee, user_id: user?.id }),
-    })
-    mutate()
-    toast.success(t("statusUpdateSuccess"))
+    patchOrderLocally(orderId, { status: newStatus })
+    try {
+      await fetch(`/api/orders/${orderId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus, assigned_to: currentAssignee, user_id: user?.id }),
+      })
+      toast.success(t("statusUpdateSuccess"))
+    } catch {
+      mutate()
+      toast.error("Failed to update status")
+    }
   }
 
   const handleConfirmationStatusChangeInline = async (orderId: string, newStatus: string) => {
-    await fetch(`/api/orders/${orderId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ confirmation_status: newStatus, user_id: user?.id }),
-    })
-    mutate()
-    toast.success(t("statusUpdateSuccess"))
+    patchOrderLocally(orderId, { confirmation_status: newStatus })
+    try {
+      await fetch(`/api/orders/${orderId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirmation_status: newStatus, user_id: user?.id }),
+      })
+      toast.success(t("statusUpdateSuccess"))
+    } catch {
+      mutate()
+      toast.error("Failed to update confirmation status")
+    }
   }
 
   const handleDeliveryStatusChangeInline = async (orderId: string, newDeliveryStatus: string) => {
-    await fetch(`/api/orders/${orderId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ delivery_status: newDeliveryStatus, user_id: user?.id }),
-    })
-    mutate()
+    patchOrderLocally(orderId, { delivery_status: newDeliveryStatus })
+    try {
+      await fetch(`/api/orders/${orderId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ delivery_status: newDeliveryStatus, user_id: user?.id }),
+      })
+    } catch {
+      mutate()
+      toast.error("Failed to update delivery status")
+    }
   }
 
   const handleCodeSuiviUpdate = async (orderId: string, newCode: string) => {
-    await fetch(`/api/orders/${orderId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code_suivi: newCode || null, user_id: user?.id }),
-    })
-    mutate()
-    toast.success("Code suivi updated")
+    patchOrderLocally(orderId, { code_suivi: newCode || null })
+    try {
+      await fetch(`/api/orders/${orderId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code_suivi: newCode || null, user_id: user?.id }),
+      })
+      toast.success("Code suivi updated")
+    } catch {
+      mutate()
+      toast.error("Failed to update code suivi")
+    }
   }
 
   const handleDeleteOrder = async () => {
