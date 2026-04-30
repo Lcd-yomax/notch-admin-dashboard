@@ -9,7 +9,7 @@ export async function GET() {
   }
 
   const supabase = createAdminClient()
-  
+
   const { data: dashUser } = await supabase
     .from("dashboard_users")
     .select("role_id, roles!inner(name)")
@@ -100,7 +100,7 @@ export async function POST(request: Request) {
       notes: body.notes,
       code_suivi: body.code_suivi,
       status: body.status || "pending",
-      delivery_status: body.delivery_status || "pending",
+      delivery_status: body.delivery_status || "En attente",
       confirmation_status: body.confirmation_status || "pending",
       assigned_to: body.assigned_to,
       utm_source: body.utm_source,

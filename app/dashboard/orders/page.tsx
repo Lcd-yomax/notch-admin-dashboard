@@ -1,9 +1,10 @@
 "use client"
 
 import * as React from "react"
+import { Suspense } from "react"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import {
   IconChevronDown,
   IconChevronLeft,
@@ -123,7 +124,7 @@ const statusClasses: Record<string, string> = {
 }
 
 const deliveryStatusClasses: Record<string, string> = {
-  pending: "bg-gray-100 text-gray-800 dark:bg-gray-800/30 dark:text-gray-400 border-gray-200 dark:border-gray-700",
+  "En attente": "bg-gray-100 text-gray-800 dark:bg-gray-800/30 dark:text-gray-400 border-gray-200 dark:border-gray-700",
   livre: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800",
   envois_recu: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800",
   refuse: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800",
@@ -187,8 +188,8 @@ function CodeSuiviCell({
         />
         {saving && (
           <svg className="animate-spin size-3 text-muted-foreground shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
           </svg>
         )}
       </div>
@@ -203,9 +204,8 @@ function CodeSuiviCell({
       {code ? (
         <>
           <span
-            className={`font-mono text-xs font-semibold tracking-wide truncate ${
-              canEdit ? "cursor-pointer hover:text-primary" : ""
-            }`}
+            className={`font-mono text-xs font-semibold tracking-wide truncate ${canEdit ? "cursor-pointer hover:text-primary" : ""
+              }`}
             title={`${code}${canEdit ? " — click to edit" : ""}`}
           >
             {code}
@@ -219,8 +219,8 @@ function CodeSuiviCell({
             title="Copy"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
-              <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+              <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+              <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
             </svg>
           </button>
         </>
@@ -311,38 +311,56 @@ function OrderStatusForm({
   )
 }
 
-export default function OrdersPage() {
+function OrdersPageContent() {
   const router = useRouter()
   const { user, hasPermission } = usePermissions()
   const t = useTranslations("orders")
   const tc = useTranslations("common")
   const { data: orders = [], mutate, isLoading } = useSWR<Order[]>("/api/orders", fetcher)
   const { data: usersData = [] } = useSWR<any[]>("/api/users", fetcher)
-  
+
+  const searchParams = useSearchParams()
+  const pathname = usePathname()
+
   const [editingOrder, setEditingOrder] = React.useState<Order | null>(null)
   const [deletingOrder, setDeletingOrder] = React.useState<Order | null>(null)
-  
+
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [sorting, setSorting] = React.useState<SortingState>([])
-  const [globalFilter, setGlobalFilter] = React.useState("")
-  
-  // Custom Filters State
-  const [statusFilter, setStatusFilter] = React.useState<string>("all")
-  const [deliveryStatusFilter, setDeliveryStatusFilter] = React.useState<string>("all")
-  const [confirmationStatusFilter, setConfirmationStatusFilter] = React.useState<string>("all")
-  const [assignedToFilter, setAssignedToFilter] = React.useState<string>("all")
+  const [globalFilter, setGlobalFilter] = React.useState(searchParams.get("q") || "")
+
+  // Custom Filters State — initialized from URL search params
+  const [statusFilter, setStatusFilter] = React.useState<string>(searchParams.get("status") || "all")
+  const [deliveryStatusFilter, setDeliveryStatusFilter] = React.useState<string>(searchParams.get("delivery") || "all")
+  const [confirmationStatusFilter, setConfirmationStatusFilter] = React.useState<string>(searchParams.get("payment") || "all")
+  const [assignedToFilter, setAssignedToFilter] = React.useState<string>(searchParams.get("assignee") || "all")
   const [dateRange, setDateRange] = React.useState<{ from: Date | undefined; to: Date | undefined }>({
-    from: undefined,
-    to: undefined,
+    from: searchParams.get("from") ? new Date(searchParams.get("from")!) : undefined,
+    to: searchParams.get("to") ? new Date(searchParams.get("to")!) : undefined,
   })
 
   const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
   const [isExporting, setIsExporting] = React.useState(false)
 
+  // Sync filter state → URL search params (replaceState so no new history entries)
+  React.useEffect(() => {
+    const params = new URLSearchParams()
+    if (statusFilter !== "all") params.set("status", statusFilter)
+    if (deliveryStatusFilter !== "all") params.set("delivery", deliveryStatusFilter)
+    if (confirmationStatusFilter !== "all") params.set("payment", confirmationStatusFilter)
+    if (assignedToFilter !== "all") params.set("assignee", assignedToFilter)
+    if (globalFilter) params.set("q", globalFilter)
+    if (dateRange.from) params.set("from", dateRange.from.toISOString().split("T")[0])
+    if (dateRange.to) params.set("to", dateRange.to.toISOString().split("T")[0])
+    const qs = params.toString()
+    const newUrl = qs ? `${pathname}?${qs}` : pathname
+    window.history.replaceState(null, "", newUrl)
+  }, [statusFilter, deliveryStatusFilter, confirmationStatusFilter, assignedToFilter, globalFilter, dateRange, pathname])
+
   const canUpdateOrder = React.useCallback((order: Order) => {
-    return hasPermission("orders:update_status") || 
-           (hasPermission("orders:update_own") && order.assigned_to === user?.id)
+    return hasPermission("orders:update_status") ||
+      (hasPermission("orders:update_own") && order.assigned_to === user?.id)
   }, [hasPermission, user?.id])
 
   const handleUpdateStatus = async (status: string, assignee: string | null) => {
@@ -528,7 +546,7 @@ export default function OrdersPage() {
       header: "Assignee",
       cell: ({ row }) => (
         canUpdateOrder(row.original) ? (
-          <Select 
+          <Select
             value={row.original.assigned_to || "none"}
             onValueChange={(val) => handleAssigneeChange(row.original.id, val, row.original.status)}
           >
@@ -559,7 +577,7 @@ export default function OrdersPage() {
       header: t("confirmation_status"),
       cell: ({ row }) => (
         canUpdateOrder(row.original) ? (
-          <Select 
+          <Select
             value={row.original.status}
             onValueChange={(val) => handleStatusChangeInline(row.original.id, val, row.original.assigned_to)}
           >
@@ -596,15 +614,15 @@ export default function OrdersPage() {
       header: t("delivery_status"),
       cell: ({ row }) => (
         canUpdateOrder(row.original) ? (
-          <Select 
-            value={row.original.delivery_status || "pending"}
+          <Select
+            value={row.original.delivery_status || "En attente"}
             onValueChange={(val) => handleDeliveryStatusChangeInline(row.original.id, val)}
           >
-            <SelectTrigger className={`h-8 font-medium text-xs w-[140px] focus:ring-0 ${deliveryStatusClasses[row.original.delivery_status || "pending"] || ""} border-none shadow-none`}>
+            <SelectTrigger className={`h-8 font-medium text-xs w-[140px] focus:ring-0 ${deliveryStatusClasses[row.original.delivery_status || "En attente"] || ""} border-none shadow-none`}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="pending">En attente / Pending</SelectItem>
+              <SelectItem value="En attente">En attente</SelectItem>
               <SelectItem value="livre">{t("livre")}</SelectItem>
               <SelectItem value="envois_recu">{t("envois_recu")}</SelectItem>
               <SelectItem value="refuse">{t("refuse")}</SelectItem>
@@ -618,8 +636,8 @@ export default function OrdersPage() {
             </SelectContent>
           </Select>
         ) : (
-          <Badge variant="outline" className={deliveryStatusClasses[row.original.delivery_status || "pending"]}>
-            {row.original.delivery_status && row.original.delivery_status !== "pending" ? t(row.original.delivery_status) : "Pending"}
+          <Badge variant="outline" className={deliveryStatusClasses[row.original.delivery_status || "En attente"]}>
+            {row.original.delivery_status || "En attente"}
           </Badge>
         )
       ),
@@ -629,7 +647,7 @@ export default function OrdersPage() {
       header: t("payment_status"),
       cell: ({ row }) => (
         canUpdateOrder(row.original) ? (
-          <Select 
+          <Select
             value={row.original.confirmation_status || "pending"}
             onValueChange={(val) => handleConfirmationStatusChangeInline(row.original.id, val)}
           >
@@ -710,7 +728,7 @@ export default function OrdersPage() {
   // Apply custom filters outside of react-table to simplify combining global + specific filters
   const filteredOrders = React.useMemo(() => {
     let filtered = [...orders]
-    
+
     if (statusFilter !== "all") {
       filtered = filtered.filter(o => o.status === statusFilter)
     }
@@ -806,7 +824,7 @@ export default function OrdersPage() {
     document.body.removeChild(link)
 
     try {
-      await Promise.all(selectedOrders.map(o => 
+      await Promise.all(selectedOrders.map(o =>
         fetch(`/api/orders/${o.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -829,286 +847,294 @@ export default function OrdersPage() {
         title={t("title")}
         description={t("description")}
       >
-              <PermissionButton permission="orders:update_status" asChild className="mr-2">
-                <Link href="/dashboard/orders/new">
-                  <IconPlus className="size-4 mr-2" />
-                  Create Order
-                </Link>
-              </PermissionButton>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <IconLayoutColumns />
-                    {tc("columns")}
-                    <IconChevronDown />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  {table.getAllColumns().filter((col) => col.getCanHide()).map((column) => (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+        <PermissionButton permission="orders:update_status" asChild className="mr-2">
+          <Link href="/dashboard/orders/new">
+            <IconPlus className="size-4 mr-2" />
+            Create Order
+          </Link>
+        </PermissionButton>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm">
+              <IconLayoutColumns />
+              {tc("columns")}
+              <IconChevronDown />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            {table.getAllColumns().filter((col) => col.getCanHide()).map((column) => (
+              <DropdownMenuCheckboxItem
+                key={column.id}
+                className="capitalize"
+                checked={column.getIsVisible()}
+                onCheckedChange={(value) => column.toggleVisibility(!!value)}
+              >
+                {column.id}
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </PageHeader>
 
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-card p-4 rounded-lg border">
-            <div className="flex flex-1 flex-wrap items-center gap-3">
-              <Input
-                placeholder={t("searchOrders")}
-                value={globalFilter}
-                onChange={(e) => setGlobalFilter(e.target.value)}
-                className="max-w-xs"
-              />
-              
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-10 border-dashed">
-                    <IconFilter className="mr-2 size-4" />
-                    Filters
-                    {(statusFilter !== "all" || deliveryStatusFilter !== "all" || confirmationStatusFilter !== "all" || assignedToFilter !== "all" || dateRange.from) && (
-                      <Badge variant="secondary" className="ml-2 px-1 rounded-sm">On</Badge>
-                    )}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-card p-4 rounded-lg border">
+        <div className="flex flex-1 flex-wrap items-center gap-3">
+          <Input
+            placeholder={t("searchOrders")}
+            value={globalFilter}
+            onChange={(e) => setGlobalFilter(e.target.value)}
+            className="max-w-xs"
+          />
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="h-10 border-dashed">
+                <IconFilter className="mr-2 size-4" />
+                Filters
+                {(statusFilter !== "all" || deliveryStatusFilter !== "all" || confirmationStatusFilter !== "all" || assignedToFilter !== "all" || dateRange.from) && (
+                  <Badge variant="secondary" className="ml-2 px-1 rounded-sm">On</Badge>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[300px] p-4" align="start">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium text-sm">Custom Filters</h4>
+                  <Button variant="ghost" size="sm" className="h-auto p-0 text-xs" onClick={() => {
+                    setStatusFilter("all")
+                    setDeliveryStatusFilter("all")
+                    setConfirmationStatusFilter("all")
+                    setAssignedToFilter("all")
+                    setDateRange({ from: undefined, to: undefined })
+                  }}>
+                    Reset <IconX className="ml-1 size-3" />
                   </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[300px] p-4" align="start">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-medium text-sm">Custom Filters</h4>
-                      <Button variant="ghost" size="sm" className="h-auto p-0 text-xs" onClick={() => {
-                        setStatusFilter("all")
-                        setDeliveryStatusFilter("all")
-                        setConfirmationStatusFilter("all")
-                        setAssignedToFilter("all")
-                        setDateRange({ from: undefined, to: undefined })
-                      }}>
-                        Reset <IconX className="ml-1 size-3" />
-                      </Button>
-                    </div>
+                </div>
 
-                    <div className="space-y-2">
-                      <Label className="text-xs">{t("orderStatus")}</Label>
-                      <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="h-8 text-xs">
-                          <SelectValue placeholder="All Status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All</SelectItem>
-                          <SelectItem value="pending">{t("pending")}</SelectItem>
-                          <SelectItem value="confirmed">{t("confirmed")}</SelectItem>
-                          <SelectItem value="call_1">{t("call_1")}</SelectItem>
-                          <SelectItem value="call_2">{t("call_2")}</SelectItem>
-                          <SelectItem value="call_3">{t("call_3")}</SelectItem>
-                          <SelectItem value="call_whatsapp">{t("call_whatsapp")}</SelectItem>
-                          <SelectItem value="call_sms">{t("call_sms")}</SelectItem>
-                          <SelectItem value="no_response">{t("no_response")}</SelectItem>
-                          <SelectItem value="postponed">{t("postponed")}</SelectItem>
-                          <SelectItem value="unreachable">{t("unreachable")}</SelectItem>
-                          <SelectItem value="voicemail">{t("voicemail")}</SelectItem>
-                          <SelectItem value="cancelled">{t("cancelled")}</SelectItem>
-                          <SelectItem value="fake_order">{t("fake_order")}</SelectItem>
-                          <SelectItem value="exported">{t("exported")}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">{t("orderStatus")}</Label>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue placeholder="All Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="pending">{t("pending")}</SelectItem>
+                      <SelectItem value="confirmed">{t("confirmed")}</SelectItem>
+                      <SelectItem value="call_1">{t("call_1")}</SelectItem>
+                      <SelectItem value="call_2">{t("call_2")}</SelectItem>
+                      <SelectItem value="call_3">{t("call_3")}</SelectItem>
+                      <SelectItem value="call_whatsapp">{t("call_whatsapp")}</SelectItem>
+                      <SelectItem value="call_sms">{t("call_sms")}</SelectItem>
+                      <SelectItem value="no_response">{t("no_response")}</SelectItem>
+                      <SelectItem value="postponed">{t("postponed")}</SelectItem>
+                      <SelectItem value="unreachable">{t("unreachable")}</SelectItem>
+                      <SelectItem value="voicemail">{t("voicemail")}</SelectItem>
+                      <SelectItem value="cancelled">{t("cancelled")}</SelectItem>
+                      <SelectItem value="fake_order">{t("fake_order")}</SelectItem>
+                      <SelectItem value="exported">{t("exported")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                    <div className="space-y-2">
-                      <Label className="text-xs">{t("delivery_status")}</Label>
-                      <Select value={deliveryStatusFilter} onValueChange={setDeliveryStatusFilter}>
-                        <SelectTrigger className="h-8 text-xs">
-                          <SelectValue placeholder="All Delivery" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All</SelectItem>
-                          <SelectItem value="pending">Pending</SelectItem>
-                          <SelectItem value="livre">{t("livre")}</SelectItem>
-                          <SelectItem value="envois_recu">{t("envois_recu")}</SelectItem>
-                          <SelectItem value="refuse">{t("refuse")}</SelectItem>
-                          <SelectItem value="annule">{t("annule")}</SelectItem>
-                          <SelectItem value="retourne">{t("retourne")}</SelectItem>
-                          <SelectItem value="stope">{t("stope")}</SelectItem>
-                          <SelectItem value="suivi">{t("suivi")}</SelectItem>
-                          <SelectItem value="retour_stock">{t("retour_stock")}</SelectItem>
-                          <SelectItem value="pr">{t("pr")}</SelectItem>
-                          <SelectItem value="an_1">{t("an_1")}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">{t("delivery_status")}</Label>
+                  <Select value={deliveryStatusFilter} onValueChange={setDeliveryStatusFilter}>
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue placeholder="All Delivery" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="En attente">En attente</SelectItem>
+                      <SelectItem value="livre">{t("livre")}</SelectItem>
+                      <SelectItem value="envois_recu">{t("envois_recu")}</SelectItem>
+                      <SelectItem value="refuse">{t("refuse")}</SelectItem>
+                      <SelectItem value="annule">{t("annule")}</SelectItem>
+                      <SelectItem value="retourne">{t("retourne")}</SelectItem>
+                      <SelectItem value="stope">{t("stope")}</SelectItem>
+                      <SelectItem value="suivi">{t("suivi")}</SelectItem>
+                      <SelectItem value="retour_stock">{t("retour_stock")}</SelectItem>
+                      <SelectItem value="pr">{t("pr")}</SelectItem>
+                      <SelectItem value="an_1">{t("an_1")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                    <div className="space-y-2">
-                      <Label className="text-xs">{t("payment_status")}</Label>
-                      <Select value={confirmationStatusFilter} onValueChange={setConfirmationStatusFilter}>
-                        <SelectTrigger className="h-8 text-xs">
-                          <SelectValue placeholder="All Confirmation" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All</SelectItem>
-                          <SelectItem value="pending">Pending</SelectItem>
-                          <SelectItem value="paid">{t("paid")}</SelectItem>
-                          <SelectItem value="return">{t("return")}</SelectItem>
-                          <SelectItem value="refund">{t("refund")}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">{t("payment_status")}</Label>
+                  <Select value={confirmationStatusFilter} onValueChange={setConfirmationStatusFilter}>
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue placeholder="All Confirmation" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="paid">{t("paid")}</SelectItem>
+                      <SelectItem value="return">{t("return")}</SelectItem>
+                      <SelectItem value="refund">{t("refund")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                    <div className="space-y-2">
-                      <Label className="text-xs">Assigned To</Label>
-                      <Select value={assignedToFilter} onValueChange={setAssignedToFilter}>
-                        <SelectTrigger className="h-8 text-xs">
-                          <SelectValue placeholder="All Agents" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All</SelectItem>
-                          <SelectItem value="unassigned">Unassigned</SelectItem>
-                          {usersData.map((u: any) => (
-                            <SelectItem key={u.id} value={u.id}>
-                              {u.full_name || u.email}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                <div className="space-y-2">
+                  <Label className="text-xs">Assigned To</Label>
+                  <Select value={assignedToFilter} onValueChange={setAssignedToFilter}>
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue placeholder="All Agents" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="unassigned">Unassigned</SelectItem>
+                      {usersData.map((u: any) => (
+                        <SelectItem key={u.id} value={u.id}>
+                          {u.full_name || u.email}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className={`h-10 justify-start text-left font-normal border-dashed ${!dateRange.from && "text-muted-foreground"}`}>
+                <IconCalendar className="mr-2 size-4" />
+                {dateRange.from ? (
+                  dateRange.to ? (
+                    <>
+                      {format(dateRange.from, "LLL dd, y")} - {format(dateRange.to, "LLL dd, y")}
+                    </>
+                  ) : (
+                    format(dateRange.from, "LLL dd, y")
+                  )
+                ) : (
+                  <span>Date Range</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={dateRange.from}
+                selected={dateRange}
+                onSelect={(range: any) => setDateRange(range || { from: undefined, to: undefined })}
+                numberOfMonths={2}
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        <Button
+          onClick={handleExportSelected}
+          size="sm"
+          variant="outline"
+          className="h-10 whitespace-nowrap"
+          disabled={isExporting || table.getFilteredRowModel().rows.length === 0}
+        >
+          <IconDownload className="mr-2 size-4" />
+          {tc("export")} {Object.keys(rowSelection).length > 0 ? `(${Object.keys(rowSelection).length})` : ""}
+        </Button>
+      </div>
+
+      <div className="overflow-hidden rounded-lg border">
+        <Table>
+          <TableHeader className="bg-muted">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : isLoading ? (
+              <TableSpinner colSpan={columns.length} />
+            ) : (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="h-24 text-center">
+                  <div className="flex flex-col items-center gap-2 py-8">
+                    <div className="text-muted-foreground">{t("noOrders")}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {t("noOrdersDescription")}
                     </div>
                   </div>
-                </PopoverContent>
-              </Popover>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className={`h-10 justify-start text-left font-normal border-dashed ${!dateRange.from && "text-muted-foreground"}`}>
-                    <IconCalendar className="mr-2 size-4" />
-                    {dateRange.from ? (
-                      dateRange.to ? (
-                        <>
-                          {format(dateRange.from, "LLL dd, y")} - {format(dateRange.to, "LLL dd, y")}
-                        </>
-                      ) : (
-                        format(dateRange.from, "LLL dd, y")
-                      )
-                    ) : (
-                      <span>Date Range</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    initialFocus
-                    mode="range"
-                    defaultMonth={dateRange.from}
-                    selected={dateRange}
-                    onSelect={(range: any) => setDateRange(range || { from: undefined, to: undefined })}
-                    numberOfMonths={2}
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-muted-foreground">
+          {table.getFilteredSelectedRowModel().rows.length} of {table.getFilteredRowModel().rows.length} selected
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="icon" onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()}>
+            <IconChevronsLeft />
+          </Button>
+          <Button variant="outline" size="icon" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
+            <IconChevronLeft />
+          </Button>
+          <span className="text-sm">Page {pagination.pageIndex + 1} of {table.getPageCount() || 1}</span>
+          <Button variant="outline" size="icon" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
+            <IconChevronRight />
+          </Button>
+          <Button variant="outline" size="icon" onClick={() => table.setPageIndex(table.getPageCount() - 1)} disabled={!table.getCanNextPage()}>
+            <IconChevronsRight />
+          </Button>
+        </div>
+      </div>
 
-            <Button 
-              onClick={handleExportSelected} 
-              size="sm" 
-              variant="outline" 
-              className="h-10 whitespace-nowrap"
-              disabled={isExporting || table.getFilteredRowModel().rows.length === 0}
-            >
-              <IconDownload className="mr-2 size-4" />
-              {tc("export")} {Object.keys(rowSelection).length > 0 ? `(${Object.keys(rowSelection).length})` : ""}
-            </Button>
-          </div>
+      <Dialog open={!!editingOrder} onOpenChange={() => setEditingOrder(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("updateOrderStatus")}</DialogTitle>
+            <DialogDescription>{t("changeStatus", { orderNumber: editingOrder?.order_number ?? "" })}</DialogDescription>
+          </DialogHeader>
+          {editingOrder && <OrderStatusForm order={editingOrder} users={usersData} canAssign={hasPermission("orders:update_status")} onSave={handleUpdateStatus} onCancel={() => setEditingOrder(null)} />}
+        </DialogContent>
+      </Dialog>
 
-          <div className="overflow-hidden rounded-lg border">
-            <Table>
-              <TableHeader className="bg-muted">
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : isLoading ? (
-                  <TableSpinner colSpan={columns.length} />
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="h-24 text-center">
-                      <div className="flex flex-col items-center gap-2 py-8">
-                        <div className="text-muted-foreground">{t("noOrders")}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {t("noOrdersDescription")}
-                        </div>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-muted-foreground">
-              {table.getFilteredSelectedRowModel().rows.length} of {table.getFilteredRowModel().rows.length} selected
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" onClick={() => table.setPageIndex(0)} disabled={!table.getCanPreviousPage()}>
-                <IconChevronsLeft />
-              </Button>
-              <Button variant="outline" size="icon" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
-                <IconChevronLeft />
-              </Button>
-              <span className="text-sm">Page {pagination.pageIndex + 1} of {table.getPageCount() || 1}</span>
-              <Button variant="outline" size="icon" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
-                <IconChevronRight />
-              </Button>
-              <Button variant="outline" size="icon" onClick={() => table.setPageIndex(table.getPageCount() - 1)} disabled={!table.getCanNextPage()}>
-                <IconChevronsRight />
-              </Button>
-            </div>
-          </div>
-
-        <Dialog open={!!editingOrder} onOpenChange={() => setEditingOrder(null)}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>{t("updateOrderStatus")}</DialogTitle>
-              <DialogDescription>{t("changeStatus", { orderNumber: editingOrder?.order_number ?? "" })}</DialogDescription>
-            </DialogHeader>
-            {editingOrder && <OrderStatusForm order={editingOrder} users={usersData} canAssign={hasPermission("orders:update_status")} onSave={handleUpdateStatus} onCancel={() => setEditingOrder(null)} />}
-          </DialogContent>
-        </Dialog>
-
-        {/* Delete Dialog */}
-        <Dialog open={!!deletingOrder} onOpenChange={() => setDeletingOrder(null)}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Delete Order</DialogTitle>
-              <DialogDescription>
-                Are you sure you want to delete order "#{deletingOrder?.order_number}"? This action cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setDeletingOrder(null)}>{tc("cancel")}</Button>
-              <Button variant="destructive" onClick={handleDeleteOrder}>{tc("delete")}</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+      {/* Delete Dialog */}
+      <Dialog open={!!deletingOrder} onOpenChange={() => setDeletingOrder(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete Order</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete order "#{deletingOrder?.order_number}"? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeletingOrder(null)}>{tc("cancel")}</Button>
+            <Button variant="destructive" onClick={handleDeleteOrder}>{tc("delete")}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
     </div>
+  )
+}
+
+export default function OrdersPage() {
+  return (
+    <Suspense>
+      <OrdersPageContent />
+    </Suspense>
   )
 }

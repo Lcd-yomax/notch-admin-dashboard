@@ -142,7 +142,7 @@ const statusButtonClasses: Record<string, string> = {
 }
 
 const deliveryStatusClasses: Record<string, string> = {
-  pending: "bg-gray-100 text-gray-800 dark:bg-gray-800/30 dark:text-gray-400 border-gray-200 dark:border-gray-700",
+  "En attente": "bg-gray-100 text-gray-800 dark:bg-gray-800/30 dark:text-gray-400 border-gray-200 dark:border-gray-700",
   livre: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800",
   envois_recu: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800",
   refuse: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800",
@@ -178,14 +178,14 @@ export default function OrderDetailPage() {
 
   const canUpdateOrder = React.useMemo(() => {
     if (!order) return false
-    return hasPermission("orders:update_status") || 
-           (hasPermission("orders:update_own") && order.assigned_to === user?.id)
+    return hasPermission("orders:update_status") ||
+      (hasPermission("orders:update_own") && order.assigned_to === user?.id)
   }, [order, hasPermission, user?.id])
 
   const [statusDialogOpen, setStatusDialogOpen] = React.useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
   const [newStatus, setNewStatus] = React.useState("")
-  const [newDeliveryStatus, setNewDeliveryStatus] = React.useState("pending")
+  const [newDeliveryStatus, setNewDeliveryStatus] = React.useState("En attente")
   const [newConfirmationStatus, setNewConfirmationStatus] = React.useState("pending")
   const [newAssignee, setNewAssignee] = React.useState("none")
   const [newCodeSuivi, setNewCodeSuivi] = React.useState("")
@@ -228,7 +228,7 @@ export default function OrderDetailPage() {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-2">
         <p className="text-muted-foreground">{t("noOrders")}</p>
-        <Button variant="outline" onClick={() => router.push("/dashboard/orders")}>
+        <Button variant="outline" onClick={() => router.back()}>
           <IconArrowLeft className="mr-2 size-4" />
           {tc("back")}
         </Button>
@@ -241,7 +241,7 @@ export default function OrderDetailPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => router.push("/dashboard/orders")}>
+          <Button variant="ghost" size="icon" onClick={() => router.back()}>
             <IconArrowLeft className="size-5" />
           </Button>
           <div>
@@ -262,8 +262,8 @@ export default function OrderDetailPage() {
           <Badge variant="outline" className={`text-sm px-3 py-1 ${statusClasses[order.status]}`}>
             {t(order.status)}
           </Badge>
-          <Badge variant="outline" className={`text-sm px-3 py-1 ${deliveryStatusClasses[order.delivery_status || "pending"]}`}>
-            {order.delivery_status && order.delivery_status !== "pending" ? t(order.delivery_status) : "Pending Delivery"}
+          <Badge variant="outline" className={`text-sm px-3 py-1 ${deliveryStatusClasses[order.delivery_status || "En attente"]}`}>
+            {order.delivery_status ? t(order.delivery_status) : "En attente"}
           </Badge>
           <Badge variant="outline" className={`text-sm px-3 py-1 ${confirmationStatusClasses[order.confirmation_status || "pending"]}`}>
             {order.confirmation_status && order.confirmation_status !== "pending" ? t(order.confirmation_status) : "Pending Payment"}
@@ -274,7 +274,7 @@ export default function OrderDetailPage() {
               className={statusButtonClasses[order.status]}
               onClick={() => {
                 setNewStatus(order.status)
-                setNewDeliveryStatus(order.delivery_status || "pending")
+                setNewDeliveryStatus(order.delivery_status || "En attente")
                 setNewConfirmationStatus(order.confirmation_status || "pending")
                 setNewAssignee(order.assigned_to || "none")
                 setNewCodeSuivi(order.code_suivi || "")
@@ -359,12 +359,12 @@ export default function OrderDetailPage() {
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="shrink-0 flex size-9 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400">
                       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14"/>
-                        <path d="m7.5 4.27 9 5.15"/>
-                        <polyline points="3.29 7 12 12 20.71 7"/>
-                        <line x1="12" y1="22" x2="12" y2="12"/>
-                        <circle cx="18.5" cy="15.5" r="2.5"/>
-                        <path d="M20.27 17.27 22 19"/>
+                        <path d="M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14" />
+                        <path d="m7.5 4.27 9 5.15" />
+                        <polyline points="3.29 7 12 12 20.71 7" />
+                        <line x1="12" y1="22" x2="12" y2="12" />
+                        <circle cx="18.5" cy="15.5" r="2.5" />
+                        <path d="M20.27 17.27 22 19" />
                       </svg>
                     </div>
                     <div className="min-w-0">
@@ -382,8 +382,8 @@ export default function OrderDetailPage() {
                     className="shrink-0 flex items-center gap-1.5 rounded-md border border-blue-300 dark:border-blue-700 bg-white dark:bg-blue-900/30 px-3 py-1.5 text-xs font-medium text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
-                      <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+                      <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                      <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
                     </svg>
                     Copy
                   </button>
@@ -492,38 +492,38 @@ export default function OrderDetailPage() {
               <CardContent>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   {order.utm_source && (
-                     <div>
-                       <div className="text-muted-foreground text-xs uppercase tracking-wide">Source</div>
-                       <div className="font-medium">{order.utm_source}</div>
-                     </div>
+                    <div>
+                      <div className="text-muted-foreground text-xs uppercase tracking-wide">Source</div>
+                      <div className="font-medium">{order.utm_source}</div>
+                    </div>
                   )}
                   {order.utm_medium && (
-                     <div>
-                       <div className="text-muted-foreground text-xs uppercase tracking-wide">Medium</div>
-                       <div className="font-medium">{order.utm_medium}</div>
-                     </div>
+                    <div>
+                      <div className="text-muted-foreground text-xs uppercase tracking-wide">Medium</div>
+                      <div className="font-medium">{order.utm_medium}</div>
+                    </div>
                   )}
                   {order.utm_campaign && (
-                     <div className="col-span-2">
-                       <div className="text-muted-foreground text-xs uppercase tracking-wide">Campaign</div>
-                       <div className="font-medium">{order.utm_campaign}</div>
-                     </div>
+                    <div className="col-span-2">
+                      <div className="text-muted-foreground text-xs uppercase tracking-wide">Campaign</div>
+                      <div className="font-medium">{order.utm_campaign}</div>
+                    </div>
                   )}
                   {order.click_id && (
-                     <div className="col-span-2">
-                       <div className="text-muted-foreground text-xs uppercase tracking-wide">Click ID</div>
-                       <div className="font-medium font-mono text-xs break-all">{order.click_id}</div>
-                     </div>
+                    <div className="col-span-2">
+                      <div className="text-muted-foreground text-xs uppercase tracking-wide">Click ID</div>
+                      <div className="font-medium font-mono text-xs break-all">{order.click_id}</div>
+                    </div>
                   )}
                   {order.referrer && (
-                     <div className="col-span-2">
-                       <div className="text-muted-foreground text-xs uppercase tracking-wide">Referrer</div>
-                       <div className="font-medium overflow-hidden text-ellipsis whitespace-nowrap" title={order.referrer}>
-                         <a href={order.referrer} target="_blank" rel="noreferrer" className="text-primary hover:underline">
-                            {order.referrer}
-                         </a>
-                       </div>
-                     </div>
+                    <div className="col-span-2">
+                      <div className="text-muted-foreground text-xs uppercase tracking-wide">Referrer</div>
+                      <div className="font-medium overflow-hidden text-ellipsis whitespace-nowrap" title={order.referrer}>
+                        <a href={order.referrer} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                          {order.referrer}
+                        </a>
+                      </div>
+                    </div>
                   )}
                 </div>
               </CardContent>
@@ -558,9 +558,9 @@ export default function OrderDetailPage() {
                           <p className="text-sm font-medium">
                             {entry.action === "status_changed"
                               ? t("statusChanged", {
-                                  from: t(entry.old_value ?? "pending"),
-                                  to: t(entry.new_value ?? "pending"),
-                                })
+                                from: t(entry.old_value ?? "pending"),
+                                to: t(entry.new_value ?? "pending"),
+                              })
                               : entry.action === "created"
                                 ? t("orderCreated")
                                 : entry.action}
@@ -629,7 +629,7 @@ export default function OrderDetailPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="En attente">En attente</SelectItem>
                   <SelectItem value="livre">{t("livre")}</SelectItem>
                   <SelectItem value="envois_recu">{t("envois_recu")}</SelectItem>
                   <SelectItem value="refuse">{t("refuse")}</SelectItem>
