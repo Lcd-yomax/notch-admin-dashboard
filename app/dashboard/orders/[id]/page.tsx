@@ -228,7 +228,7 @@ export default function OrderDetailPage() {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-2">
         <p className="text-muted-foreground">{t("noOrders")}</p>
-        <Button variant="outline" onClick={() => router.push("/dashboard/orders")}>
+        <Button variant="outline" onClick={() => router.back()}>
           <IconArrowLeft className="mr-2 size-4" />
           {tc("back")}
         </Button>
@@ -241,7 +241,7 @@ export default function OrderDetailPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => router.push("/dashboard/orders")}>
+          <Button variant="ghost" size="icon" onClick={() => router.back()}>
             <IconArrowLeft className="size-5" />
           </Button>
           <div>

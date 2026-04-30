@@ -1,9 +1,10 @@
 "use client"
 
 import * as React from "react"
+import { Suspense } from "react"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import {
   IconChevronDown,
   IconChevronLeft,
@@ -310,7 +311,7 @@ function OrderStatusForm({
   )
 }
 
-export default function OrdersPage() {
+function OrdersPageContent() {
   const router = useRouter()
   const { user, hasPermission } = usePermissions()
   const t = useTranslations("orders")
@@ -318,26 +319,44 @@ export default function OrdersPage() {
   const { data: orders = [], mutate, isLoading } = useSWR<Order[]>("/api/orders", fetcher)
   const { data: usersData = [] } = useSWR<any[]>("/api/users", fetcher)
 
+  const searchParams = useSearchParams()
+  const pathname = usePathname()
+
   const [editingOrder, setEditingOrder] = React.useState<Order | null>(null)
   const [deletingOrder, setDeletingOrder] = React.useState<Order | null>(null)
 
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [sorting, setSorting] = React.useState<SortingState>([])
-  const [globalFilter, setGlobalFilter] = React.useState("")
+  const [globalFilter, setGlobalFilter] = React.useState(searchParams.get("q") || "")
 
-  // Custom Filters State
-  const [statusFilter, setStatusFilter] = React.useState<string>("all")
-  const [deliveryStatusFilter, setDeliveryStatusFilter] = React.useState<string>("all")
-  const [confirmationStatusFilter, setConfirmationStatusFilter] = React.useState<string>("all")
-  const [assignedToFilter, setAssignedToFilter] = React.useState<string>("all")
+  // Custom Filters State — initialized from URL search params
+  const [statusFilter, setStatusFilter] = React.useState<string>(searchParams.get("status") || "all")
+  const [deliveryStatusFilter, setDeliveryStatusFilter] = React.useState<string>(searchParams.get("delivery") || "all")
+  const [confirmationStatusFilter, setConfirmationStatusFilter] = React.useState<string>(searchParams.get("payment") || "all")
+  const [assignedToFilter, setAssignedToFilter] = React.useState<string>(searchParams.get("assignee") || "all")
   const [dateRange, setDateRange] = React.useState<{ from: Date | undefined; to: Date | undefined }>({
-    from: undefined,
-    to: undefined,
+    from: searchParams.get("from") ? new Date(searchParams.get("from")!) : undefined,
+    to: searchParams.get("to") ? new Date(searchParams.get("to")!) : undefined,
   })
 
   const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
   const [isExporting, setIsExporting] = React.useState(false)
+
+  // Sync filter state → URL search params (replaceState so no new history entries)
+  React.useEffect(() => {
+    const params = new URLSearchParams()
+    if (statusFilter !== "all") params.set("status", statusFilter)
+    if (deliveryStatusFilter !== "all") params.set("delivery", deliveryStatusFilter)
+    if (confirmationStatusFilter !== "all") params.set("payment", confirmationStatusFilter)
+    if (assignedToFilter !== "all") params.set("assignee", assignedToFilter)
+    if (globalFilter) params.set("q", globalFilter)
+    if (dateRange.from) params.set("from", dateRange.from.toISOString().split("T")[0])
+    if (dateRange.to) params.set("to", dateRange.to.toISOString().split("T")[0])
+    const qs = params.toString()
+    const newUrl = qs ? `${pathname}?${qs}` : pathname
+    window.history.replaceState(null, "", newUrl)
+  }, [statusFilter, deliveryStatusFilter, confirmationStatusFilter, assignedToFilter, globalFilter, dateRange, pathname])
 
   const canUpdateOrder = React.useCallback((order: Order) => {
     return hasPermission("orders:update_status") ||
@@ -925,7 +944,7 @@ export default function OrdersPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="En attente">En attente</SelectItem>
                       <SelectItem value="livre">{t("livre")}</SelectItem>
                       <SelectItem value="envois_recu">{t("envois_recu")}</SelectItem>
                       <SelectItem value="refuse">{t("refuse")}</SelectItem>
@@ -1109,5 +1128,13 @@ export default function OrdersPage() {
       </Dialog>
 
     </div>
+  )
+}
+
+export default function OrdersPage() {
+  return (
+    <Suspense>
+      <OrdersPageContent />
+    </Suspense>
   )
 }
