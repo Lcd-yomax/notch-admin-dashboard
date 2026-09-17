@@ -1,5 +1,7 @@
 import { createAdminClient, requirePermission } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
+import { activateProduct } from "@/lib/products/activation-server"
+import { summarizeBlockers } from "@/lib/products/activation"
 
 export async function POST(request: Request) {
   const denied = await requirePermission("products:write")
@@ -51,7 +53,8 @@ export async function POST(request: Request) {
       }
     }
 
-    const { error } = await supabase
+    // Created inactive, then activated only if it has a photo (activation rules)
+    const { data: created, error } = await supabase
       .from("products")
       .insert({
         name: product.name,
@@ -59,15 +62,30 @@ export async function POST(request: Request) {
         description: product.description || null,
         category_id: categoryId,
         thumbnail_url: product.thumbnail_url || null,
-        is_active: true,
+        is_active: false,
         is_featured: false,
         is_best_seller: false,
       })
+      .select("id")
+      .single()
 
-    if (error) {
-      results.errors.push(`"${product.name}": ${error.message}`)
-    } else {
-      results.created++
+    if (error || !created) {
+      results.errors.push(`"${product.name}": ${error?.message}`)
+      continue
+    }
+
+    results.created++
+    if (product.thumbnail_url) {
+      await supabase.from("product_images").insert({
+        product_id: created.id,
+        url: product.thumbnail_url,
+        sort_order: 0,
+        is_primary: true,
+      })
+    }
+    const { blockers } = await activateProduct(supabase, created.id)
+    if (blockers.length > 0) {
+      results.errors.push(`"${product.name}" créé inactif : ${summarizeBlockers(blockers)}`)
     }
   }
 

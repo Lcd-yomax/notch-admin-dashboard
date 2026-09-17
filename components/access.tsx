@@ -1,6 +1,8 @@
 "use client"
 
 import * as React from "react"
+import { useTranslations } from "next-intl"
+import { IconLock } from "@tabler/icons-react"
 import { usePermissions } from "@/hooks/use-permissions"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
@@ -42,6 +44,25 @@ export function Can({ permission, fallback = null, children }: CanProps) {
     : hasPermission(permission)
 
   return <>{allowed ? children : fallback}</>
+}
+
+// ─── <AccessDenied> ──────────────────────────────────────────────────────────
+//
+// Full-page fallback for pages the user has no permission for.
+//
+// Usage:
+//   <Can permission="brands.manage" fallback={<AccessDenied />}>
+//     <BrandsPageContent />
+//   </Can>
+
+export function AccessDenied() {
+  const t = useTranslations("common")
+  return (
+    <div className="flex min-h-[50vh] flex-col items-center justify-center gap-2 px-4 text-center">
+      <IconLock className="size-8 text-muted-foreground" />
+      <p className="text-muted-foreground">{t("noAccess")}</p>
+    </div>
+  )
 }
 
 // ─── <PermissionButton> ──────────────────────────────────────────────────────

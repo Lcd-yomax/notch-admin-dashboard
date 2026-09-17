@@ -1,5 +1,6 @@
 import { createAdminClient, createClient, requirePermission } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
+import { checkItemPrices } from "@/lib/orders/create-order"
 
 export async function GET(
   request: Request,
@@ -44,7 +45,7 @@ export async function GET(
         *,
         product_variations(
           *,
-          products(name, thumbnail_url)
+          products(name, thumbnail_url, categories(slug))
         )
       )
     `)
@@ -149,6 +150,19 @@ export async function PUT(
 
   // Handle order items replacement if items are provided
   if (body.items) {
+    // 0. Variations without a price cannot be ordered
+    const priceError = await checkItemPrices(
+      supabase,
+      body.items.map((item: any) => ({
+        variation_id: item.variation_id,
+        quantity: item.quantity,
+        unit_price: item.unit_price,
+      }))
+    )
+    if (priceError) {
+      return NextResponse.json({ error: priceError.error }, { status: 400 })
+    }
+
     // 1. Delete existing items
     const { error: deleteError } = await supabase
       .from("order_items")

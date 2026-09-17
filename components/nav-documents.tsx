@@ -28,7 +28,9 @@ import {
 
 export function NavDocuments({
   items,
+  label = "Management",
 }: {
+  label?: string
   items: {
     name: string
     url: string
@@ -38,7 +40,7 @@ export function NavDocuments({
   const pathname = usePathname()
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-      <SidebarGroupLabel>Management</SidebarGroupLabel>
+      <SidebarGroupLabel>{label}</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => (
           <SidebarMenuItem key={item.name}>

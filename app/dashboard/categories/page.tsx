@@ -51,6 +51,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 import {
   Table,
   TableBody,
@@ -70,6 +71,7 @@ interface Category {
   image_url: string | null
   created_at: string
   products_count: number
+  is_active: boolean
 }
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
@@ -88,6 +90,7 @@ function CategoryForm({
   const [name, setName] = React.useState(category?.name || "")
   const [slug, setSlug] = React.useState(category?.slug || "")
   const [imageUrl, setImageUrl] = React.useState(category?.image_url || "")
+  const [isActive, setIsActive] = React.useState(category?.is_active ?? true)
   const [uploading, setUploading] = React.useState(false)
   const fileInputRef = React.useRef<HTMLInputElement>(null)
 
@@ -117,7 +120,7 @@ function CategoryForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onSave({ name, slug, image_url: imageUrl || null })
+    onSave({ name, slug, image_url: imageUrl || null, is_active: isActive })
   }
 
   return (
@@ -131,6 +134,13 @@ function CategoryForm({
           placeholder={t("enterCategoryName")}
           required
         />
+      </div>
+      <div className="flex items-start gap-2 rounded-lg border p-3">
+        <Switch id="category_is_active" checked={isActive} onCheckedChange={setIsActive} className="mt-0.5" />
+        <div>
+          <Label htmlFor="category_is_active">{t("showOnWebsite")}</Label>
+          <p className="text-xs text-muted-foreground">{t("showOnWebsiteHelp")}</p>
+        </div>
       </div>
       <div className="space-y-2">
         <Label htmlFor="slug">{t("categorySlug")} *</Label>
@@ -308,6 +318,15 @@ export default function CategoriesPage() {
       header: t("productsCount"),
       cell: ({ row }) => (
         <Badge variant="secondary">{row.original.products_count} products</Badge>
+      ),
+    },
+    {
+      accessorKey: "is_active",
+      header: tc("status"),
+      cell: ({ row }) => (
+        <Badge variant={row.original.is_active ? "default" : "secondary"}>
+          {row.original.is_active ? tc("active") : tc("inactive")}
+        </Badge>
       ),
     },
     {

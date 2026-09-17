@@ -11,12 +11,18 @@ export async function GET() {
       id,
       name,
       thumbnail_url,
+      categories(slug),
       product_variations(
         id,
+        sku,
         size,
         color,
+        storage_gb,
+        ram_gb,
+        condition,
         price,
-        stock
+        stock,
+        is_active
       )
     `)
     .eq("is_active", true)
