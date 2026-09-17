@@ -1,5 +1,6 @@
 import { createAdminClient, createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
+import { createOrderWithItems } from "@/lib/orders/create-order"
 
 export async function GET() {
   const supabaseAuth = await createClient()
@@ -86,10 +87,10 @@ export async function POST(request: Request) {
   // Generate an order number (similar to store logic, e.g. ORD-12345678)
   const orderNumber = `ORD-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 1000)}`
 
-  // 1. Insert order
-  const { data: order, error: orderError } = await supabase
-    .from("orders")
-    .insert([{
+  // 1. Insert order and its items (the order is removed if the items fail)
+  const { order, error: createError, status: createStatus } = await createOrderWithItems(
+    supabase,
+    {
       order_number: orderNumber,
       full_name: body.full_name,
       phone: body.phone,
@@ -108,32 +109,16 @@ export async function POST(request: Request) {
       utm_campaign: body.utm_campaign,
       click_id: body.click_id,
       referrer: body.referrer
-    }])
-    .select()
-    .single()
-
-  if (orderError) {
-    return NextResponse.json({ error: orderError.message }, { status: 500 })
-  }
-
-  // 2. Insert order items
-  if (body.items && body.items.length > 0) {
-    const orderItemsToInsert = body.items.map((item: any) => ({
-      order_id: order.id,
+    },
+    (body.items || []).map((item: any) => ({
       variation_id: item.variation_id,
       quantity: item.quantity,
       unit_price: item.unit_price
     }))
+  )
 
-    const { error: itemsError } = await supabase
-      .from("order_items")
-      .insert(orderItemsToInsert)
-
-    if (itemsError) {
-      // Best effort deletion of the orphaned order if items fail, though less common
-      await supabase.from("orders").delete().eq("id", order.id)
-      return NextResponse.json({ error: itemsError.message }, { status: 500 })
-    }
+  if (createError) {
+    return NextResponse.json({ error: createError }, { status: createStatus ?? 500 })
   }
 
   // Log creation activity

@@ -1,5 +1,6 @@
 import { createAdminClient, requirePermission } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
+import { activateProduct } from "@/lib/products/activation-server"
 
 export async function GET() {
   const supabase = createAdminClient()
@@ -50,7 +51,8 @@ export async function POST(request: Request) {
       description: body.description,
       category_id: body.category_id,
       thumbnail_url: body.thumbnail_url,
-      is_active: body.is_active,
+      // Always created inactive: a new product has no photos yet (activation rules)
+      is_active: false,
       is_featured: body.is_featured ?? false,
       is_best_seller: body.is_best_seller ?? false,
     })
@@ -59,6 +61,11 @@ export async function POST(request: Request) {
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+
+  if (body.is_active) {
+    const { blockers } = await activateProduct(supabase, data.id)
+    return NextResponse.json({ ...data, is_active: blockers.length === 0, activation_blockers: blockers })
   }
 
   return NextResponse.json(data)

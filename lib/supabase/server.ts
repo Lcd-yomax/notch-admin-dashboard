@@ -47,16 +47,29 @@ export function createAdminClient() {
  * Returns NextResponse with 401/403 if denied, or null if allowed.
  */
 export async function requirePermission(permission: string): Promise<NextResponse | null> {
+  const { denied } = await authorize(permission)
+  return denied
+}
+
+type AuthorizeResult =
+  | { userId: string; permissions: string[]; denied: null }
+  | { userId: null; permissions: string[]; denied: NextResponse }
+
+/**
+ * Like requirePermission, but also returns the user id and the user's
+ * permission keys. Pass an array to allow the user if they have ANY of the keys.
+ */
+export async function authorize(permission: string | string[]): Promise<AuthorizeResult> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
+    return { userId: null, permissions: [], denied: NextResponse.json({ error: "Not authenticated" }, { status: 401 }) }
   }
 
   const admin = createAdminClient()
 
-  // Look up the user's role, then check if that role has the permission
+  // Look up the user's role, then load the permission keys of that role
   const { data: dashUser } = await admin
     .from("dashboard_users")
     .select("role_id, is_active")
@@ -64,19 +77,22 @@ export async function requirePermission(permission: string): Promise<NextRespons
     .single()
 
   if (!dashUser || !dashUser.is_active) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+    return { userId: null, permissions: [], denied: NextResponse.json({ error: "Forbidden" }, { status: 403 }) }
   }
 
-  const { data: perm } = await admin
+  const { data: perms } = await admin
     .from("role_permissions")
-    .select("permission_id, permissions!inner(key)")
+    .select("permissions!inner(key)")
     .eq("role_id", dashUser.role_id)
-    .eq("permissions.key", permission)
-    .maybeSingle()
 
-  if (!perm) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
+  const permissions: string[] = (perms || [])
+    .map((p: any) => p.permissions?.key)
+    .filter(Boolean)
+
+  const required = Array.isArray(permission) ? permission : [permission]
+  if (!required.some((key) => permissions.includes(key))) {
+    return { userId: null, permissions, denied: NextResponse.json({ error: "Non autorisé" }, { status: 403 }) }
   }
 
-  return null // allowed
+  return { userId: user.id, permissions, denied: null }
 }

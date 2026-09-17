@@ -53,6 +53,9 @@ import {
 } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
 import { usePermissions } from "@/hooks/use-permissions"
+import { OrderImeiCard } from "@/components/orders/order-imei-card"
+import { useOrderImeiGuard } from "@/components/orders/order-imei-guard"
+import { formatVariationLabel, isSmartphoneCategory } from "@/lib/products/smartphone"
 
 interface OrderItem {
   id: string
@@ -63,9 +66,13 @@ interface OrderItem {
     sku: string | null
     color: string | null
     size: string | null
+    storage_gb: number | null
+    ram_gb: number | null
+    condition: string | null
     products: {
       name: string
       thumbnail_url: string | null
+      categories: { slug: string } | null
     }
   }
 }
@@ -167,7 +174,9 @@ export default function OrderDetailPage() {
   const router = useRouter()
   const t = useTranslations("orders")
   const tc = useTranslations("common")
+  const ti = useTranslations("imeiInventory")
   const { user, hasPermission } = usePermissions()
+  const imeiGuard = useOrderImeiGuard()
 
   const { data: order, isLoading, mutate } = useSWR<OrderDetail>(`/api/orders/${id}`, fetcher)
   const { data: activity = [], mutate: mutateActivity } = useSWR<ActivityEntry[]>(
@@ -194,6 +203,14 @@ export default function OrderDetailPage() {
 
   const handleUpdateStatus = async () => {
     if (!order || !newStatus) return
+    const change = {
+      status: newStatus,
+      previousStatus: order.status,
+      deliveryStatus: newDeliveryStatus,
+      previousDeliveryStatus: order.delivery_status || "En attente",
+    }
+    // Phones without IMEI must not leave silently
+    if (!(await imeiGuard.confirmShipping(id, change))) return
     setUpdating(true)
     await fetch(`/api/orders/${id}`, {
       method: "PUT",
@@ -214,7 +231,15 @@ export default function OrderDetailPage() {
     mutate()
     mutateActivity()
     toast.success(t("statusUpdateSuccess"))
+    imeiGuard.offerRelease(id, change, () => {
+      mutate()
+      mutateActivity()
+    })
   }
+
+  const smartphoneItems = (order?.order_items || []).filter((item) =>
+    isSmartphoneCategory(item.product_variations?.products?.categories?.slug)
+  )
 
   if (isLoading) {
     return (
@@ -435,6 +460,14 @@ export default function OrderDetailPage() {
                         </div>
                       </TableCell>
                       <TableCell>
+                        {isSmartphoneCategory(item.product_variations?.products?.categories?.slug) ? (
+                          <div>
+                            <div className="text-sm">{formatVariationLabel(item.product_variations)}</div>
+                            {item.product_variations?.sku && (
+                              <div className="text-xs text-muted-foreground font-mono">{item.product_variations.sku}</div>
+                            )}
+                          </div>
+                        ) : (
                         <div className="flex flex-wrap gap-1">
                           {item.product_variations?.color && (
                             <Badge variant="outline" className="text-xs">
@@ -455,6 +488,7 @@ export default function OrderDetailPage() {
                             <span className="text-xs text-muted-foreground">—</span>
                           )}
                         </div>
+                        )}
                       </TableCell>
                       <TableCell className="text-center">{item.quantity}</TableCell>
                       <TableCell className="text-end">
@@ -476,6 +510,20 @@ export default function OrderDetailPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* IMEI assignment for smartphones */}
+          {smartphoneItems.length > 0 && hasPermission("inventory.imei") && (
+            <OrderImeiCard
+              orderId={order.id}
+              items={smartphoneItems.map((item) => ({
+                id: item.id,
+                quantity: item.quantity,
+                product_name: item.product_variations.products.name,
+                variation: item.product_variations,
+              }))}
+              onChanged={() => mutateActivity()}
+            />
+          )}
         </div>
 
         {/* Right side: Activity timeline & Tracking */}
@@ -563,7 +611,16 @@ export default function OrderDetailPage() {
                               })
                               : entry.action === "created"
                                 ? t("orderCreated")
-                                : entry.action}
+                                : entry.action === "created_manually"
+                                  ? t("orderCreatedManually")
+                                  : entry.action === "imei_assigned"
+                                    ? t("imeiAssigned", { imei: entry.new_value ?? "" })
+                                    : entry.action === "imei_status_changed"
+                                      ? t("imeiStatusChanged", {
+                                          from: ti(`statuses.${(entry.old_value ?? "sold") as "sold"}`),
+                                          to: ti(`statuses.${(entry.new_value ?? "sold") as "sold"}`),
+                                        })
+                                      : entry.action}
                           </p>
                           {entry.note && (
                             <p className="mt-0.5 text-xs text-muted-foreground">
@@ -703,6 +760,8 @@ export default function OrderDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {imeiGuard.dialogs}
+
       {/* Delete Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md">

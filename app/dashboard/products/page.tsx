@@ -17,6 +17,7 @@ import {
   IconPlus,
   IconTrash,
   IconUpload,
+  IconCloudDownload,
 } from "@tabler/icons-react"
 import {
   flexRender,
@@ -76,7 +77,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { PageHeader } from "@/components/page-header"
 import { usePermissions } from "@/hooks/use-permissions"
 import { PermissionButton } from "@/components/access"
-import { RichTextEditor } from "@/components/rich-text-editor"
+import { ProductForm } from "@/components/products/product-form"
+import { MissingPhoto } from "@/components/products/missing-photo"
+import Link from "next/link"
 
 interface Product {
   id: string
@@ -105,323 +108,23 @@ interface ProductImage {
 interface Category {
   id: string
   name: string
-}
-
-interface VariationRow {
-  key: string
-  sku: string
-  color: string
-  size: string
-  price: string
-  stock: string
+  slug: string
 }
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json())
-
-function ProductForm({
-  product,
-  categories,
-  onSave,
-  onCancel,
-}: {
-  product?: Product | null
-  categories: Category[]
-  onSave: (data: Partial<Product> & { images?: File[]; existingImages?: ProductImage[]; variations?: VariationRow[] }) => void
-  onCancel: () => void
-}) {
-  const t = useTranslations("products")
-  const td = useTranslations("productDetail")
-  const tc = useTranslations("common")
-  const [name, setName] = React.useState(product?.name || "")
-  const [slug, setSlug] = React.useState(product?.slug || "")
-  const [description, setDescription] = React.useState(product?.description || "")
-  const [categoryId, setCategoryId] = React.useState(product?.category_id || "")
-  const [isActive, setIsActive] = React.useState(product?.is_active ?? true)
-  const [isFeatured, setIsFeatured] = React.useState(product?.is_featured ?? false)
-  const [isBestSeller, setIsBestSeller] = React.useState(product?.is_best_seller ?? false)
-
-  // Variations state (only for creation)
-  const [variations, setVariations] = React.useState<VariationRow[]>([])
-
-  const addVariation = () => {
-    setVariations((prev) => [
-      ...prev,
-      { key: crypto.randomUUID(), sku: "", color: "", size: "", price: "", stock: "0" },
-    ])
-  }
-
-  const updateVariation = (key: string, field: keyof VariationRow, value: string) => {
-    setVariations((prev) =>
-      prev.map((v) => (v.key === key ? { ...v, [field]: value } : v))
-    )
-  }
-
-  const removeVariation = (key: string) => {
-    setVariations((prev) => prev.filter((v) => v.key !== key))
-  }
-
-  // Image state
-  const [newFiles, setNewFiles] = React.useState<File[]>([])
-  const [newPreviews, setNewPreviews] = React.useState<string[]>([])
-  const [existingImages, setExistingImages] = React.useState<ProductImage[]>(product?.product_images || [])
-  const imageInputRef = React.useRef<HTMLInputElement>(null)
-
-  const handleNameChange = (value: string) => {
-    setName(value)
-    if (!product) {
-      setSlug(value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""))
-    }
-  }
-
-  const handleAddFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
-    if (files.length === 0) return
-    setNewFiles((prev) => [...prev, ...files])
-    setNewPreviews((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))])
-    e.target.value = ""
-  }
-
-  const removeNewFile = (index: number) => {
-    URL.revokeObjectURL(newPreviews[index])
-    setNewFiles((prev) => prev.filter((_, i) => i !== index))
-    setNewPreviews((prev) => prev.filter((_, i) => i !== index))
-  }
-
-  const removeExistingImage = (id: string) => {
-    setExistingImages((prev) => prev.filter((img) => img.id !== id))
-  }
-
-  React.useEffect(() => {
-    return () => {
-      newPreviews.forEach((url) => URL.revokeObjectURL(url))
-    }
-  }, [])
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSave({
-      name,
-      slug,
-      description: description || null,
-      category_id: categoryId || null,
-      thumbnail_url: null,
-      is_active: isActive,
-      is_featured: isFeatured,
-      is_best_seller: isBestSeller,
-      images: newFiles,
-      existingImages,
-      ...(!product ? { variations: variations.filter((v) => v.sku && v.price) } : {}),
-    })
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="name">{t("productName")} *</Label>
-          <Input
-            id="name"
-            value={name}
-            onChange={(e) => handleNameChange(e.target.value)}
-            placeholder={t("enterProductName")}
-            required
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="slug">{t("slug")} *</Label>
-          <Input
-            id="slug"
-            value={slug}
-            onChange={(e) => setSlug(e.target.value)}
-            placeholder={t("productSlug")}
-            required
-          />
-        </div>
-      </div>
-      <div className="space-y-2">
-        <Label>{t("productDescription")}</Label>
-        <RichTextEditor
-          content={description}
-          onChange={setDescription}
-          placeholder={t("enterProductDescription")}
-        />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="category">{t("category")}</Label>
-        <Select value={categoryId || "none"} onValueChange={(val) => setCategoryId(val === "none" ? "" : val)}>
-          <SelectTrigger id="category">
-            <SelectValue placeholder={t("selectCategory")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">{t("noCategory")}</SelectItem>
-            {categories.map((cat) => (
-              <SelectItem key={cat.id} value={cat.id}>
-                {cat.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      {/* Multi-image upload */}
-      <div className="space-y-2">
-        <Label>{t("productImages")}</Label>
-        <div className="flex flex-wrap gap-3">
-          {existingImages.map((img) => (
-            <div key={img.id} className="group relative size-20 rounded-lg border overflow-hidden">
-              <img src={img.url} alt={img.alt_text || ""} className="size-full object-cover" />
-              <button
-                type="button"
-                onClick={() => removeExistingImage(img.id)}
-                className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <IconTrash className="size-4 text-white" />
-              </button>
-            </div>
-          ))}
-          {newPreviews.map((src, i) => (
-            <div key={`new-${i}`} className="group relative size-20 rounded-lg border overflow-hidden">
-              <img src={src} alt="" className="size-full object-cover" />
-              <button
-                type="button"
-                onClick={() => removeNewFile(i)}
-                className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <IconTrash className="size-4 text-white" />
-              </button>
-            </div>
-          ))}
-          <button
-            type="button"
-            onClick={() => imageInputRef.current?.click()}
-            className="flex size-20 flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-muted-foreground/25 text-muted-foreground hover:border-muted-foreground/50 hover:text-foreground transition-colors"
-          >
-            <IconPlus className="size-5" />
-            <span className="text-[10px]">Add</span>
-          </button>
-        </div>
-        <input
-          ref={imageInputRef}
-          type="file"
-          accept="image/*"
-          multiple
-          className="hidden"
-          onChange={handleAddFiles}
-        />
-      </div>
-      {/* Variations section — only on create */}
-      {!product && (
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Label>{t("variations")}</Label>
-            <Button type="button" variant="outline" size="sm" onClick={addVariation}>
-              <IconPlus className="mr-1 size-3.5" />
-              {td("addVariation")}
-            </Button>
-          </div>
-          {variations.length > 0 && (
-            <div className="rounded-lg border divide-y">
-              {/* Header */}
-              <div className="grid grid-cols-[1fr_0.8fr_0.6fr_0.7fr_0.5fr_auto] gap-2 px-3 py-2 bg-muted/50 text-xs font-medium text-muted-foreground">
-                <span>{td("sku")} *</span>
-                <span>{td("color")}</span>
-                <span>{td("size")}</span>
-                <span>{td("price")} *</span>
-                <span>{td("stock")}</span>
-                <span></span>
-              </div>
-              {/* Rows */}
-              {variations.map((v) => (
-                <div key={v.key} className="grid grid-cols-[1fr_0.8fr_0.6fr_0.7fr_0.5fr_auto] gap-2 px-3 py-2 items-center">
-                  <Input
-                    value={v.sku}
-                    onChange={(e) => updateVariation(v.key, "sku", e.target.value)}
-                    placeholder={td("skuPlaceholder")}
-                    className="h-8 text-sm"
-                    required
-                  />
-                  <Input
-                    value={v.color}
-                    onChange={(e) => updateVariation(v.key, "color", e.target.value)}
-                    placeholder={td("colorPlaceholder")}
-                    className="h-8 text-sm"
-                  />
-                  <Input
-                    value={v.size}
-                    onChange={(e) => updateVariation(v.key, "size", e.target.value)}
-                    placeholder={td("sizePlaceholder")}
-                    className="h-8 text-sm"
-                  />
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={v.price}
-                    onChange={(e) => updateVariation(v.key, "price", e.target.value)}
-                    placeholder="0.00"
-                    className="h-8 text-sm"
-                    required
-                  />
-                  <Input
-                    type="number"
-                    min="0"
-                    value={v.stock}
-                    onChange={(e) => updateVariation(v.key, "stock", e.target.value)}
-                    placeholder="0"
-                    className="h-8 text-sm"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="size-8 text-muted-foreground hover:text-destructive"
-                    onClick={() => removeVariation(v.key)}
-                  >
-                    <IconTrash className="size-3.5" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
-          {variations.length === 0 && (
-            <p className="text-xs text-muted-foreground">{t("variationsHint")}</p>
-          )}
-        </div>
-      )}
-      <div className="flex items-center gap-2">
-        <Switch id="is_active" checked={isActive} onCheckedChange={setIsActive} />
-        <Label htmlFor="is_active">{t("isActive")}</Label>
-      </div>
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <Switch id="is_featured" checked={isFeatured} onCheckedChange={setIsFeatured} />
-          <Label htmlFor="is_featured">{t("isFeatured")}</Label>
-        </div>
-        <div className="flex items-center gap-2">
-          <Switch id="is_best_seller" checked={isBestSeller} onCheckedChange={setIsBestSeller} />
-          <Label htmlFor="is_best_seller">{t("isBestSeller")}</Label>
-        </div>
-      </div>
-      <DialogFooter>
-        <Button type="button" variant="outline" onClick={onCancel}>
-          {tc("cancel")}
-        </Button>
-        <Button type="submit">{product ? t("updateProduct") : t("createProduct")}</Button>
-      </DialogFooter>
-    </form>
-  )
-}
 
 export default function ProductsPage() {
   const router = useRouter()
   const { hasPermission } = usePermissions()
   const t = useTranslations("products")
   const tc = useTranslations("common")
+  const tn = useTranslations("nav")
   const { data: products = [], mutate, isLoading } = useSWR<Product[]>("/api/products", fetcher)
   const { data: categories = [] } = useSWR<Category[]>("/api/categories", fetcher)
   
   const searchParams = useSearchParams()
   const [isCreateOpen, setIsCreateOpen] = React.useState(false)
-  const [editingProduct, setEditingProduct] = React.useState<Product | null>(null)
+  const [editingProductId, setEditingProductId] = React.useState<string | null>(null)
   const [deletingProduct, setDeletingProduct] = React.useState<Product | null>(null)
   const [isImportOpen, setIsImportOpen] = React.useState(false)
   const [importData, setImportData] = React.useState<{ name: string; category: string; description: string; imageBlob?: Blob; imagePreview?: string }[]>([])
@@ -438,103 +141,6 @@ export default function ProductsPage() {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [globalFilter, setGlobalFilter] = React.useState("")
   const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
-
-  const uploadImages = async (files: File[]): Promise<string[]> => {
-    const urls: string[] = []
-    for (const file of files) {
-      const formData = new FormData()
-      formData.append("file", file)
-      const res = await fetch("/api/upload", { method: "POST", body: formData })
-      if (res.ok) {
-        const { url } = await res.json()
-        urls.push(url)
-      }
-    }
-    return urls
-  }
-
-  const handleCreate = async (data: Partial<Product> & { images?: File[]; existingImages?: ProductImage[]; variations?: VariationRow[] }) => {
-    const { images, existingImages, variations, ...productData } = data
-
-    // Upload new images first
-    const imageUrls = images?.length ? await uploadImages(images) : []
-
-    // Set thumbnail to first image if available
-    if (imageUrls.length > 0) {
-      productData.thumbnail_url = imageUrls[0]
-    }
-
-    const res = await fetch("/api/products", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(productData),
-    })
-    const created = await res.json()
-
-    // Save images to product_images table
-    if (created.id && imageUrls.length > 0) {
-      await fetch(`/api/products/${created.id}/images`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ urls: imageUrls }),
-      })
-    }
-
-    // Create variations
-    if (created.id && variations?.length) {
-      await Promise.all(
-        variations.map((v) =>
-          fetch(`/api/products/${created.id}/variations`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              sku: v.sku,
-              color: v.color || null,
-              size: v.size || null,
-              price: parseFloat(v.price),
-              stock: parseInt(v.stock) || 0,
-            }),
-          })
-        )
-      )
-    }
-
-    mutate()
-    toast.success(t("createSuccess"))
-    setIsCreateOpen(false)
-  }
-
-  const handleUpdate = async (data: Partial<Product> & { images?: File[]; existingImages?: ProductImage[] }) => {
-    if (!editingProduct) return
-    const { images, existingImages, ...productData } = data
-
-    // Upload new images
-    const newImageUrls = images?.length ? await uploadImages(images) : []
-
-    // Set thumbnail: first existing image, or first new image
-    const firstExisting = existingImages?.[0]?.url
-    productData.thumbnail_url = firstExisting || newImageUrls[0] || null
-
-    await fetch(`/api/products/${editingProduct.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(productData),
-    })
-
-    // Sync images: send existing IDs to keep + new URLs to add
-    await fetch(`/api/products/${editingProduct.id}/images`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        keepIds: existingImages?.map((img) => img.id) || [],
-        newUrls: newImageUrls,
-      }),
-    })
-
-    mutate()
-    toast.success(t("updateSuccess"))
-    setEditingProduct(null)
-  }
 
   const handleDelete = async () => {
     if (!deletingProduct) return
@@ -709,9 +315,7 @@ export default function ProductsPage() {
               className="size-10 rounded-md object-cover"
             />
           ) : (
-            <div className="flex size-10 items-center justify-center rounded-md bg-muted text-xs text-muted-foreground">
-              {t("noImg")}
-            </div>
+            <MissingPhoto className="size-10" />
           )}
           <div>
             <div className="font-medium">{row.original.name}</div>
@@ -765,11 +369,7 @@ export default function ProductsPage() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-32">
             {hasPermission("products:write") && (
-              <DropdownMenuItem onClick={async () => {
-                const res = await fetch(`/api/products/${row.original.id}`)
-                const full = await res.json()
-                setEditingProduct({ ...row.original, product_images: full.product_images || [] })
-              }}>
+              <DropdownMenuItem onClick={() => setEditingProductId(row.original.id)}>
                 <IconEdit className="mr-2 size-4" />
                 {tc("edit")}
               </DropdownMenuItem>
@@ -848,6 +448,19 @@ export default function ProductsPage() {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
+          {hasPermission("products:write") && (
+            <Button variant="outline" asChild>
+              <Link href="/dashboard/products/to-complete">{tn("toComplete")}</Link>
+            </Button>
+          )}
+          {hasPermission("brands.manage") && hasPermission("products:write") && (
+            <Button variant="outline" asChild>
+              <Link href="/dashboard/products/import">
+                <IconCloudDownload />
+                <span className="hidden sm:inline">{tn("bulkImport")}</span>
+              </Link>
+            </Button>
+          )}
           <PermissionButton permission="products:write" onClick={() => setIsCreateOpen(true)}>
             <IconPlus />
             {t("addProduct")}
@@ -942,23 +555,43 @@ export default function ProductsPage() {
 
         {/* Create Dialog */}
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{t("createProduct")}</DialogTitle>
-              <DialogDescription>Add a new product to your catalog.</DialogDescription>
+              <DialogDescription>{t("createProductDesc")}</DialogDescription>
             </DialogHeader>
-            <ProductForm categories={categories} onSave={handleCreate} onCancel={() => setIsCreateOpen(false)} />
+            {isCreateOpen && (
+              <ProductForm
+                categories={categories}
+                onSaved={() => {
+                  mutate()
+                  setIsCreateOpen(false)
+                }}
+                onCancel={() => setIsCreateOpen(false)}
+              />
+            )}
           </DialogContent>
         </Dialog>
 
         {/* Edit Dialog */}
-        <Dialog open={!!editingProduct} onOpenChange={() => setEditingProduct(null)}>
-          <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+        <Dialog open={!!editingProductId} onOpenChange={() => setEditingProductId(null)}>
+          <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{t("updateProduct")}</DialogTitle>
-              <DialogDescription>Update product information.</DialogDescription>
+              <DialogDescription>{t("updateProductDesc")}</DialogDescription>
             </DialogHeader>
-            <ProductForm product={editingProduct} categories={categories} onSave={handleUpdate} onCancel={() => setEditingProduct(null)} />
+            {editingProductId && (
+              <ProductForm
+                key={editingProductId}
+                productId={editingProductId}
+                categories={categories}
+                onSaved={() => {
+                  mutate()
+                  setEditingProductId(null)
+                }}
+                onCancel={() => setEditingProductId(null)}
+              />
+            )}
           </DialogContent>
         </Dialog>
 

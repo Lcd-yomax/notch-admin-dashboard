@@ -40,6 +40,8 @@ import { PageHeader } from "@/components/page-header"
 import { usePermissions } from "@/hooks/use-permissions"
 import { TableSpinner } from "@/components/ui/spinner"
 import { useTranslations } from "next-intl"
+import Link from "next/link"
+import { formatVariationLabel, isSmartphoneCategory } from "@/lib/products/smartphone"
 
 interface ProductVariation {
   id: string
@@ -52,6 +54,9 @@ interface ProductVariation {
   discount_label: string | null
   stock: number
   is_active: boolean
+  storage_gb?: number | null
+  ram_gb?: number | null
+  condition?: string | null
   product_images?: VariationImage[]
 }
 
@@ -74,7 +79,7 @@ interface Product {
   is_featured: boolean
   is_best_seller: boolean
   created_at: string
-  categories?: { name: string } | null
+  categories?: { name: string; slug: string } | null
   product_variations?: ProductVariation[]
   product_images?: VariationImage[]
 }
@@ -87,15 +92,18 @@ const fetcher = (url: string) => fetch(url).then((res) => {
 function VariationForm({
   variation,
   productId,
+  isSmartphone,
   onSave,
   onCancel,
 }: {
   variation?: ProductVariation | null
   productId: string
+  isSmartphone: boolean
   onSave: () => void
   onCancel: () => void
 }) {
   const t = useTranslations("productDetail")
+  const tf = useTranslations("productForm")
   const tc = useTranslations("common")
   const [sku, setSku] = React.useState(variation?.sku || "")
   const [color, setColor] = React.useState(variation?.color || "")
@@ -149,7 +157,8 @@ function VariationForm({
         price: parseFloat(price),
         price_display: priceDisplay ? parseFloat(priceDisplay) : null,
         discount_label: discountLabel || null,
-        stock: parseInt(stock) || 0,
+        // Smartphone stock is managed by IMEI units: never sent
+        ...(isSmartphone ? {} : { stock: parseInt(stock) || 0 }),
         is_active: isActive,
       }
 
@@ -252,15 +261,26 @@ function VariationForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="stock">{t("stock")} *</Label>
-          <Input
-            id="stock"
-            type="number"
-            min="0"
-            value={stock}
-            onChange={(e) => setStock(e.target.value)}
-            required
-          />
+          <Label htmlFor="stock">{t("stock")}{!isSmartphone && " *"}</Label>
+          {isSmartphone ? (
+            <p className="flex h-9 items-center gap-2 text-sm text-muted-foreground">
+              {tf("stockManagedByImei", { stock: variation?.stock ?? 0 })}
+              {variation && (
+                <Link href={`/dashboard/inventory/reception?variation=${variation.id}`} className="text-primary hover:underline">
+                  {tf("receiveStock")}
+                </Link>
+              )}
+            </p>
+          ) : (
+            <Input
+              id="stock"
+              type="number"
+              min="0"
+              value={stock}
+              onChange={(e) => setStock(e.target.value)}
+              required
+            />
+          )}
         </div>
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
@@ -400,6 +420,7 @@ export default function ProductDetailPage({
   }
 
   const variations = product?.product_variations || []
+  const isSmartphone = isSmartphoneCategory(product?.categories?.slug)
   const productImages = (product?.product_images || []).filter((img) => !img.sort_order || true)
 
   // Group variations by color for summary
@@ -586,7 +607,12 @@ export default function ProductDetailPage({
                 {variations.length > 0 ? (
                   variations.map((v) => (
                     <TableRow key={v.id}>
-                      <TableCell className="font-mono text-sm">{v.sku}</TableCell>
+                      <TableCell>
+                        <div className="font-mono text-sm">{v.sku}</div>
+                        {isSmartphone && (
+                          <div className="text-xs text-muted-foreground">{formatVariationLabel(v)}</div>
+                        )}
+                      </TableCell>
                       <TableCell>
                         {v.color ? (
                           <Badge variant="outline">{v.color}</Badge>
@@ -722,6 +748,7 @@ export default function ProductDetailPage({
           <VariationForm
             variation={editingVariation}
             productId={id}
+            isSmartphone={isSmartphone}
             onSave={handleVariationSaved}
             onCancel={() => { setVariationDialogOpen(false); setEditingVariation(null) }}
           />
