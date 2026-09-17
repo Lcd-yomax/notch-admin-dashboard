@@ -42,6 +42,7 @@ CREATE TABLE public.categories (
   slug text NOT NULL UNIQUE,
   created_at timestamp with time zone DEFAULT now(),
   image_url text,
+  is_active boolean NOT NULL DEFAULT true,
   CONSTRAINT categories_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.products (

@@ -28,6 +28,31 @@ export function missingPriceLabel(v: Omit<ActivationVariation, "price" | "is_act
   return label || v.sku || ""
 }
 
+/**
+ * Short version of the blockers for messages:
+ * "Photos manquantes · Prix manquants sur 20 variantes (128 Go : 8, 256 Go : 12)"
+ */
+export function summarizeBlockers(blockers: string[]) {
+  const parts: string[] = []
+  if (blockers.includes(PHOTOS_MISSING)) parts.push(PHOTOS_MISSING)
+
+  const prices = blockers.filter((b) => b.startsWith("Prix manquant : ")).map((b) => b.slice("Prix manquant : ".length))
+  if (prices.length === 1) {
+    parts.push(`Prix manquant : ${prices[0]}`)
+  } else if (prices.length > 1) {
+    // Group by the first part of the label (storage for phones, color for accessories)
+    const groups = new Map<string, number>()
+    for (const label of prices) {
+      const key = label.split(" · ")[0]
+      groups.set(key, (groups.get(key) ?? 0) + 1)
+    }
+    const detail = [...groups].map(([key, count]) => `${key} : ${count}`).join(", ")
+    parts.push(`Prix manquants sur ${prices.length} variantes (${detail})`)
+  }
+
+  return parts.join(" · ")
+}
+
 export interface ActivationStatus {
   photosMissing: boolean
   /** Labels of active variations with price <= 0 */

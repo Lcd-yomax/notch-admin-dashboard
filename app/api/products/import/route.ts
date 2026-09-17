@@ -1,6 +1,7 @@
 import { createAdminClient, requirePermission } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { activateProduct } from "@/lib/products/activation-server"
+import { summarizeBlockers } from "@/lib/products/activation"
 
 export async function POST(request: Request) {
   const denied = await requirePermission("products:write")
@@ -84,7 +85,7 @@ export async function POST(request: Request) {
     }
     const { blockers } = await activateProduct(supabase, created.id)
     if (blockers.length > 0) {
-      results.errors.push(`"${product.name}" créé inactif : ${blockers.join(" · ")}`)
+      results.errors.push(`"${product.name}" créé inactif : ${summarizeBlockers(blockers)}`)
     }
   }
 

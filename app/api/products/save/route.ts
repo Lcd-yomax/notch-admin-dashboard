@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 import { CONDITION_OPTIONS, isSmartphoneCategory, sameText } from "@/lib/products/smartphone"
 import type { SaveProductPayload, SaveProductResult, SaveStep } from "@/lib/products/form"
 import { activateProduct } from "@/lib/products/activation-server"
+import { summarizeBlockers } from "@/lib/products/activation"
 
 // POST /api/products/save
 // Saves a product with its variations, images and specs from the product form.
@@ -227,7 +228,7 @@ export async function POST(request: Request) {
     result.activation_blockers = blockers
     steps.push(
       error || blockers.length > 0
-        ? { key: "activation", status: "failed", message: error || `Produit enregistré inactif : ${blockers.join(" · ")}` }
+        ? { key: "activation", status: "failed", message: error || `Enregistré mais pas activé : ${summarizeBlockers(blockers)}` }
         : { key: "activation", status: "saved" }
     )
   }

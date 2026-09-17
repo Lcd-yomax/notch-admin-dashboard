@@ -204,6 +204,8 @@
     "uploadImage": "Click to upload image",
     "uploadImageHint": "PNG, JPG or WEBP",
     "productsCount": "Products",
+    "showOnWebsite": "Show category on website",
+    "showOnWebsiteHelp": "Turn this off to remove the category from the storefront without deleting its products.",
     "createSuccess": "Category created successfully",
     "updateSuccess": "Category updated successfully",
     "deleteSuccess": "Category deleted successfully"
@@ -540,6 +542,8 @@
     "pendingBrand": "{name} (will be created)",
     "hidePrice": "Hide price on the website",
     "hidePriceHelp": "The price is still used for orders and margins.",
+    "showOnWebsite": "Show product on website",
+    "showOnWebsiteHelp": "Turn this off to hide the product from the storefront. It remains available in the dashboard.",
     "nameRequired": "Name is required",
     "slugRequired": "Slug is required",
     "skuRequired": "SKU is required",
@@ -634,7 +638,8 @@
     "importLinked": "Linked to MobileAPI (ID {id})",
     "importApplied": "MobileAPI data applied to the form (not saved)",
     "missingPhoto": "Missing photo",
-    "activeHint": "The product is only activated if it has photos and a price for every active variation."
+    "activeHint": "The product is only activated if it has photos and a price for every active variation.",
+    "stepNotActivated": "not activated (everything else is saved)"
   },
   "mobileapi": {
     "importTitle": "Import from MobileAPI",
@@ -839,11 +844,14 @@
     "activate": "Activate",
     "notReady": "Add photos and every price before activating",
     "activated": "\"{name}\" is now active",
-    "activateFailed": "Activation failed"
+    "activateFailed": "Activation failed",
+    "importPhotos": "MobileAPI photos",
+    "photosImported": "{count, plural, one {# photo added} other {# photos added}}",
+    "photosFailed": "Could not import the photos"
   },
   "bulkImport": {
     "title": "Bulk import",
-    "description": "Create several smartphones from MobileAPI (inactive, no photos)",
+    "description": "Create several smartphones from MobileAPI with their photos (inactive products)",
     "toCompleteLink": "Open the To complete list",
     "step1": "Models to import",
     "step1Desc": "One model per line (3 characters min.). Searches already cached cost no credit.",
@@ -866,10 +874,10 @@
     "selectedCount": "{count, plural, =0 {No phones selected} one {# phone selected} other {# phones selected}}",
     "importCost": "{count, plural, =0 {This import will use no credits (already cached)} one {This import will use # credit} other {This import will use # credits}}",
     "importButton": "{count, plural, =0 {Import} one {Import # phone} other {Import # phones}}",
-    "importHint": "Products are created inactive, without photos. Add photos and prices in \"To complete\".",
+    "importHint": "Products are created inactive with the MobileAPI photos (over 400 px). Add prices in \"To complete\".",
     "importing": "Importing...",
     "created": "Created",
-    "createdSummary": "Created (inactive): {variations} variations, {specs} specs{missing, plural, =0 {} other {, # prices to fill}}",
+    "createdSummary": "Created (inactive): {variations} variations, {specs} specs, {images, plural, =0 {no photos} one {# photo} other {# photos}}{missing, plural, =0 {} other {, # prices to fill}}",
     "completeLink": "Complete",
     "doneSummary": "{count, plural, =0 {No products created} one {# product created} other {# products created}}",
     "searchFailed": "Search failed, please retry",

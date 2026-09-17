@@ -3,6 +3,7 @@ import type { createAdminClient } from "@/lib/supabase/server"
 import { getDevice } from "@/lib/mobileapi/client"
 import { buildSpecs, manufacturerName, parseImportedColors, parseVariants } from "@/lib/mobileapi/parse"
 import { importedProductName } from "@/lib/mobileapi/results"
+import { importDeviceImages } from "@/lib/mobileapi/images"
 import { SMARTPHONE_CATEGORY_SLUG, buildSku } from "@/lib/products/smartphone"
 import { slugify } from "@/lib/utils"
 
@@ -65,6 +66,7 @@ export type ImportResult =
       product: ImportedProductRef
       variations: number
       specs: number
+      images: number
       missing_prices: number
       credits_used: number
       warnings: string[]
@@ -73,7 +75,8 @@ export type ImportResult =
 
 /**
  * Creates the product (always inactive, price hidden), its variations
- * (storage/RAM x colors, price per storage or 0) and its specs. No image rows.
+ * (storage/RAM x colors, price per storage or 0), its specs and its gallery photos
+ * (images narrower than 400 px are skipped).
  */
 export async function importDevice(
   supabase: Admin,
@@ -199,11 +202,22 @@ export async function importDevice(
     if (error) warnings.push(`Caractéristiques : ${error.message}`)
   }
 
+  // Gallery photos (the product stays usable even if this part fails)
+  let imagesAdded = 0
+  try {
+    const images = await importDeviceImages(supabase, product.id, deviceId)
+    imagesAdded = images.added
+    warnings.push(...images.warnings)
+  } catch (error) {
+    warnings.push(`Photos non importées : ${(error as Error).message}`)
+  }
+
   return {
     status: "created",
     product,
     variations: variationCount,
     specs: specs.length,
+    images: imagesAdded,
     missing_prices: rows.filter((r) => !(r.price > 0)).length,
     credits_used: creditsUsed,
     warnings,

@@ -14,7 +14,12 @@ export async function PUT(
 
   const { data, error } = await supabase
     .from("categories")
-    .update({ name: body.name, slug: body.slug, image_url: body.image_url })
+    .update({
+      name: body.name,
+      slug: body.slug,
+      image_url: body.image_url,
+      ...(typeof body.is_active === "boolean" ? { is_active: body.is_active } : {}),
+    })
     .eq("id", id)
     .select()
     .single()

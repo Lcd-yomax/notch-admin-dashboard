@@ -571,7 +571,7 @@ function ProductFormInner({
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
           <div className="flex items-center gap-2">
             <Switch id="is_active" checked={isActive} onCheckedChange={setIsActive} />
-            <Label htmlFor="is_active">{t("isActive")}</Label>
+            <Label htmlFor="is_active">{tf("showOnWebsite")}</Label>
           </div>
           <div className="flex items-center gap-2">
             <Switch id="is_featured" checked={isFeatured} onCheckedChange={setIsFeatured} />
@@ -582,6 +582,7 @@ function ProductFormInner({
             <Label htmlFor="is_best_seller">{t("isBestSeller")}</Label>
           </div>
         </div>
+        <p className="text-xs text-muted-foreground">{tf("showOnWebsiteHelp")}</p>
         {isActive && !product?.is_active && (
           <p className="text-xs text-muted-foreground">{tf("activeHint")}</p>
         )}
@@ -632,7 +633,11 @@ function ProductFormInner({
                   <span className="font-medium">{tf(`steps.${step.key}`)}</span>
                   {" : "}
                   <span className={cn(step.status !== "saved" && "text-destructive")}>
-                    {step.status === "saved" ? tf("stepSaved") : tf("stepNotSaved")}
+                    {step.status === "saved"
+                      ? tf("stepSaved")
+                      : step.key === "activation"
+                        ? tf("stepNotActivated")
+                        : tf("stepNotSaved")}
                   </span>
                   {step.message && <span className="block text-xs text-muted-foreground">{step.message}</span>}
                 </span>

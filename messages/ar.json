@@ -204,6 +204,8 @@
     "uploadImage": "انقر لرفع صورة",
     "uploadImageHint": "PNG، JPG أو WEBP",
     "productsCount": "المنتجات",
+    "showOnWebsite": "إظهار الفئة على الموقع",
+    "showOnWebsiteHelp": "عطّل هذا الخيار لإخفاء الفئة من المتجر دون حذف منتجاتها.",
     "createSuccess": "تم إنشاء الفئة بنجاح",
     "updateSuccess": "تم تحديث الفئة بنجاح",
     "deleteSuccess": "تم حذف الفئة بنجاح"
@@ -539,6 +541,8 @@
     "pendingBrand": "{name} (سيتم إنشاؤها)",
     "hidePrice": "إخفاء السعر على الموقع",
     "hidePriceHelp": "يبقى السعر مستخدمًا في الطلبات والهوامش.",
+    "showOnWebsite": "إظهار المنتج على الموقع",
+    "showOnWebsiteHelp": "عطّل هذا الخيار لإخفاء المنتج من المتجر. سيبقى متاحًا في لوحة التحكم.",
     "nameRequired": "الاسم مطلوب",
     "slugRequired": "المعرّف مطلوب",
     "skuRequired": "SKU مطلوب",
@@ -633,7 +637,8 @@
     "importLinked": "مرتبط بـ MobileAPI (المعرّف {id})",
     "importApplied": "تم تطبيق بيانات MobileAPI على النموذج (غير محفوظة)",
     "missingPhoto": "صورة مفقودة",
-    "activeHint": "لن يتم تفعيل المنتج إلا إذا كانت له صور وسعر لكل متغير نشط."
+    "activeHint": "لن يتم تفعيل المنتج إلا إذا كانت له صور وسعر لكل متغير نشط.",
+    "stepNotActivated": "غير مفعّل (تم حفظ الباقي)"
   },
   "mobileapi": {
     "importTitle": "استيراد من MobileAPI",
@@ -838,11 +843,14 @@
     "activate": "تفعيل",
     "notReady": "أضف الصور وكل الأسعار قبل التفعيل",
     "activated": "«{name}» أصبح نشطًا",
-    "activateFailed": "تعذّر التفعيل"
+    "activateFailed": "تعذّر التفعيل",
+    "importPhotos": "صور MobileAPI",
+    "photosImported": "{count, plural, one {تمت إضافة صورة واحدة} other {تمت إضافة # صور}}",
+    "photosFailed": "تعذّر استيراد الصور"
   },
   "bulkImport": {
     "title": "استيراد جماعي",
-    "description": "إنشاء عدة هواتف من MobileAPI (غير نشطة، بدون صور)",
+    "description": "إنشاء عدة هواتف من MobileAPI مع صورها (منتجات غير نشطة)",
     "toCompleteLink": "عرض قائمة للإكمال",
     "step1": "الطرازات المراد استيرادها",
     "step1Desc": "طراز واحد في كل سطر (3 أحرف على الأقل). عمليات البحث المخزنة مؤقتًا لا تستهلك أي رصيد.",
@@ -865,10 +873,10 @@
     "selectedCount": "{count, plural, =0 {لم يتم اختيار أي هاتف} one {تم اختيار هاتف واحد} other {تم اختيار # هواتف}}",
     "importCost": "{count, plural, =0 {لن يستهلك هذا الاستيراد أي رصيد (مخزن مؤقتًا)} one {سيستهلك هذا الاستيراد رصيدًا واحدًا} other {سيستهلك هذا الاستيراد # أرصدة}}",
     "importButton": "{count, plural, =0 {استيراد} one {استيراد هاتف واحد} other {استيراد # هواتف}}",
-    "importHint": "تُنشأ المنتجات غير نشطة وبدون صور. أضف الصور والأسعار في «للإكمال».",
+    "importHint": "تُنشأ المنتجات غير نشطة مع صور MobileAPI (أكبر من 400 بكسل). أضف الأسعار في «للإكمال».",
     "importing": "جارٍ الاستيراد...",
     "created": "تم الإنشاء",
-    "createdSummary": "تم الإنشاء (غير نشط): {variations} متغيرات، {specs} مواصفات{missing, plural, =0 {} other {، # أسعار للإكمال}}",
+    "createdSummary": "تم الإنشاء (غير نشط): {variations} متغيرات، {specs} مواصفات، {images, plural, =0 {بدون صور} one {صورة واحدة} other {# صور}}{missing, plural, =0 {} other {، # أسعار للإكمال}}",
     "completeLink": "إكمال",
     "doneSummary": "{count, plural, =0 {لم يتم إنشاء أي منتج} one {تم إنشاء منتج واحد} other {تم إنشاء # منتجات}}",
     "searchFailed": "تعذّر البحث، أعد المحاولة",

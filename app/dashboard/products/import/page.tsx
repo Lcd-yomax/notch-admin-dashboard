@@ -194,7 +194,7 @@ function BulkImportContent() {
           importMessage:
             data.status === "exists"
               ? t("alreadyImported")
-              : t("createdSummary", { variations: data.variations, specs: data.specs, missing: data.missing_prices }),
+              : t("createdSummary", { variations: data.variations, specs: data.specs, images: data.images ?? 0, missing: data.missing_prices }),
         })
       } catch {
         updateRow(row.key, { import: "error", importMessage: t("importFailed") })

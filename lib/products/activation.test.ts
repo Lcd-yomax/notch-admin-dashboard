@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { getActivationStatus, missingPriceLabel } from "./activation"
+import { getActivationStatus, missingPriceLabel, summarizeBlockers } from "./activation"
 
 const phone = (storage_gb: number, ram_gb: number, color: string, price: number, is_active = true) => ({
   sku: `SKU-${storage_gb}-${ram_gb}-${color}`,
@@ -32,6 +32,19 @@ describe("activation rules", () => {
       "Prix manquant : 128 Go · 8 Go · Bleu",
       "Prix manquant : 256 Go · 8 Go · Noir",
     ])
+  })
+
+  it("summarizes many missing prices by storage", () => {
+    const labels = ["6 Go · Bleu glacier", "6 Go · Lilas", "8 Go · Bleu glacier", "8 Go · Lilas"]
+    const blockers = [
+      ...labels.map((l) => `Prix manquant : 128 Go · ${l}`),
+      ...labels.map((l) => `Prix manquant : 256 Go · ${l}`),
+      "Prix manquant : 256 Go · 12 Go · Lilas",
+    ]
+    expect(summarizeBlockers(blockers)).toBe("Prix manquants sur 9 variantes (128 Go : 4, 256 Go : 5)")
+    expect(summarizeBlockers(["Photos manquantes", "Prix manquant : 256 Go · 8 Go · Noir"])).toBe(
+      "Photos manquantes · Prix manquant : 256 Go · 8 Go · Noir"
+    )
   })
 
   it("is ready with photos and prices", () => {

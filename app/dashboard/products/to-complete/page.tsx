@@ -29,6 +29,7 @@ interface ToCompleteProduct {
   id: string
   name: string
   created_at: string
+  mobileapi_device_id: string | null
   category_name: string | null
   brand_name: string | null
   image_url: string | null
@@ -64,6 +65,21 @@ function ToCompleteContent() {
   const [expanded, setExpanded] = React.useState<string | null>(null)
   const [editingId, setEditingId] = React.useState<string | null>(null)
   const [activatingId, setActivatingId] = React.useState<string | null>(null)
+  const [photosId, setPhotosId] = React.useState<string | null>(null)
+  const canImportPhotos = canWrite && hasPermission("brands.manage")
+
+  const handleImportPhotos = async (product: ToCompleteProduct) => {
+    setPhotosId(product.id)
+    try {
+      const res = await fetch(`/api/products/${product.id}/mobileapi-images`, { method: "POST" })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) toast.error(data.error || t("photosFailed"))
+      else toast.success(t("photosImported", { count: data.added }))
+      mutate()
+    } finally {
+      setPhotosId(null)
+    }
+  }
 
   const counts = {
     all: products.length,
@@ -182,7 +198,19 @@ function ToCompleteContent() {
                 </div>
               </div>
               {canWrite && (
-                <div className="flex gap-2 sm:shrink-0">
+                <div className="flex flex-wrap gap-2 sm:shrink-0">
+                  {canImportPhotos && product.photos_missing && product.mobileapi_device_id && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 sm:flex-none"
+                      disabled={photosId === product.id}
+                      onClick={() => handleImportPhotos(product)}
+                    >
+                      {photosId === product.id ? <Spinner /> : <IconCloudDownload className="size-4" />}
+                      {t("importPhotos")}
+                    </Button>
+                  )}
                   <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={() => setEditingId(product.id)}>
                     <IconEdit className="size-4" />
                     {t("complete")}
