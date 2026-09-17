@@ -4,6 +4,7 @@ import { CONDITION_OPTIONS, isSmartphoneCategory, sameText } from "@/lib/product
 import type { SaveProductPayload, SaveProductResult, SaveStep } from "@/lib/products/form"
 import { activateProduct } from "@/lib/products/activation-server"
 import { summarizeBlockers } from "@/lib/products/activation"
+import { importDeviceImages } from "@/lib/mobileapi/images"
 
 // POST /api/products/save
 // Saves a product with its variations, images and specs from the product form.
@@ -206,6 +207,19 @@ export async function POST(request: Request) {
 
   // ── 4. Images ──────────────────────────────────────────────────────────────
   const imageFailures = await syncImages(supabase, productId, body.images)
+
+  // The single-product MobileAPI dialog stores the device link in the form,
+  // but does not send image URLs to the browser. Import its gallery here so a
+  // newly created smartphone is not saved without a photo.
+  if (imageFailures.length === 0 && p.mobileapi_device_id && body.images.length === 0) {
+    try {
+      const imported = await importDeviceImages(supabase, productId, p.mobileapi_device_id)
+      imageFailures.push(...imported.warnings)
+      if (imported.added === 0) imageFailures.push("Aucune photo MobileAPI enregistrée")
+    } catch (error) {
+      imageFailures.push(`Photos MobileAPI : ${(error as Error).message}`)
+    }
+  }
   steps.push(
     imageFailures.length > 0
       ? { key: "images", status: "failed", message: imageFailures.join(" · ") }

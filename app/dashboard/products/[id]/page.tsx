@@ -191,13 +191,12 @@ function VariationForm({
           const formData = new FormData()
           formData.append("file", file)
           const res = await fetch("/api/upload", { method: "POST", body: formData })
-          if (res.ok) {
-            const { url } = await res.json()
-            uploadedUrls.push(url)
-          }
+          const data = await res.json().catch(() => ({}))
+          if (!res.ok || !data.url) throw new Error(data.error || "Image upload failed")
+          uploadedUrls.push(data.url)
         }
         // Sync images for this variation
-        await fetch(`/api/products/${productId}/images`, {
+        const imageResponse = await fetch(`/api/products/${productId}/images`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -206,9 +205,11 @@ function VariationForm({
             variationId,
           }),
         })
+        const imageResult = await imageResponse.json().catch(() => ({}))
+        if (!imageResponse.ok) throw new Error(imageResult.error || "Image save failed")
       } else if (variationId && existingImages.length !== (variation?.product_images?.length ?? 0)) {
         // Images were removed, sync
-        await fetch(`/api/products/${productId}/images`, {
+        const imageResponse = await fetch(`/api/products/${productId}/images`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -217,11 +218,13 @@ function VariationForm({
             variationId,
           }),
         })
+        const imageResult = await imageResponse.json().catch(() => ({}))
+        if (!imageResponse.ok) throw new Error(imageResult.error || "Image save failed")
       }
 
       onSave()
-    } catch {
-      // Error handling could be improved
+    } catch (error) {
+      toast.error((error as Error).message || "Impossible d'enregistrer la variante")
     } finally {
       setIsSaving(false)
     }
