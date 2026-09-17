@@ -84,7 +84,6 @@ import {
 import { PageHeader } from "@/components/page-header"
 import { usePermissions } from "@/hooks/use-permissions"
 import { PermissionButton } from "@/components/access"
-import { useOrderImeiGuard } from "@/components/orders/order-imei-guard"
 
 interface Order {
   id: string
@@ -321,7 +320,6 @@ function OrdersPageContent() {
   const { data: orders = [], mutate, isLoading } = useSWR<Order[]>("/api/orders", fetcher)
   const { data: usersData = [] } = useSWR<any[]>("/api/users", fetcher)
   const tm = useTranslations("manualOrder")
-  const imeiGuard = useOrderImeiGuard()
 
   const searchParams = useSearchParams()
   const pathname = usePathname()
@@ -369,8 +367,6 @@ function OrdersPageContent() {
 
   const handleUpdateStatus = async (status: string, assignee: string | null) => {
     if (!editingOrder) return
-    const change = { status, previousStatus: editingOrder.status }
-    if (!(await imeiGuard.confirmShipping(editingOrder.id, change))) return
     await fetch(`/api/orders/${editingOrder.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -378,7 +374,6 @@ function OrdersPageContent() {
     })
     mutate()
     toast.success(t("statusUpdateSuccess"))
-    imeiGuard.offerRelease(editingOrder.id, change)
     setEditingOrder(null)
   }
 
@@ -414,9 +409,6 @@ function OrdersPageContent() {
   }
 
   const handleStatusChangeInline = async (orderId: string, newStatus: string, currentAssignee: string | null) => {
-    const previousStatus = orders.find((o) => o.id === orderId)?.status
-    const change = { status: newStatus, previousStatus }
-    if (!(await imeiGuard.confirmShipping(orderId, change))) return
     patchOrderLocally(orderId, { status: newStatus })
     try {
       await fetch(`/api/orders/${orderId}`, {
@@ -425,7 +417,6 @@ function OrdersPageContent() {
         body: JSON.stringify({ status: newStatus, assigned_to: currentAssignee, user_id: user?.id }),
       })
       toast.success(t("statusUpdateSuccess"))
-      imeiGuard.offerRelease(orderId, change)
     } catch {
       mutate()
       toast.error("Failed to update status")
@@ -448,8 +439,6 @@ function OrdersPageContent() {
   }
 
   const handleDeliveryStatusChangeInline = async (orderId: string, newDeliveryStatus: string) => {
-    const previousDeliveryStatus = orders.find((o) => o.id === orderId)?.delivery_status || "En attente"
-    if (!(await imeiGuard.confirmShipping(orderId, { deliveryStatus: newDeliveryStatus, previousDeliveryStatus }))) return
     patchOrderLocally(orderId, { delivery_status: newDeliveryStatus })
     try {
       await fetch(`/api/orders/${orderId}`, {
@@ -1132,8 +1121,6 @@ function OrdersPageContent() {
           {editingOrder && <OrderStatusForm order={editingOrder} users={usersData} canAssign={hasPermission("orders:update_status")} onSave={handleUpdateStatus} onCancel={() => setEditingOrder(null)} />}
         </DialogContent>
       </Dialog>
-
-      {imeiGuard.dialogs}
 
       {/* Delete Dialog */}
       <Dialog open={!!deletingOrder} onOpenChange={() => setDeletingOrder(null)}>

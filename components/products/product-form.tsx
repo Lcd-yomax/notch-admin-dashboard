@@ -359,9 +359,8 @@ function ProductFormInner({
           price: toNumberOrNull(v.price) ?? 0,
           price_display: toNumberOrNull(v.price_display),
           discount_label: v.discount_label.trim() || null,
-          ...(isSmartphone
-            ? {}
-            : { stock: toNumberOrNull(v.stock) ?? 0, stock_original: v.stock_original != null ? toNumberOrNull(v.stock_original) ?? 0 : undefined }),
+          stock: toNumberOrNull(v.stock) ?? 0,
+          stock_original: v.stock_original != null ? toNumberOrNull(v.stock_original) ?? 0 : undefined,
           is_active: v.is_active,
         })),
         deleted_variation_ids: variations.filter((v) => v.deleted && v.id).map((v) => v.id as string),
@@ -607,7 +606,6 @@ function ProductFormInner({
         isSmartphone={isSmartphone}
         errors={variationErrors}
         canDelete={hasPermission("products:delete")}
-        canManageInventory={hasPermission("inventory.imei")}
         onGenerate={() => setGenerator({ open: true, mode: importedVariants ? "import" : "manual" })}
       />
 

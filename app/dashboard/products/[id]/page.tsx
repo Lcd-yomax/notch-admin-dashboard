@@ -40,7 +40,6 @@ import { PageHeader } from "@/components/page-header"
 import { usePermissions } from "@/hooks/use-permissions"
 import { TableSpinner } from "@/components/ui/spinner"
 import { useTranslations } from "next-intl"
-import Link from "next/link"
 import { formatVariationLabel, isSmartphoneCategory } from "@/lib/products/smartphone"
 
 interface ProductVariation {
@@ -92,18 +91,15 @@ const fetcher = (url: string) => fetch(url).then((res) => {
 function VariationForm({
   variation,
   productId,
-  isSmartphone,
   onSave,
   onCancel,
 }: {
   variation?: ProductVariation | null
   productId: string
-  isSmartphone: boolean
   onSave: () => void
   onCancel: () => void
 }) {
   const t = useTranslations("productDetail")
-  const tf = useTranslations("productForm")
   const tc = useTranslations("common")
   const [sku, setSku] = React.useState(variation?.sku || "")
   const [color, setColor] = React.useState(variation?.color || "")
@@ -157,8 +153,7 @@ function VariationForm({
         price: parseFloat(price),
         price_display: priceDisplay ? parseFloat(priceDisplay) : null,
         discount_label: discountLabel || null,
-        // Smartphone stock is managed by IMEI units: never sent
-        ...(isSmartphone ? {} : { stock: parseInt(stock) || 0 }),
+        stock: parseInt(stock) || 0,
         is_active: isActive,
       }
 
@@ -264,26 +259,15 @@ function VariationForm({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="stock">{t("stock")}{!isSmartphone && " *"}</Label>
-          {isSmartphone ? (
-            <p className="flex h-9 items-center gap-2 text-sm text-muted-foreground">
-              {tf("stockManagedByImei", { stock: variation?.stock ?? 0 })}
-              {variation && (
-                <Link href={`/dashboard/inventory/reception?variation=${variation.id}`} className="text-primary hover:underline">
-                  {tf("receiveStock")}
-                </Link>
-              )}
-            </p>
-          ) : (
-            <Input
-              id="stock"
-              type="number"
-              min="0"
-              value={stock}
-              onChange={(e) => setStock(e.target.value)}
-              required
-            />
-          )}
+          <Label htmlFor="stock">{t("stock")} *</Label>
+          <Input
+            id="stock"
+            type="number"
+            min="0"
+            value={stock}
+            onChange={(e) => setStock(e.target.value)}
+            required
+          />
         </div>
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
@@ -751,7 +735,6 @@ export default function ProductDetailPage({
           <VariationForm
             variation={editingVariation}
             productId={id}
-            isSmartphone={isSmartphone}
             onSave={handleVariationSaved}
             onCancel={() => { setVariationDialogOpen(false); setEditingVariation(null) }}
           />

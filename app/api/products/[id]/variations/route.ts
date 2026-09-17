@@ -1,6 +1,5 @@
 import { createAdminClient, requirePermission } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
-import { isStockManagedByImei } from "@/lib/products/stock"
 
 export async function GET(
   _request: Request,
@@ -34,8 +33,7 @@ export async function POST(
   const supabase = createAdminClient()
   const body = await request.json()
 
-  // Smartphone stock comes from device_units: a new variation starts at 0
-  const stock = (await isStockManagedByImei(supabase, id)) ? 0 : body.stock ?? 0
+  const stock = body.stock ?? 0
 
   const { data, error } = await supabase
     .from("product_variations")

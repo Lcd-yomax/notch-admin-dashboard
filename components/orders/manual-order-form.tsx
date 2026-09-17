@@ -272,7 +272,7 @@ export function ManualOrderForm() {
         return
       }
       toast.success(t("created", { number: data.order_number }))
-      // Go to the order so IMEIs can be assigned
+      // Open the new order
       router.push(`/dashboard/orders/${data.id}`)
     } catch {
       toast.error(t("errors.createFailed"))
