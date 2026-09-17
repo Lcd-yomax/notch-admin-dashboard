@@ -205,7 +205,9 @@
     "showOnWebsiteHelp": "Turn this off to remove the category from the storefront without deleting its products.",
     "createSuccess": "Category created successfully",
     "updateSuccess": "Category updated successfully",
-    "deleteSuccess": "Category deleted successfully"
+    "deleteSuccess": "Category deleted successfully",
+    "uploadError": "Image upload failed",
+    "saveError": "Could not save the category"
   },
   "orders": {
     "title": "Orders",

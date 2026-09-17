@@ -205,7 +205,9 @@
     "showOnWebsiteHelp": "Désactivez cette option pour retirer la catégorie du storefront sans supprimer ses produits.",
     "createSuccess": "Catégorie créée avec succès",
     "updateSuccess": "Catégorie mise à jour avec succès",
-    "deleteSuccess": "Catégorie supprimée avec succès"
+    "deleteSuccess": "Catégorie supprimée avec succès",
+    "uploadError": "Échec du téléchargement de l'image",
+    "saveError": "Impossible d'enregistrer la catégorie"
   },
   "orders": {
     "title": "Commandes",

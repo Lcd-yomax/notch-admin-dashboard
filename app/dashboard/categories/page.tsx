@@ -109,11 +109,16 @@ function CategoryForm({
       const formData = new FormData()
       formData.append("file", file)
       const res = await fetch("/api/upload", { method: "POST", body: formData })
-      const data = await res.json()
-      if (data.url) {
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && data.url) {
         setImageUrl(data.url)
+      } else {
+        toast.error(data.error || t("uploadError"))
       }
+    } catch {
+      toast.error(t("uploadError"))
     } finally {
+      e.target.value = ""
       setUploading(false)
     }
   }
@@ -246,26 +251,33 @@ export default function CategoriesPage() {
   const [globalFilter, setGlobalFilter] = React.useState("")
   const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
 
-  const handleCreate = async (data: Partial<Category>) => {
-    if (!hasPermission("products:write")) return
-    await fetch("/api/categories", {
-      method: "POST",
+  // Shows the real server error instead of a success toast when saving fails
+  const saveCategory = async (url: string, method: "POST" | "PUT", data: Partial<Category>) => {
+    const res = await fetch(url, {
+      method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     })
+    const result = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      toast.error(result.error || t("saveError"))
+      return false
+    }
+    if (result.warning) toast.warning(result.warning)
     mutate()
+    return true
+  }
+
+  const handleCreate = async (data: Partial<Category>) => {
+    if (!hasPermission("products:write")) return
+    if (!(await saveCategory("/api/categories", "POST", data))) return
     toast.success(t("createSuccess"))
     setIsCreateOpen(false)
   }
 
   const handleUpdate = async (data: Partial<Category>) => {
     if (!editingCategory || !hasPermission("products:write")) return
-    await fetch(`/api/categories/${editingCategory.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    })
-    mutate()
+    if (!(await saveCategory(`/api/categories/${editingCategory.id}`, "PUT", data))) return
     toast.success(t("updateSuccess"))
     setEditingCategory(null)
   }

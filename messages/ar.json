@@ -205,7 +205,9 @@
     "showOnWebsiteHelp": "عطّل هذا الخيار لإخفاء الفئة من المتجر دون حذف منتجاتها.",
     "createSuccess": "تم إنشاء الفئة بنجاح",
     "updateSuccess": "تم تحديث الفئة بنجاح",
-    "deleteSuccess": "تم حذف الفئة بنجاح"
+    "deleteSuccess": "تم حذف الفئة بنجاح",
+    "uploadError": "فشل رفع الصورة",
+    "saveError": "تعذّر حفظ الفئة"
   },
   "orders": {
     "title": "الطلبات",
