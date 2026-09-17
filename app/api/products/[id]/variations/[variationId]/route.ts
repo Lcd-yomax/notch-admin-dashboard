@@ -1,6 +1,5 @@
 import { createAdminClient, requirePermission } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
-import { isStockManagedByImei } from "@/lib/products/stock"
 
 export async function PUT(
   request: Request,
@@ -20,11 +19,8 @@ export async function PUT(
     price: body.price,
     price_display: body.price_display || null,
     discount_label: body.discount_label || null,
+    stock: body.stock ?? 0,
     is_active: body.is_active ?? true,
-  }
-  // Stock of variations tracked by IMEI is kept in sync by a trigger: never write it
-  if (!(await isStockManagedByImei(supabase, id, variationId))) {
-    update.stock = body.stock ?? 0
   }
 
   const { data, error } = await supabase

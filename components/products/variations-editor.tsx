@@ -1,9 +1,8 @@
 "use client"
 
 import * as React from "react"
-import Link from "next/link"
 import { useTranslations } from "next-intl"
-import { IconArrowBackUp, IconExternalLink, IconPlus, IconTrash, IconWand } from "@tabler/icons-react"
+import { IconArrowBackUp, IconPlus, IconTrash, IconWand } from "@tabler/icons-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -43,7 +42,6 @@ export function VariationsEditor({
   isSmartphone,
   errors,
   canDelete,
-  canManageInventory,
   onGenerate,
 }: {
   rows: VariationDraft[]
@@ -51,7 +49,6 @@ export function VariationsEditor({
   isSmartphone: boolean
   errors: VariationErrors
   canDelete: boolean
-  canManageInventory: boolean
   onGenerate?: () => void
 }) {
   const t = useTranslations("productForm")
@@ -72,7 +69,6 @@ export function VariationsEditor({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h3 className="text-sm font-medium">{t("variations")}</h3>
-          {isSmartphone && <p className="text-xs text-muted-foreground">{t("variationsSmartphoneHint")}</p>}
         </div>
         <div className="flex flex-wrap gap-2">
           {isSmartphone && onGenerate && (
@@ -118,7 +114,7 @@ export function VariationsEditor({
                 <TableHead className="min-w-[100px]">{t("price")} *</TableHead>
                 <TableHead className="min-w-[100px]">{t("priceDisplay")}</TableHead>
                 <TableHead className="min-w-[100px]">{t("discountLabel")}</TableHead>
-                <TableHead className={isSmartphone ? "min-w-[170px]" : "min-w-[80px]"}>{t("stock")}</TableHead>
+                <TableHead className="min-w-[80px]">{t("stock")}</TableHead>
                 <TableHead>{t("active")}</TableHead>
                 <TableHead className="w-10" />
               </TableRow>
@@ -271,30 +267,14 @@ export function VariationsEditor({
                         />
                       </TableCell>
                       <TableCell className="align-top">
-                        {isSmartphone ? (
-                          <div className="flex h-8 items-center gap-1 whitespace-nowrap text-xs text-muted-foreground">
-                            <span>{t("stockManagedByImei", { stock: row.stock || "0" })}</span>
-                            {row.id && canManageInventory && (
-                              <Link
-                                href={`/dashboard/inventory/reception?variation=${row.id}`}
-                                className="inline-flex items-center text-primary hover:underline"
-                                title={t("receiveStock")}
-                                target="_blank"
-                              >
-                                <IconExternalLink className="size-3.5" />
-                              </Link>
-                            )}
-                          </div>
-                        ) : (
-                          <Input
-                            type="number"
-                            min="0"
-                            value={row.stock}
-                            onChange={(e) => update(row.key, { stock: e.target.value })}
-                            className="h-8"
-                            disabled={disabled}
-                          />
-                        )}
+                        <Input
+                          type="number"
+                          min="0"
+                          value={row.stock}
+                          onChange={(e) => update(row.key, { stock: e.target.value })}
+                          className="h-8"
+                          disabled={disabled}
+                        />
                       </TableCell>
                       <TableCell className="align-top">
                         <div className="flex h-8 items-center">

@@ -21,8 +21,6 @@ import {
   IconUserShield,
   IconChartBar,
   IconTag,
-  IconBarcode,
-  IconDeviceMobile,
   IconChecklist,
   IconCloudDownload,
 } from "@tabler/icons-react"
@@ -126,25 +124,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     },
   ]
 
-  const inventory = [
-    {
-      name: t("stockReception"),
-      url: "/dashboard/inventory/reception",
-      icon: IconBarcode,
-      permission: "inventory.imei",
-    },
-    {
-      name: t("imeiInventory"),
-      url: "/dashboard/inventory/imei",
-      icon: IconDeviceMobile,
-      permission: "inventory.imei",
-    },
-  ]
-
-  const filteredInventory = inventory.filter(
-    (item) => hasPermission(item.permission)
-  )
-
   const filteredNavMain = navMain.filter(
     (item) => !item.permission || hasPermission(item.permission)
   )
@@ -172,9 +151,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={filteredNavMain} />
-        {filteredInventory.length > 0 && (
-          <NavDocuments label={t("inventory")} items={filteredInventory} />
-        )}
         <NavDocuments items={filteredDocuments} />
         </SidebarContent>
       <SidebarFooter>

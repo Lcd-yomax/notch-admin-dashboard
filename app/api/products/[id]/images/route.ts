@@ -85,7 +85,10 @@ export async function PUT(
       is_primary: !hasExisting && i === 0,
     }))
 
-    await supabase.from("product_images").insert(rows)
+    const { error: insertError } = await supabase.from("product_images").insert(rows)
+    if (insertError) {
+      return NextResponse.json({ error: insertError.message }, { status: 500 })
+    }
   }
 
   // Return updated image list

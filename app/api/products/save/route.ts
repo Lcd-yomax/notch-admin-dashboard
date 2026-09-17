@@ -1,9 +1,10 @@
 import { authorize, createAdminClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
-import { CONDITION_OPTIONS, isSmartphoneCategory, sameText } from "@/lib/products/smartphone"
+import { CONDITION_OPTIONS, sameText } from "@/lib/products/smartphone"
 import type { SaveProductPayload, SaveProductResult, SaveStep } from "@/lib/products/form"
 import { activateProduct } from "@/lib/products/activation-server"
 import { summarizeBlockers } from "@/lib/products/activation"
+import { importDeviceImages } from "@/lib/mobileapi/images"
 
 // POST /api/products/save
 // Saves a product with its variations, images and specs from the product form.
@@ -130,12 +131,6 @@ export async function POST(request: Request) {
   result.product_id = productId
   steps.push({ key: "product", status: "saved" })
 
-  let isSmartphone = false
-  if (p.category_id) {
-    const { data: category } = await supabase.from("categories").select("slug").eq("id", p.category_id).maybeSingle()
-    isSmartphone = isSmartphoneCategory(category?.slug)
-  }
-
   // ── 3. Variations ──────────────────────────────────────────────────────────
   const variationFailures: string[] = []
 
@@ -148,19 +143,12 @@ export async function POST(request: Request) {
         if (error) {
           variationFailures.push(
             error.code === "23503"
-              ? "Une variante utilisée par des commandes ou des IMEI ne peut pas être supprimée (désactivez-la)"
+              ? "Une variante utilisée par des commandes ne peut pas être supprimée (désactivez-la)"
               : `Suppression : ${error.message}`
           )
         }
       }
     }
-  }
-
-  const existingIds = body.variations.filter((v) => v.id).map((v) => v.id as string)
-  const unitsByVariation = new Set<string>()
-  if (existingIds.length > 0) {
-    const { data: units } = await supabase.from("device_units").select("variation_id").in("variation_id", existingIds)
-    for (const u of units || []) unitsByVariation.add(u.variation_id)
   }
 
   for (const [i, v] of body.variations.entries()) {
@@ -177,10 +165,9 @@ export async function POST(request: Request) {
       discount_label: v.discount_label || null,
       is_active: v.is_active,
     }
-    // Stock of smartphones is kept in sync with device_units by a trigger: never write it.
-    // For accessories, only write stock the user actually changed in the form.
-    const stockManagedByImei = isSmartphone || (v.id ? unitsByVariation.has(v.id) : false)
-    if (!stockManagedByImei && v.stock != null && (!v.id || v.stock !== v.stock_original)) {
+    // Manual stock for every product: only write stock the user actually changed in the form,
+    // so a concurrent website order is not overwritten by an old value.
+    if (v.stock != null && (!v.id || v.stock !== v.stock_original)) {
       row.stock = Math.max(0, Math.trunc(v.stock))
     }
 
@@ -206,6 +193,19 @@ export async function POST(request: Request) {
 
   // ── 4. Images ──────────────────────────────────────────────────────────────
   const imageFailures = await syncImages(supabase, productId, body.images)
+
+  // The single-product MobileAPI dialog stores the device link in the form,
+  // but does not send image URLs to the browser. Import its gallery here so a
+  // newly created smartphone is not saved without a photo.
+  if (imageFailures.length === 0 && p.mobileapi_device_id && body.images.length === 0) {
+    try {
+      const imported = await importDeviceImages(supabase, productId, p.mobileapi_device_id)
+      imageFailures.push(...imported.warnings)
+      if (imported.added === 0) imageFailures.push("Aucune photo MobileAPI enregistrée")
+    } catch (error) {
+      imageFailures.push(`Photos MobileAPI : ${(error as Error).message}`)
+    }
+  }
   steps.push(
     imageFailures.length > 0
       ? { key: "images", status: "failed", message: imageFailures.join(" · ") }

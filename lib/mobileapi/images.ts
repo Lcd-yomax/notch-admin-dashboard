@@ -101,15 +101,29 @@ async function downloadImage(raw: string): Promise<Uint8Array | null> {
   if (!allowed) return null
   const key = process.env.MOBILEAPI_KEY
   try {
-    const res = await fetch(allowed.url, {
+    let res = await fetch(allowed.url, {
       headers: allowed.withKey && key ? { Authorization: `Bearer ${key}` } : {},
       signal: AbortSignal.timeout(TIMEOUT_MS),
       cache: "no-store",
       // Never follow a redirect with the key to another host
       redirect: allowed.withKey ? "manual" : "follow",
     })
+
+    // MobileAPI may redirect its protected image URL to a public GSM Arena URL.
+    // Follow that redirect only after validating the destination and without the API key.
+    if (allowed.withKey && res.status >= 300 && res.status < 400) {
+      const location = res.headers.get("location")
+      if (!location) return null
+      const redirected = allowedImageUrl(new URL(location, allowed.url).toString())
+      if (!redirected || redirected.withKey) return null
+      res = await fetch(redirected.url, {
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+        cache: "no-store",
+        redirect: "follow",
+      })
+    }
     if (res.status === 402 || res.status === 429) throw new MobileApiError(MOBILEAPI_ERRORS.noCredits, 429)
-    if (!res.ok || !res.headers.get("content-type")?.startsWith("image/")) return null
+    if (!res.ok) return null
     const bytes = new Uint8Array(await res.arrayBuffer())
     return bytes.length > 0 && bytes.length <= MAX_BYTES ? bytes : null
   } catch (error) {
@@ -118,20 +132,36 @@ async function downloadImage(raw: string): Promise<Uint8Array | null> {
   }
 }
 
+async function ensureImageBucket(supabase: Admin) {
+  const { data: buckets, error: listError } = await supabase.storage.listBuckets()
+  if (listError) throw new Error(`Bucket images : ${listError.message}`)
+  if (buckets?.some((bucket) => bucket.name === BUCKET)) return
+
+  const { error: createError } = await supabase.storage.createBucket(BUCKET, { public: true })
+  if (createError && !/already exists/i.test(createError.message)) {
+    throw new Error(`Bucket images : ${createError.message}`)
+  }
+}
+
 /**
- * Downloads the device photos (skipping images narrower than 400 px), uploads them to the
- * product-images bucket and adds product_images rows after the existing ones.
+ * Downloads the device photos, uploads them to the product-images bucket and adds
+ * product_images rows after the existing ones. Large photos are preferred; when a
+ * device only exposes a small image, the first available one is kept as a fallback.
  * The first image becomes the thumbnail when the product has none.
  */
 export async function importDeviceImages(supabase: Admin, productId: string, deviceId: string) {
   const warnings: string[] = []
   const { images } = await getDeviceImages(deviceId)
+  if (images.length === 0) return { added: 0, skippedSmall: 0, warnings }
+
+  await ensureImageBucket(supabase)
 
   const urls: string[] = []
+  const smallImages: { bytes: Uint8Array; size: { width: number; height: number; ext: "jpg" | "png" | "webp" } }[] = []
   let skippedSmall = 0
   for (const image of images) {
-    // Known small images (75 px thumbnail, 160 px main image): skip without downloading
-    if (/\/devices\/\d+\/(thumb\.png|image\/?)$/.test(image.image_url)) {
+    // The tiny thumbnail is only a search preview, never a product image.
+    if (/\/devices\/\d+\/thumb\.png$/.test(image.image_url)) {
       skippedSmall++
       continue
     }
@@ -140,6 +170,7 @@ export async function importDeviceImages(supabase: Admin, productId: string, dev
     const size = imageSize(bytes)
     if (!size) continue
     if (size.width < MIN_IMAGE_WIDTH) {
+      smallImages.push({ bytes, size })
       skippedSmall++
       continue
     }
@@ -153,6 +184,23 @@ export async function importDeviceImages(supabase: Admin, productId: string, dev
       continue
     }
     urls.push(supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl)
+  }
+
+  // Some devices only expose the 160 px main image. Keep it as a fallback so
+  // the imported smartphone is not left without any image at all.
+  if (urls.length === 0 && smallImages.length > 0) {
+    const fallback = smallImages[0]
+    const path = `products/${crypto.randomUUID()}.${fallback.size.ext}`
+    const { error } = await supabase.storage.from(BUCKET).upload(path, fallback.bytes, {
+      contentType: fallback.size.ext === "jpg" ? "image/jpeg" : `image/${fallback.size.ext}`,
+      upsert: false,
+    })
+    if (!error) {
+      urls.push(supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl)
+      warnings.push("Photo MobileAPI basse résolution utilisée en secours")
+    } else {
+      warnings.push(`Photo non enregistrée : ${error.message}`)
+    }
   }
 
   if (urls.length === 0) {
