@@ -11,6 +11,7 @@ export async function GET() {
       id,
       name,
       thumbnail_url,
+      hide_price,
       categories(slug),
       product_variations(
         id,

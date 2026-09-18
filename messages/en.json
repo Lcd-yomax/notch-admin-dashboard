@@ -50,7 +50,8 @@
     "management": "Management",
     "brands": "Brands",
     "toComplete": "To complete",
-    "bulkImport": "Bulk import"
+    "bulkImport": "Bulk import",
+    "packs": "Packs"
   },
   "user": {
     "account": "Account",
@@ -205,7 +206,9 @@
     "showOnWebsiteHelp": "Turn this off to remove the category from the storefront without deleting its products.",
     "createSuccess": "Category created successfully",
     "updateSuccess": "Category updated successfully",
-    "deleteSuccess": "Category deleted successfully"
+    "deleteSuccess": "Category deleted successfully",
+    "uploadError": "Image upload failed",
+    "saveError": "Could not save the category"
   },
   "orders": {
     "title": "Orders",
@@ -271,7 +274,8 @@
     "shipped": "Shipped",
     "statusUpdateSuccess": "Order status updated successfully",
     "code_suivi": "Tracking Code",
-    "orderCreatedManually": "Order created manually (WhatsApp)"
+    "orderCreatedManually": "Order created manually (WhatsApp)",
+    "packItem": "Pack"
   },
   "reviews": {
     "title": "Reviews",
@@ -326,7 +330,18 @@
     "deleteAnnouncementConfirm": "Are you sure you want to delete \"{title}\"?",
     "createSuccess": "Announcement created successfully",
     "updateSuccess": "Announcement updated successfully",
-    "deleteSuccess": "Announcement deleted successfully"
+    "deleteSuccess": "Announcement deleted successfully",
+    "image": "Pop-up image",
+    "uploadImage": "Add an image",
+    "uploading": "Uploading...",
+    "imageHint": "Shown large in the full-screen pop-up on the website. Recommended: 1080 × 1080 px, under 500 KB.",
+    "uploadError": "Image upload failed",
+    "saveError": "Could not save the announcement",
+    "linkToPack": "Link to a pack...",
+    "delay": "Delay before showing (seconds)",
+    "delayHint": "0 = as soon as the visitor arrives",
+    "showOnce": "Only once per visitor",
+    "showOnceHint": "After closing it, the visitor won't see it again unless you edit the announcement."
   },
   "users": {
     "title": "Users",
@@ -763,5 +778,47 @@
     "doneSummary": "{count, plural, =0 {No products created} one {# product created} other {# products created}}",
     "searchFailed": "Search failed, please retry",
     "importFailed": "Import failed, please retry"
+  },
+  "packs": {
+    "title": "Packs",
+    "description": "Description",
+    "addPack": "New pack",
+    "editPack": "Edit pack",
+    "formDescription": "Pack price = product prices minus the discount. It updates automatically when a price changes.",
+    "empty": "No packs yet",
+    "name": "Name",
+    "namePlaceholder": "e.g. Galaxy A55 + charger pack",
+    "slug": "Slug",
+    "descriptionPlaceholder": "What the pack contains, why it's a good deal...",
+    "image": "Image",
+    "uploadImage": "Add",
+    "uploadError": "Image upload failed",
+    "discount": "Discount",
+    "showOnWebsite": "Show on the website",
+    "activeHint": "Only visible when every product is active and has a price.",
+    "items": "Pack products",
+    "selectProduct": "Select a product...",
+    "searchProduct": "Search a product...",
+    "noProduct": "No product found",
+    "selectVariation": "Variation",
+    "quantity": "Quantity",
+    "removeItem": "Remove",
+    "addItem": "Add a product",
+    "originalPrice": "Regular price",
+    "packPrice": "Pack price",
+    "saving": "Customer saves",
+    "hiddenPriceWarning": "A product has a hidden price: the pack will show \"Price on request\" and be ordered via WhatsApp.",
+    "priceOnRequest": "Price on request",
+    "online": "Online",
+    "offline": "Offline",
+    "create": "Create pack",
+    "update": "Save",
+    "saveSuccess": "Pack saved",
+    "savedInactive": "Pack saved but offline",
+    "saveError": "Could not save the pack",
+    "deletePack": "Delete pack",
+    "deleteConfirm": "Delete \"{name}\"? Past orders keep their products.",
+    "deleteSuccess": "Pack deleted",
+    "deleteError": "Could not delete the pack"
   }
 }

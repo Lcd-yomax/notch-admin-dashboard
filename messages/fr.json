@@ -50,7 +50,8 @@
     "management": "Gestion",
     "brands": "Marques",
     "toComplete": "À compléter",
-    "bulkImport": "Import en masse"
+    "bulkImport": "Import en masse",
+    "packs": "Packs"
   },
   "user": {
     "account": "Compte",
@@ -205,7 +206,9 @@
     "showOnWebsiteHelp": "Désactivez cette option pour retirer la catégorie du storefront sans supprimer ses produits.",
     "createSuccess": "Catégorie créée avec succès",
     "updateSuccess": "Catégorie mise à jour avec succès",
-    "deleteSuccess": "Catégorie supprimée avec succès"
+    "deleteSuccess": "Catégorie supprimée avec succès",
+    "uploadError": "Échec du téléchargement de l'image",
+    "saveError": "Impossible d'enregistrer la catégorie"
   },
   "orders": {
     "title": "Commandes",
@@ -271,7 +274,8 @@
     "shipped": "Expédié",
     "statusUpdateSuccess": "Statut de la commande mis à jour avec succès",
     "code_suivi": "Code Suivi",
-    "orderCreatedManually": "Commande créée manuellement (WhatsApp)"
+    "orderCreatedManually": "Commande créée manuellement (WhatsApp)",
+    "packItem": "Pack"
   },
   "reviews": {
     "title": "Avis",
@@ -326,7 +330,18 @@
     "deleteAnnouncementConfirm": "Êtes-vous sûr de vouloir supprimer \"{title}\" ?",
     "createSuccess": "Annonce créée avec succès",
     "updateSuccess": "Annonce mise à jour avec succès",
-    "deleteSuccess": "Annonce supprimée avec succès"
+    "deleteSuccess": "Annonce supprimée avec succès",
+    "image": "Image du pop-up",
+    "uploadImage": "Ajouter une image",
+    "uploading": "Téléchargement...",
+    "imageHint": "Affichée en grand dans le pop-up plein écran du site. Format conseillé : 1080 × 1080 px, moins de 500 Ko.",
+    "uploadError": "Échec du téléchargement de l'image",
+    "saveError": "Impossible d'enregistrer l'annonce",
+    "linkToPack": "Lier à un pack...",
+    "delay": "Délai avant affichage (secondes)",
+    "delayHint": "0 = dès l'arrivée sur le site",
+    "showOnce": "Une seule fois par visiteur",
+    "showOnceHint": "Après fermeture, le visiteur ne la revoit plus, sauf si vous modifiez l'annonce."
   },
   "users": {
     "title": "Utilisateurs",
@@ -763,5 +778,47 @@
     "doneSummary": "{count, plural, =0 {Aucun produit créé} one {# produit créé} other {# produits créés}}",
     "searchFailed": "Recherche impossible, réessayez",
     "importFailed": "Import impossible, réessayez"
+  },
+  "packs": {
+    "title": "Packs",
+    "description": "Description",
+    "addPack": "Nouveau pack",
+    "editPack": "Modifier le pack",
+    "formDescription": "Le prix du pack = prix des produits moins la remise. Il se met à jour tout seul si un prix change.",
+    "empty": "Aucun pack pour le moment",
+    "name": "Nom",
+    "namePlaceholder": "ex. Pack Galaxy A55 + chargeur",
+    "slug": "Slug",
+    "descriptionPlaceholder": "Ce que contient le pack, pourquoi c'est une bonne affaire...",
+    "image": "Image",
+    "uploadImage": "Ajouter",
+    "uploadError": "Échec du téléchargement de l'image",
+    "discount": "Remise",
+    "showOnWebsite": "Afficher sur le site",
+    "activeHint": "Visible seulement si tous les produits sont actifs et ont un prix.",
+    "items": "Produits du pack",
+    "selectProduct": "Choisir un produit...",
+    "searchProduct": "Rechercher un produit...",
+    "noProduct": "Aucun produit trouvé",
+    "selectVariation": "Variante",
+    "quantity": "Quantité",
+    "removeItem": "Retirer",
+    "addItem": "Ajouter un produit",
+    "originalPrice": "Prix normal",
+    "packPrice": "Prix du pack",
+    "saving": "Économie client",
+    "hiddenPriceWarning": "Un produit a son prix masqué : le pack sera affiché « Prix sur demande » et commandé via WhatsApp.",
+    "priceOnRequest": "Prix sur demande",
+    "online": "En ligne",
+    "offline": "Hors ligne",
+    "create": "Créer le pack",
+    "update": "Enregistrer",
+    "saveSuccess": "Pack enregistré",
+    "savedInactive": "Pack enregistré mais hors ligne",
+    "saveError": "Impossible d'enregistrer le pack",
+    "deletePack": "Supprimer le pack",
+    "deleteConfirm": "Supprimer « {name} » ? Les commandes passées gardent leurs produits.",
+    "deleteSuccess": "Pack supprimé",
+    "deleteError": "Impossible de supprimer le pack"
   }
 }

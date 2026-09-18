@@ -53,15 +53,24 @@ export async function POST(request: Request) {
   const supabase = createAdminClient()
   const body = await request.json()
 
-  const { data, error } = await supabase
+  const fields = { name: body.name, slug: body.slug, image_url: body.image_url || null }
+
+  let { data, error } = await supabase
     .from("categories")
-    .insert({ name: body.name, slug: body.slug, image_url: body.image_url || null, is_active: body.is_active ?? true })
+    .insert({ ...fields, is_active: body.is_active ?? true })
     .select()
     .single()
+
+  // Before add_category_activation.sql is run the column does not exist
+  let warning: string | undefined
+  if (error && /is_active/i.test(error.message)) {
+    ;({ data, error } = await supabase.from("categories").insert(fields).select().single())
+    warning = "Visibilité non enregistrée : exécutez la migration add_category_activation.sql"
+  }
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json(data)
+  return NextResponse.json(warning ? { ...data, is_active: true, warning } : data)
 }

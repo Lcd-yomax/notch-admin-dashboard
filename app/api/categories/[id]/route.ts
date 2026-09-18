@@ -12,23 +12,29 @@ export async function PUT(
   const supabase = createAdminClient()
   const body = await request.json()
 
-  const { data, error } = await supabase
+  const fields = { name: body.name, slug: body.slug, image_url: body.image_url ?? null }
+  const withVisibility = typeof body.is_active === "boolean" ? { ...fields, is_active: body.is_active } : fields
+
+  let { data, error } = await supabase
     .from("categories")
-    .update({
-      name: body.name,
-      slug: body.slug,
-      image_url: body.image_url,
-      ...(typeof body.is_active === "boolean" ? { is_active: body.is_active } : {}),
-    })
+    .update(withVisibility)
     .eq("id", id)
     .select()
     .single()
+
+  // Before add_category_activation.sql is run the column does not exist:
+  // still save name, slug and image instead of failing the whole update
+  let warning: string | undefined
+  if (error && /is_active/i.test(error.message) && withVisibility !== fields) {
+    ;({ data, error } = await supabase.from("categories").update(fields).eq("id", id).select().single())
+    warning = "Visibilité non enregistrée : exécutez la migration add_category_activation.sql"
+  }
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json(data)
+  return NextResponse.json(warning ? { ...data, is_active: true, warning } : data)
 }
 
 export async function DELETE(

@@ -50,7 +50,8 @@
     "management": "الإدارة",
     "brands": "العلامات التجارية",
     "toComplete": "للإكمال",
-    "bulkImport": "استيراد جماعي"
+    "bulkImport": "استيراد جماعي",
+    "packs": "الباقات"
   },
   "user": {
     "account": "الحساب",
@@ -205,7 +206,9 @@
     "showOnWebsiteHelp": "عطّل هذا الخيار لإخفاء الفئة من المتجر دون حذف منتجاتها.",
     "createSuccess": "تم إنشاء الفئة بنجاح",
     "updateSuccess": "تم تحديث الفئة بنجاح",
-    "deleteSuccess": "تم حذف الفئة بنجاح"
+    "deleteSuccess": "تم حذف الفئة بنجاح",
+    "uploadError": "فشل رفع الصورة",
+    "saveError": "تعذّر حفظ الفئة"
   },
   "orders": {
     "title": "الطلبات",
@@ -270,7 +273,8 @@
     "shipped": "تم الشحن",
     "statusUpdateSuccess": "تم تحديث حالة الطلب بنجاح",
     "code_suivi": "كود التتبع",
-    "orderCreatedManually": "طلب تم إنشاؤه يدويًا (واتساب)"
+    "orderCreatedManually": "طلب تم إنشاؤه يدويًا (واتساب)",
+    "packItem": "باقة"
   },
   "reviews": {
     "title": "التقييمات",
@@ -325,7 +329,18 @@
     "deleteAnnouncementConfirm": "هل أنت متأكد من حذف \"{title}\"؟",
     "createSuccess": "تم إنشاء الإعلان بنجاح",
     "updateSuccess": "تم تحديث الإعلان بنجاح",
-    "deleteSuccess": "تم حذف الإعلان بنجاح"
+    "deleteSuccess": "تم حذف الإعلان بنجاح",
+    "image": "صورة النافذة المنبثقة",
+    "uploadImage": "إضافة صورة",
+    "uploading": "جارٍ الرفع...",
+    "imageHint": "تُعرض بحجم كبير في النافذة المنبثقة على الموقع. المقاس المقترح: 1080 × 1080 بكسل، أقل من 500 كيلوبايت.",
+    "uploadError": "فشل رفع الصورة",
+    "saveError": "تعذّر حفظ الإعلان",
+    "linkToPack": "ربط بباقة...",
+    "delay": "مدة الانتظار قبل الظهور (ثوانٍ)",
+    "delayHint": "0 = فور دخول الزائر",
+    "showOnce": "مرة واحدة لكل زائر",
+    "showOnceHint": "بعد إغلاقها لن يراها الزائر مجددًا إلا إذا عدّلت الإعلان."
   },
   "users": {
     "title": "المستخدمون",
@@ -762,5 +777,47 @@
     "doneSummary": "{count, plural, =0 {لم يتم إنشاء أي منتج} one {تم إنشاء منتج واحد} other {تم إنشاء # منتجات}}",
     "searchFailed": "تعذّر البحث، أعد المحاولة",
     "importFailed": "تعذّر الاستيراد، أعد المحاولة"
+  },
+  "packs": {
+    "title": "الباقات",
+    "description": "الوصف",
+    "addPack": "باقة جديدة",
+    "editPack": "تعديل الباقة",
+    "formDescription": "سعر الباقة = أسعار المنتجات ناقص الخصم. يتحدّث تلقائيًا عند تغيّر أي سعر.",
+    "empty": "لا توجد باقات بعد",
+    "name": "الاسم",
+    "namePlaceholder": "مثال: باقة Galaxy A55 + شاحن",
+    "slug": "المعرّف (Slug)",
+    "descriptionPlaceholder": "محتوى الباقة ولماذا هي صفقة جيدة...",
+    "image": "الصورة",
+    "uploadImage": "إضافة",
+    "uploadError": "فشل رفع الصورة",
+    "discount": "الخصم",
+    "showOnWebsite": "عرض على الموقع",
+    "activeHint": "تظهر فقط إذا كانت كل المنتجات نشطة ولها سعر.",
+    "items": "منتجات الباقة",
+    "selectProduct": "اختر منتجًا...",
+    "searchProduct": "ابحث عن منتج...",
+    "noProduct": "لم يتم العثور على منتج",
+    "selectVariation": "المتغير",
+    "quantity": "الكمية",
+    "removeItem": "إزالة",
+    "addItem": "إضافة منتج",
+    "originalPrice": "السعر العادي",
+    "packPrice": "سعر الباقة",
+    "saving": "توفير الزبون",
+    "hiddenPriceWarning": "أحد المنتجات سعره مخفي: ستظهر الباقة «السعر عند الطلب» ويتم طلبها عبر واتساب.",
+    "priceOnRequest": "السعر عند الطلب",
+    "online": "منشورة",
+    "offline": "غير منشورة",
+    "create": "إنشاء الباقة",
+    "update": "حفظ",
+    "saveSuccess": "تم حفظ الباقة",
+    "savedInactive": "تم حفظ الباقة لكنها غير منشورة",
+    "saveError": "تعذّر حفظ الباقة",
+    "deletePack": "حذف الباقة",
+    "deleteConfirm": "حذف «{name}»؟ الطلبات السابقة تحتفظ بمنتجاتها.",
+    "deleteSuccess": "تم حذف الباقة",
+    "deleteError": "تعذّر حذف الباقة"
   }
 }

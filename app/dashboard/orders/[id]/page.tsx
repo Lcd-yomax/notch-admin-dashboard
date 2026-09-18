@@ -59,6 +59,8 @@ interface OrderItem {
   id: string
   quantity: number
   unit_price: number
+  /** Set when the line comes from a pack (discounted unit price) */
+  pack_id?: string | null
   product_variations: {
     id: string
     sku: string | null
@@ -436,6 +438,9 @@ export default function OrderDetailPage() {
                           )}
                           <span className="font-medium text-sm">
                             {item.product_variations?.products?.name ?? "—"}
+                            {item.pack_id && (
+                              <Badge variant="secondary" className="ms-2 text-[10px]">{t("packItem")}</Badge>
+                            )}
                           </span>
                         </div>
                       </TableCell>
