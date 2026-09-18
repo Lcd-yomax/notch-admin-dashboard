@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e ' *)",
+      "Bash(node __TRACKED_VAR__/i18n-merge.cjs __TRACKED_VAR__/i18n-11-packs.json)",
+      "Bash(node __TRACKED_VAR__/i18n-check.cjs app/dashboard/packs/page.tsx components/packs/pack-form.tsx app/dashboard/announcements/page.tsx components/app-sidebar.tsx)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\Ultrapc\\Desktop\\coding\\notch-store\\lib\\catalog",
+      "C:\\Users\\Ultrapc\\Desktop\\coding\\notch-store\\components\\packs",
+      "C:\\Users\\Ultrapc\\Desktop\\coding\\notch-store\\app\\packs",
+      "C:\\Users\\Ultrapc\\Desktop\\coding\\notch-store\\app\\api\\announcements"
+    ]
+  }
+}

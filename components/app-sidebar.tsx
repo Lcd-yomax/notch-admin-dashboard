@@ -23,6 +23,7 @@ import {
   IconTag,
   IconChecklist,
   IconCloudDownload,
+  IconGift,
 } from "@tabler/icons-react"
 
 import { NavDocuments } from '@/components/nav-documents'
@@ -88,6 +89,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/dashboard/brands",
       icon: IconTag,
       permission: "brands.manage",
+    },
+    {
+      title: t("packs"),
+      url: "/dashboard/packs",
+      icon: IconGift,
+      permission: "products:read",
     },
     {
       title: t("orders"),

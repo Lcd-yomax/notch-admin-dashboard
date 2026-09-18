@@ -53,6 +53,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
   Table,
   TableBody,
   TableCell,
@@ -76,6 +83,8 @@ interface Announcement {
   starts_at: string
   ends_at: string
   is_active: boolean
+  display_delay_seconds?: number
+  show_once?: boolean
   created_at: string
   created_by_name: string | null
 }
@@ -100,12 +109,40 @@ function AnnouncementForm({
   const [isActive, setIsActive] = React.useState(announcement?.is_active ?? true)
   const [startsAt, setStartsAt] = React.useState(announcement?.starts_at ? announcement.starts_at.slice(0, 16) : "")
   const [endsAt, setEndsAt] = React.useState(announcement?.ends_at ? announcement.ends_at.slice(0, 16) : "")
+  const [imageUrl, setImageUrl] = React.useState(announcement?.image_url || "")
+  const [delay, setDelay] = React.useState(String(announcement?.display_delay_seconds ?? 3))
+  const [showOnce, setShowOnce] = React.useState(announcement?.show_once ?? true)
+  const [uploading, setUploading] = React.useState(false)
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
+  const { data: packs = [] } = useSWR<{ id: string; name: string; slug: string }[]>("/api/packs", (url: string) =>
+    fetch(url).then((res) => (res.ok ? res.json() : []))
+  )
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ""
+    if (!file) return
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+      const res = await fetch("/api/upload", { method: "POST", body: formData })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && data.url) setImageUrl(data.url)
+      else toast.error(data.error || t("uploadError"))
+    } finally {
+      setUploading(false)
+    }
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     onSave({
       title,
       body,
+      image_url: imageUrl || null,
+      display_delay_seconds: Math.min(120, Math.max(0, Math.round(Number(delay) || 0))),
+      show_once: showOnce,
       cta_label: ctaLabel || null,
       cta_url: ctaUrl || null,
       starts_at: new Date(startsAt).toISOString(),
@@ -136,7 +173,25 @@ function AnnouncementForm({
           rows={5}
         />
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="space-y-2">
+        <Label>{t("image")}</Label>
+        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="flex h-24 w-40 items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/50 text-xs text-muted-foreground hover:border-primary/50"
+          >
+            {uploading ? t("uploading") : imageUrl ? <img src={imageUrl} alt="" className="size-full object-cover" /> : t("uploadImage")}
+          </button>
+          {imageUrl && (
+            <Button type="button" variant="outline" size="sm" onClick={() => setImageUrl("")}>{tc("delete")}</Button>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground">{t("imageHint")}</p>
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="cta_label">{t("ctaLabel")}</Label>
           <Input
@@ -150,14 +205,47 @@ function AnnouncementForm({
           <Label htmlFor="cta_url">{t("ctaUrl")}</Label>
           <Input
             id="cta_url"
-            type="url"
             value={ctaUrl}
             onChange={(e) => setCtaUrl(e.target.value)}
-            placeholder="https://example.com"
+            placeholder="/packs/pack-rentree"
           />
+          {packs.length > 0 && (
+            <Select onValueChange={(slug) => setCtaUrl(`/packs/${slug}`)}>
+              <SelectTrigger size="sm" className="w-full">
+                <SelectValue placeholder={t("linkToPack")} />
+              </SelectTrigger>
+              <SelectContent>
+                {packs.map((p) => (
+                  <SelectItem key={p.id} value={p.slug}>{p.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="display_delay">{t("delay")}</Label>
+          <Input
+            id="display_delay"
+            type="number"
+            min="0"
+            max="120"
+            inputMode="numeric"
+            value={delay}
+            onChange={(e) => setDelay(e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground">{t("delayHint")}</p>
+        </div>
+        <div className="flex items-start gap-2 pt-6">
+          <Switch id="show_once" checked={showOnce} onCheckedChange={setShowOnce} className="mt-0.5" />
+          <div>
+            <Label htmlFor="show_once">{t("showOnce")}</Label>
+            <p className="text-xs text-muted-foreground">{t("showOnceHint")}</p>
+          </div>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="starts_at">{t("startsAt")} *</Label>
           <Input
@@ -213,26 +301,33 @@ export default function AnnouncementsPage() {
   const [globalFilter, setGlobalFilter] = React.useState("")
   const [pagination, setPagination] = React.useState({ pageIndex: 0, pageSize: 10 })
 
-  const handleCreate = async (data: Partial<Announcement>) => {
-    if (!hasPermission("announcements:write")) return
-    await fetch("/api/announcements", {
-      method: "POST",
+  // Shows the real server error instead of a success toast when saving fails
+  const saveAnnouncement = async (url: string, method: "POST" | "PUT", data: Partial<Announcement>) => {
+    const res = await fetch(url, {
+      method,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     })
+    const result = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      toast.error(result.error || t("saveError"))
+      return false
+    }
+    if (result.warning) toast.warning(result.warning)
     mutate()
+    return true
+  }
+
+  const handleCreate = async (data: Partial<Announcement>) => {
+    if (!hasPermission("announcements:write")) return
+    if (!(await saveAnnouncement("/api/announcements", "POST", data))) return
     toast.success(t("createSuccess"))
     setIsCreateOpen(false)
   }
 
   const handleUpdate = async (data: Partial<Announcement>) => {
     if (!editingAnnouncement || !hasPermission("announcements:write")) return
-    await fetch(`/api/announcements/${editingAnnouncement.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    })
-    mutate()
+    if (!(await saveAnnouncement(`/api/announcements/${editingAnnouncement.id}`, "PUT", data))) return
     toast.success(t("updateSuccess"))
     setEditingAnnouncement(null)
   }
